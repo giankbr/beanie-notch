@@ -1,7 +1,23 @@
 import SwiftUI
 
+// Copied things on one side, a scratchpad on the other.
 struct ClipboardView: View {
+    @State private var mode = 0
+
+    var body: some View {
+        VStack(spacing: 8) {
+            if mode == 0 {
+                HistoryView(mode: $mode)
+            } else {
+                NotesView(mode: $mode)
+            }
+        }
+    }
+}
+
+private struct HistoryView: View {
     @EnvironmentObject var clipboard: ClipboardHistory
+    @Binding var mode: Int
     @State private var query = ""
     @State private var copied: UUID?
     @State private var selected = 0
@@ -14,6 +30,7 @@ struct ClipboardView: View {
     var body: some View {
         VStack(spacing: 8) {
             HStack(spacing: 6) {
+                Segmented(options: ["History", "Notes"], selection: $mode).frame(width: 120)
                 HStack(spacing: 6) {
                     Image(systemName: "magnifyingglass").font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.dim)
                     TextField("Search text, file names, or words in images", text: $query)
@@ -122,6 +139,48 @@ struct ClipboardView: View {
                 .help(FileManager.default.displayName(atPath: url.path))
         } else {
             Image(systemName: "doc.on.clipboard").font(.system(size: 10)).foregroundStyle(Theme.dim).frame(width: 16)
+        }
+    }
+}
+
+private struct NotesView: View {
+    @EnvironmentObject var notes: Notes
+    @EnvironmentObject var shelf: Shelf
+    @EnvironmentObject var model: AppModel
+    @Binding var mode: Int
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 6) {
+                Segmented(options: ["History", "Notes"], selection: $mode).frame(width: 120)
+                Spacer()
+                Pill(text: "\(notes.text.split(whereSeparator: \.isWhitespace).count) words")
+                PillButton(text: "Copy", icon: "doc.on.doc") {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(notes.text, forType: .string)
+                }
+                PillButton(text: "To Shelf", icon: "tray.and.arrow.down", color: Theme.accent) {
+                    if let url = notes.exportFile() {
+                        shelf.add([url])
+                        model.show(Notice(icon: "note.text", color: Theme.accent, left: "Note", right: "On the Shelf"))
+                    }
+                }
+                PillButton(text: "Clear", color: Theme.red) { notes.text = "" }
+            }
+            TextEditor(text: $notes.text)
+                .font(.app(size: 11.5))
+                .scrollContentBackground(.hidden)
+                .scrollIndicators(.never)
+                .padding(8)
+                .card()
+                .overlay(alignment: .topLeading) {
+                    if notes.text.isEmpty {
+                        Text("Jot something down. It's saved as you type.")
+                            .font(.app(size: 11.5)).foregroundStyle(Theme.faint)
+                            .padding(.horizontal, 13).padding(.vertical, 8)
+                            .allowsHitTesting(false)
+                    }
+                }
         }
     }
 }

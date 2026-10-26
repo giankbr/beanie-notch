@@ -79,6 +79,13 @@ final class CalendarFeed: ObservableObject {
         }
     }
 
+    // The days of a month that have something on, for the dots under the month view.
+    func eventDays(in month: Date) -> Set<Int> {
+        guard authorized, let interval = Calendar.current.dateInterval(of: .month, for: month) else { return [] }
+        let predicate = store.predicateForEvents(withStart: interval.start, end: interval.end, calendars: nil)
+        return Set(store.events(matching: predicate).map { Calendar.current.component(.day, from: $0.startDate) })
+    }
+
     // Opens the call in its own app when that's installed (Zoom, Teams), in the browser otherwise.
     func join(_ item: Item) {
         guard let link = item.link else { return }

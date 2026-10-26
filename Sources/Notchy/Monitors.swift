@@ -67,6 +67,7 @@ final class AudioOutputMonitor: ObservableObject {
 
     @Published private(set) var current: AudioDeviceID
     var onNotice: ((Notice) -> Void)?
+    var onBluetooth: ((String) -> Void)?
 
     var currentName: String { Self.name(current) }
 
@@ -104,6 +105,10 @@ final class AudioOutputMonitor: ObservableObject {
         let title = Self.name(id)
         onNotice?(Notice(icon: title.localizedCaseInsensitiveContains("airpods") ? "airpodspro" : "headphones",
                          color: Theme.accent2, left: "Connected", right: title))
+        // Headphones report their charge a few seconds after connecting.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
+            MainActor.assumeIsolated { self?.onBluetooth?(title) }
+        }
     }
 
     private static func address(_ selector: AudioObjectPropertySelector,

@@ -40,6 +40,7 @@ private func droppedURLs(_ sender: NSDraggingInfo) -> [URL] {
 final class DropZoneView: NSView {
     var onHover: () -> Void = {}
     var onClick: () -> Void = {}
+    var onScroll: (NSEvent) -> Void = { _ in }
     var drops = DropHandlers()
 
     override init(frame: NSRect) {
@@ -58,6 +59,7 @@ final class DropZoneView: NSView {
 
     override func mouseEntered(with event: NSEvent) { onHover() }
     override func mouseDown(with event: NSEvent) { onClick() }
+    override func scrollWheel(with event: NSEvent) { onScroll(event) }
 
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
         drops.enter()
@@ -81,6 +83,12 @@ final class DropZoneView: NSView {
 // The panel's hosting view, so files dropped anywhere on the open panel land on the Shelf.
 final class NotchHostingView: NSHostingView<AnyView> {
     var drops = DropHandlers()
+    // Scrolls over the notch strip at the top; returns false to let the panel's content scroll instead.
+    var onScroll: (NSEvent) -> Bool = { _ in false }
+
+    override func scrollWheel(with event: NSEvent) {
+        if !onScroll(event) { super.scrollWheel(with: event) }
+    }
 
     required init(rootView: AnyView) {
         super.init(rootView: rootView)
@@ -132,6 +140,12 @@ final class NotchController {
             expand(pinned: false)
         }
         zone.onClick = { [weak self] in self?.expand(pinned: true) }
+        zone.onScroll = { [weak self] e in self?.scrolled(e) }
+        host.onScroll = { [weak self] e in
+            guard let self, let window = e.window, e.locationInWindow.y > window.frame.height - model.closedHeight else { return false }
+            scrolled(e)
+            return true
+        }
         let drops = DropHandlers(
             enter: { [weak self] in self?.dragEntered() },
             move: { [weak self] fraction in
@@ -189,6 +203,28 @@ final class NotchController {
             MainActor.assumeIsolated { self?.handle(e, local: true) }
             return e
         }) { monitors.append(m) }
+    }
+
+    private var swipeDistance: CGFloat = 0
+    private var swiped = false
+
+    // Over the notch: a sideways two-finger swipe changes the track, scrolling up and down sets the volume.
+    private func scrolled(_ e: NSEvent) {
+        guard model.settings.gestures, e.momentumPhase.isEmpty else { return }
+        if e.phase == .began || e.phase.isEmpty && !e.hasPreciseScrollingDeltas { swipeDistance = 0; swiped = false }
+        let inverted = e.isDirectionInvertedFromDevice
+        let dx = e.scrollingDeltaX, dy = e.scrollingDeltaY
+        if abs(dx) > abs(dy) {
+            // Positive when the fingers move right, whatever the scroll direction setting.
+            swipeDistance += inverted ? dx : -dx
+            if !swiped, abs(swipeDistance) > 60, model.media.now != nil {
+                swiped = true
+                if swipeDistance > 0 { model.media.previous() } else { model.media.next() }
+            }
+        } else if dy != 0 {
+            let up = inverted ? -dy : dy
+            model.nudgeVolume(by: e.hasPreciseScrollingDeltas ? Float(up) * 0.004 : (up > 0 ? 1 : -1) / 16)
+        }
     }
 
     // Out of the way while a full-screen app is in front, back as soon as it isn't.

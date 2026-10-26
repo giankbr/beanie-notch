@@ -10,16 +10,20 @@ struct TodayView: View {
             TodayStrip()
             HStack(alignment: .top, spacing: 10) {
                 VStack(alignment: .leading, spacing: 8) {
-                    CardHeader(title: page == 0 ? "Up next" : "Tasks",
-                               subtitle: page == 0 ? "Calendar · next 24 hours" : "End with a time for a reminder") {
-                        Segmented(options: ["Agenda", "Tasks"], selection: $page).frame(width: 130)
+                    CardHeader(title: ["Up next", "Tasks", "Month"][page],
+                               subtitle: ["Calendar · next 24 hours", "End with a time for a reminder", "Dots mark days with events"][page]) {
+                        Segmented(options: ["Agenda", "Tasks", "Month"], selection: $page).frame(width: 190)
                     }
-                    if page == 0 { CalendarPanel() } else { TasksPanel() }
+                    switch page {
+                    case 0: CalendarPanel()
+                    case 1: TasksPanel()
+                    default: MonthView()
+                    }
                 }
                 .padding(12)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .card()
-                FocusPanel().frame(width: settings.size == .compact ? 190 : 220)
+                TimePanel().frame(width: settings.size == .compact ? 200 : 230)
             }
             .frame(maxHeight: .infinity)
         }
@@ -204,40 +208,49 @@ private struct CalendarPanel: View {
     }
 }
 
-private struct FocusPanel: View {
-    @EnvironmentObject var focus: FocusTimer
+// Focus timer, a plain countdown, and other cities' clocks, one at a time.
+private struct TimePanel: View {
+    @State private var mode = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(focus.phase == .focus ? "Focus" : "Break").font(.app(size: 13, weight: .semibold))
-                Spacer()
-                HStack(spacing: 2) {
-                    ForEach(FocusTimer.presets.indices, id: \.self) { i in
-                        let p = FocusTimer.presets[i]
-                        Button { focus.choose(i) } label: {
-                            Text("\(p.focus)/\(p.rest)")
-                                .font(.mono(size: 8.5, weight: .semibold))
-                                .foregroundStyle(focus.preset == i ? Theme.ink : Theme.faint)
-                                .padding(.horizontal, 5)
-                                .frame(height: 18)
-                                .background(RoundedRectangle(cornerRadius: 5, style: .continuous)
-                                    .fill(focus.preset == i ? Theme.ink.opacity(0.1) : .clear))
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
+            Segmented(options: ["Focus", "Timer", "Clocks"], selection: $mode)
+            switch mode {
+            case 0: FocusPage()
+            case 1: TimerPage()
+            default: ClocksPage()
             }
+        }
+        .padding(11)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .card()
+    }
+}
+
+private struct FocusPage: View {
+    @EnvironmentObject var focus: FocusTimer
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
             TimelineView(.periodic(from: .now, by: focus.isRunning ? 1 : 3600)) { context in
                 let left = focus.left(at: context.date)
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(formatClock(left))
-                        .font(.app(size: 30, weight: .bold))
-                        .monospacedDigit()
-                        .foregroundStyle(focus.phase == .focus ? Theme.ink : Theme.accent2)
-                        .contentTransition(.numericText())
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(formatClock(left))
+                            .font(.app(size: 28, weight: .bold))
+                            .monospacedDigit()
+                            .foregroundStyle(focus.phase == .focus ? Theme.ink : Theme.accent2)
+                            .contentTransition(.numericText())
+                        Spacer(minLength: 4)
+                        Text(focus.phase == .focus ? "Focus" : "Break").font(.app(size: 9.5, weight: .medium)).foregroundStyle(Theme.faint)
+                    }
                     SegmentMeter(value: 1 - left / max(focus.duration, 1), color: focus.phase == .focus ? Theme.accent : Theme.accent2)
+                }
+            }
+            HStack(spacing: 2) {
+                ForEach(FocusTimer.presets.indices, id: \.self) { i in
+                    let p = FocusTimer.presets[i]
+                    chip("\(p.focus)/\(p.rest)", active: focus.preset == i) { focus.choose(i) }
                 }
             }
             Spacer(minLength: 0)
@@ -249,8 +262,156 @@ private struct FocusPanel: View {
                 IconButton(icon: "forward.end.fill") { focus.skip() }.help("Skip")
             }
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .card()
     }
+}
+
+private struct TimerPage: View {
+    @EnvironmentObject var countdown: CountdownTimer
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            TimelineView(.periodic(from: .now, by: countdown.isRunning ? 1 : 3600)) { context in
+                let left = countdown.left(at: context.date)
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(formatClock(left)).font(.app(size: 28, weight: .bold)).monospacedDigit()
+                            .contentTransition(.numericText())
+                        Spacer(minLength: 4)
+                        Text(countdown.isRunning ? "Running" : "Pick a time").font(.app(size: 9.5, weight: .medium)).foregroundStyle(Theme.faint)
+                    }
+                    SegmentMeter(value: countdown.isRunning ? 1 - left / max(countdown.duration, 1) : 0, color: Theme.accent)
+                }
+            }
+            HStack(spacing: 2) {
+                ForEach(CountdownTimer.presets, id: \.self) { m in
+                    chip("\(m)m", active: countdown.isRunning && Int(countdown.duration / 60) == m) { countdown.start(minutes: m) }
+                }
+            }
+            Spacer(minLength: 0)
+            if countdown.isRunning {
+                OutlineButton(text: "Cancel", color: Theme.red) { countdown.cancel() }
+            } else {
+                Text("Tap a time to start; it shows in the notch while it runs")
+                    .font(.app(size: 8.5)).foregroundStyle(Theme.faint).lineLimit(2)
+            }
+        }
+    }
+}
+
+private struct ClocksPage: View {
+    @EnvironmentObject var clock: WorldClock
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            TimelineView(.periodic(from: .now, by: 30)) { context in
+                ScrollView {
+                    VStack(spacing: 2) {
+                        ForEach(clock.cities, id: \.self) { city in
+                            let zone = TimeZone(identifier: city.zone) ?? .current
+                            HStack(spacing: 6) {
+                                VStack(alignment: .leading, spacing: 0) {
+                                    Text(city.name).font(.app(size: 10.5, weight: .medium)).lineLimit(1)
+                                    Text(Self.offset(zone, at: context.date)).font(.app(size: 8.5)).foregroundStyle(Theme.faint)
+                                }
+                                Spacer(minLength: 4)
+                                Text(context.date.formatted(Date.FormatStyle(date: .omitted, time: .shortened, timeZone: zone)))
+                                    .font(.app(size: 13, weight: .semibold)).monospacedDigit()
+                                Button { clock.remove(city) } label: {
+                                    Image(systemName: "xmark").font(.system(size: 7, weight: .bold)).foregroundStyle(Theme.faint)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .frame(height: 28)
+                        }
+                    }
+                }
+                .scrollIndicators(.never)
+            }
+            Menu {
+                ForEach(WorldClock.choices.filter { !clock.cities.contains($0) }, id: \.self) { city in
+                    Button(city.name) { clock.add(city) }
+                }
+            } label: {
+                Label("Add city", systemImage: "plus").font(.app(size: 9.5, weight: .semibold))
+            }
+            .menuStyle(.borderlessButton)
+            .controlSize(.small)
+            .fixedSize()
+        }
+    }
+
+    // "Today, +5 h" against this Mac's time zone, or the day when it's already tomorrow there.
+    private static func offset(_ zone: TimeZone, at date: Date) -> String {
+        let hours = Double(zone.secondsFromGMT(for: date) - TimeZone.current.secondsFromGMT(for: date)) / 3600
+        let text = hours == 0 ? "Same time" : (hours > 0 ? "+" : "−") + (hours.truncatingRemainder(dividingBy: 1) == 0
+            ? "\(Int(abs(hours))) h" : String(format: "%.1f h", abs(hours)))
+        var calendar = Calendar.current
+        calendar.timeZone = zone
+        let there = calendar.component(.day, from: date), here = Calendar.current.component(.day, from: date)
+        return there == here ? text : (there > here || (here > 25 && there < 3) ? "Tomorrow, " : "Yesterday, ") + text
+    }
+}
+
+// The month at a glance: today ringed, dots under days with events.
+private struct MonthView: View {
+    @EnvironmentObject var calendar: CalendarFeed
+    @State private var offset = 0
+
+    var body: some View {
+        let cal = Calendar.current
+        let month = cal.date(byAdding: .month, value: offset, to: Date()) ?? Date()
+        let days = cal.range(of: .day, in: .month, for: month)?.count ?? 30
+        let first = cal.date(from: cal.dateComponents([.year, .month], from: month)) ?? month
+        let lead = (cal.component(.weekday, from: first) - cal.firstWeekday + 7) % 7
+        let busy = calendar.eventDays(in: month)
+        let today = offset == 0 ? cal.component(.day, from: Date()) : nil
+        let symbols = Array(cal.veryShortWeekdaySymbols[(cal.firstWeekday - 1)...] + cal.veryShortWeekdaySymbols[..<(cal.firstWeekday - 1)])
+        VStack(spacing: 3) {
+            HStack {
+                Text(month.formatted(.dateTime.month(.wide).year())).font(.app(size: 10, weight: .semibold))
+                Spacer()
+                Button { offset -= 1 } label: { Image(systemName: "chevron.left") }.buttonStyle(.plain)
+                Button { offset = 0 } label: { Text("Today").font(.app(size: 9)) }.buttonStyle(.plain).foregroundStyle(Theme.accent)
+                Button { offset += 1 } label: { Image(systemName: "chevron.right") }.buttonStyle(.plain)
+            }
+            .font(.system(size: 9, weight: .semibold))
+            .foregroundStyle(Theme.dim)
+            // One list of cells with distinct ids: weekday letters, blanks, then days (repeated ids get dropped).
+            let cells = symbols.enumerated().map { ("w\($0.offset)", $0.element, 0) }
+                + (0..<lead).map { ("b\($0)", "", 0) } + (1...days).map { ("d\($0)", "", $0) }
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: 7), spacing: 1) {
+                ForEach(cells, id: \.0) { cell in
+                    if cell.2 == 0 {
+                        Text(cell.1).font(.app(size: 8, weight: .semibold)).foregroundStyle(Theme.faint).frame(height: 14)
+                    } else {
+                        dayCell(cell.2, today: today, busy: busy)
+                    }
+                }
+            }
+        }
+    }
+
+    private func dayCell(_ day: Int, today: Int?, busy: Set<Int>) -> some View {
+        Text("\(day)")
+            .font(.app(size: 9, weight: day == today ? .bold : .regular)).monospacedDigit()
+            .foregroundStyle(day == today ? Theme.background : Theme.ink)
+            .frame(width: 18, height: 14)
+            .background(Capsule().fill(day == today ? Theme.accent : .clear))
+            .overlay(alignment: .bottom) {
+                if busy.contains(day), day != today { Circle().fill(Theme.accent2).frame(width: 3, height: 3).offset(y: 2) }
+            }
+    }
+}
+
+private func chip(_ text: String, active: Bool, action: @escaping () -> Void) -> some View {
+    Button(action: action) {
+        Text(text)
+            .font(.mono(size: 8.5, weight: .semibold))
+            .foregroundStyle(active ? Theme.ink : Theme.faint)
+            .padding(.horizontal, 5)
+            .frame(height: 18)
+            .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(active ? Theme.ink.opacity(0.1) : .clear))
+            .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
 }

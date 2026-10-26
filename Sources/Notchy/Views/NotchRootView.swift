@@ -9,6 +9,7 @@ struct NotchRootView: View {
     @EnvironmentObject var prayer: PrayerTimes
     @EnvironmentObject var downloads: DownloadWatcher
     @EnvironmentObject var calendar: CalendarFeed
+    @EnvironmentObject var countdown: CountdownTimer
 
     private var size: CGSize {
         model.expanded ? model.openSize : CGSize(width: model.closedWidth, height: model.closedHeight)
@@ -93,6 +94,16 @@ struct NotchRootView: View {
             } right: {
                 TimelineView(.periodic(from: .now, by: 1)) { context in
                     Text(formatClock(focus.left(at: context.date)))
+                        .font(.app(size: 11, weight: .semibold)).monospacedDigit().foregroundStyle(.white)
+                }
+            }
+            .transition(.emerge)
+        } else if countdown.isRunning {
+            Ears {
+                Image(systemName: "hourglass").font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.accent)
+            } right: {
+                TimelineView(.periodic(from: .now, by: 1)) { context in
+                    Text(formatClock(countdown.left(at: context.date)))
                         .font(.app(size: 11, weight: .semibold)).monospacedDigit().foregroundStyle(.white)
                 }
             }
@@ -285,6 +296,7 @@ struct ExpandedView: View {
             case .shelf: ShelfView()
             case .clipboard: ClipboardView()
             case .music: MusicView()
+            case .controls: ControlsView()
             case .tools: ToolsView()
             case .settings: SettingsView()
             }
@@ -391,6 +403,7 @@ private struct StudioSidebar: View {
             item(.shelf, count: shelf.items.isEmpty ? nil : "\(shelf.items.count)")
             item(.clipboard, count: clipboard.entries.isEmpty ? nil : "\(clipboard.entries.count)")
             group("System")
+            item(.controls)
             item(.tools)
             item(.settings)
             Spacer(minLength: 4)
@@ -410,7 +423,7 @@ private struct StudioSidebar: View {
         }
         .foregroundStyle(Theme.faint)
         .padding(.leading, 10)
-        .padding(.top, 6)
+        .padding(.top, settings.size == .compact ? 3 : 6)
         .padding(.bottom, 2)
     }
 
@@ -436,7 +449,8 @@ private struct StudioSidebar: View {
                 }
             }
             .padding(.horizontal, 8)
-            .frame(height: 23)
+            // Nine rows have to fit the compact panel too.
+            .frame(height: settings.size == .compact ? 20 : 23)
             .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(active ? Theme.ink.opacity(0.09) : .clear))
             .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(active ? Theme.stroke : .clear))
             .contentShape(Rectangle())

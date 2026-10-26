@@ -113,6 +113,7 @@ final class Settings: ObservableObject {
     @Published var lyricsInNotch: Bool { didSet { save(lyricsInNotch, "lyricsInNotch") } }
     @Published var keyboardAlerts: Bool { didSet { save(keyboardAlerts, "keyboardAlerts") } }
     @Published var volumeHUD: Bool { didSet { save(volumeHUD, "volumeHUD") } }
+    @Published var gestures: Bool { didSet { save(gestures, "gestures") } }
     @Published var downloadsInNotch: Bool { didSet { save(downloadsInNotch, "downloadsInNotch") } }
     @Published var waterEvery: Int { didSet { save(waterEvery, "waterEvery") } }
     @Published var eyeBreaks: Bool { didSet { save(eyeBreaks, "eyeBreaks") } }
@@ -145,6 +146,7 @@ final class Settings: ObservableObject {
         lyricsInNotch = d.object(forKey: "lyricsInNotch") as? Bool ?? true
         keyboardAlerts = d.object(forKey: "keyboardAlerts") as? Bool ?? true
         volumeHUD = d.object(forKey: "volumeHUD") as? Bool ?? true
+        gestures = d.object(forKey: "gestures") as? Bool ?? true
         downloadsInNotch = d.object(forKey: "downloadsInNotch") as? Bool ?? true
         waterEvery = d.object(forKey: "waterEvery") as? Int ?? 0
         eyeBreaks = d.bool(forKey: "eyeBreaks")

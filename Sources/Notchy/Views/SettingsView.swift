@@ -5,6 +5,7 @@ struct SettingsView: View {
     @EnvironmentObject var settings: Settings
     @EnvironmentObject var clipboard: ClipboardHistory
     @EnvironmentObject var prayer: PrayerTimes
+    @EnvironmentObject var updater: Updater
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var loginError: String?
 
@@ -79,6 +80,9 @@ struct SettingsView: View {
                     row("arrow.down.circle", "Downloads", "Progress of browser downloads in Downloads, and when they finish") {
                         Toggle("", isOn: $settings.downloadsInNotch)
                     }
+                    row("hand.draw", "Gestures", "Over the notch: swipe sideways to change song, scroll for volume") {
+                        Toggle("", isOn: $settings.gestures)
+                    }
                     row("capslock", "Keyboard", "Caps Lock and keyboard language changes") {
                         Toggle("", isOn: $settings.keyboardAlerts)
                     }
@@ -151,6 +155,16 @@ struct SettingsView: View {
                         Toggle("", isOn: $launchAtLogin)
                             .onChange(of: launchAtLogin) { _, on in setLaunchAtLogin(on) }
                     }
+                    row("arrow.down.app", "Updates", updateCaption) {
+                        HStack(spacing: 8) {
+                            if updater.updateAvailable, let page = updater.page {
+                                PillButton(text: "Get \(updater.latest ?? "")", color: Theme.accent) { NSWorkspace.shared.open(page) }
+                            } else {
+                                PillButton(text: updater.checking ? "Checking…" : "Check now", color: Theme.accent2) { updater.check() }
+                            }
+                            Toggle("", isOn: $updater.automatic).help("Check once a day")
+                        }
+                    }
                     row("lock.shield", "Full Disk Access", "Needed to clean Safari's cache") {
                         PillButton(text: "Open Settings", color: Theme.accent2) {
                             NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")!)
@@ -183,6 +197,13 @@ struct SettingsView: View {
     }
 
     // One card per section; rows are split by hairlines, the first one hidden under the card's edge.
+    private var updateCaption: String {
+        if updater.failed { return "Couldn't reach GitHub (the repository must be public)" }
+        if updater.updateAvailable { return "Notchy \(updater.latest ?? "") is out, you have \(updater.current)" }
+        if updater.latest != nil { return "Up to date (\(updater.current))" }
+        return "Looks for a new release on GitHub once a day"
+    }
+
     private func card(@ViewBuilder _ rows: () -> some View) -> some View {
         VStack(spacing: 0) { rows() }
             .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.surface))

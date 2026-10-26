@@ -160,6 +160,18 @@ final class VolumeWatcher {
         }
     }
 
+    func nudge(by delta: Float) {
+        guard var volume = read()?.0 else { return }
+        volume = max(0, min(1, volume + delta))
+        var address = Self.address(kAudioHardwareServiceDeviceProperty_VirtualMainVolume)
+        AudioObjectSetPropertyData(device, &address, 0, nil, UInt32(MemoryLayout<Float32>.size), &volume)
+        if volume > 0 {
+            var unmute = UInt32(0)
+            var muteAddress = Self.address(kAudioDevicePropertyMute)
+            AudioObjectSetPropertyData(device, &muteAddress, 0, nil, UInt32(MemoryLayout<UInt32>.size), &unmute)
+        }
+    }
+
     private func changed() {
         guard let now = read(), now.0 != last?.0 || now.1 != last?.1 else { return }
         last = now

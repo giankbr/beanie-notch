@@ -3,7 +3,7 @@ import Combine
 import SwiftUI
 
 enum Tab: String, CaseIterable, Identifiable {
-    case home, today, prayer, shelf, clipboard, music, tools, settings
+    case home, today, prayer, shelf, clipboard, music, controls, tools, settings
     var id: String { rawValue }
 
     var icon: String {
@@ -14,6 +14,7 @@ enum Tab: String, CaseIterable, Identifiable {
         case .shelf: "tray.full.fill"
         case .clipboard: "doc.on.clipboard.fill"
         case .music: "music.note"
+        case .controls: "switch.2"
         case .tools: "wrench.and.screwdriver.fill"
         case .settings: "gearshape.fill"
         }
@@ -36,6 +37,7 @@ enum Tab: String, CaseIterable, Identifiable {
         case .shelf: "Shelf"
         case .clipboard: "Clipboard"
         case .music: "Now Playing"
+        case .controls: "Controls"
         case .tools: "Tools"
         case .settings: "Settings"
         }
@@ -99,6 +101,14 @@ final class AppModel: ObservableObject {
     let phoneDrop = PhoneDrop()
     let keepAwake = KeepAwake()
     let downloads = DownloadWatcher()
+    let toggles = QuickToggles()
+    let shortcuts = ShortcutsRunner()
+    let battery = BatteryInfo()
+    let displays = Displays()
+    let countdown = CountdownTimer()
+    let worldClock = WorldClock()
+    let notes = Notes()
+    let updater = Updater()
     private let volumeWatcher = VolumeWatcher()
     private let brightnessWatcher = BrightnessWatcher()
     private let keyboard = KeyboardWatcher()
@@ -132,6 +142,26 @@ final class AppModel: ObservableObject {
         brightnessWatcher.onChange = { [weak self] level in
             guard let self, settings.volumeHUD, !expanded else { return }
             showVolume(LevelHUD(level: level, brightness: true))
+        }
+        countdown.onDone = { [weak self] in
+            NSSound(named: "Glass")?.play()
+            self?.show(Notice(icon: "hourglass", color: Theme.accent, left: "Time's up", right: "Timer done", duration: 6, essential: true))
+        }
+        shortcuts.onDone = { [weak self] name, ok in
+            self?.show(Notice(icon: ok ? "checkmark.circle.fill" : "xmark.octagon.fill", color: ok ? Theme.accent : Theme.red,
+                              left: ok ? "Shortcut done" : "Shortcut failed", right: name))
+        }
+        updater.onNewVersion = { [weak self] version in
+            self?.show(Notice(icon: "arrow.down.app.fill", color: Theme.accent2, left: "Update", right: "Notchy \(version) is out", duration: 6))
+        }
+        // AirPods and other Bluetooth headphones: their charge follows the "Connected" notice once it's known.
+        audio.onBluetooth = { [weak self] name in
+            Task {
+                guard let device = await BatteryInfo.bluetooth().first(where: { $0.name == name }) else { return }
+                let levels = device.levels.map { $0.label.isEmpty ? "\($0.percent)%" : "\($0.label) \($0.percent)%" }.joined(separator: "  ")
+                self?.show(Notice(icon: name.localizedCaseInsensitiveContains("airpods") ? "airpodspro" : "headphones",
+                                  color: Theme.accent2, left: name, right: levels, duration: 5))
+            }
         }
         downloads.onDone = { [weak self] url in
             self?.show(Notice(icon: "arrow.down.circle.fill", color: Theme.accent, left: "Downloaded", right: url.lastPathComponent))
@@ -183,6 +213,11 @@ final class AppModel: ObservableObject {
         }
     }
 
+    // Volume from a scroll over the notch, in steps like the keyboard's.
+    func nudgeVolume(by delta: Float) {
+        volumeWatcher.nudge(by: delta)
+    }
+
     // Samples a color anywhere on screen with the system loupe, then copies its hex code.
     func pickColor() {
         expanded = false
@@ -202,7 +237,7 @@ final class AppModel: ObservableObject {
 
     var closedWidth: CGFloat {
         let extra: CGFloat = volume != nil ? 190 : notice != nil ? 260 : focus.isRunning ? 110
-            : downloads.current != nil ? 240 : calendar.meeting != nil ? 240 : showsPrayerCountdown ? 170
+            : countdown.isRunning ? 110 : downloads.current != nil ? 240 : calendar.meeting != nil ? 240 : showsPrayerCountdown ? 170
             : showsNotchLyrics ? 340 : showsMiniPlayer ? 64 : 0
         return closedSize.width + extra
     }
@@ -233,6 +268,14 @@ extension View {
             .environmentObject(m.phoneDrop)
             .environmentObject(m.keepAwake)
             .environmentObject(m.downloads)
+            .environmentObject(m.toggles)
+            .environmentObject(m.shortcuts)
+            .environmentObject(m.battery)
+            .environmentObject(m.displays)
+            .environmentObject(m.countdown)
+            .environmentObject(m.worldClock)
+            .environmentObject(m.notes)
+            .environmentObject(m.updater)
     }
 }
 
