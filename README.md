@@ -61,9 +61,17 @@ Brow is written in Swift and SwiftUI with no third-party dependencies. The downl
 
 ### Closed notch
 
-| Volume | Timer |
+| Lyrics | AirPods |
 |---|---|
-| ![Volume](docs/notch-volume.png) | ![Timer](docs/notch-timer.png) |
+| ![Lyrics in the notch](docs/notch-lyrics.png) | ![AirPods charge](docs/notch-airpods.png) |
+
+| Prayer countdown | Volume |
+|---|---|
+| ![Prayer countdown](docs/notch-prayer.png) | ![Volume](docs/notch-volume.png) |
+
+| Timer | Download |
+|---|---|
+| ![Timer](docs/notch-timer.png) | ![Download](docs/notch-download.png) |
 
 - Lyrics or a mini player while music plays.
 - Volume and brightness levels.
@@ -83,7 +91,10 @@ Brow is written in Swift and SwiftUI with no third-party dependencies. The downl
 
 ## Install
 
-1. Download `Brow.dmg` from [Releases](../../releases) and drag Brow into Applications.
+1. Download `Brow.dmg` from [Releases](../../releases), open it, and drag Brow into Applications.
+
+   ![The Brow disk image](docs/install.png)
+
 2. The app is ad-hoc signed, not notarized. On first launch, right-click it and choose **Open**, or run:
    ```bash
    xattr -dr com.apple.quarantine /Applications/Brow.app
@@ -109,7 +120,7 @@ macOS asks for access only when a feature needs it:
 The build needs Xcode, which provides the macOS SDK for the Now Playing helper.
 
 ```bash
-./build.sh                   # → dist/Brow.app and dist/Brow.dmg
+./build.sh                   # → dist/Brow.app and dist/Brow.dmg (laid out with dmgbuild, set up in .build/ on first run)
 VERSION=1.2.0 ./build.sh     # set the version
 ```
 
