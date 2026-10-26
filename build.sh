@@ -25,7 +25,8 @@ cp -R Resources/Fonts "$app/Contents/Resources/Fonts"
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
-swift tools/make_icon.swift "$work/icon.png"
+# The icon is drawn in docs/landing-page.pen (Brow/App Icon) and exported to Resources/AppIcon.png.
+cp Resources/AppIcon.png "$work/icon.png"
 mkdir "$work/Brow.iconset"
 for s in 16 32 128 256 512; do
   sips -z $s $s "$work/icon.png" --out "$work/Brow.iconset/icon_${s}x${s}.png" > /dev/null
