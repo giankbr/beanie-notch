@@ -36,8 +36,19 @@ iconutil -c icns "$work/Brow.iconset" -o "$app/Contents/Resources/Brow.icns"
 codesign --force --deep --sign - "$app"
 codesign --verify --deep --strict "$app"
 
-mkdir "$work/dmg"
-cp -R "$app" "$work/dmg/"
-ln -s /Applications "$work/dmg/Applications"
-hdiutil create -volname "Brow $version" -srcfolder "$work/dmg" -ov -format UDZO "$dist/Brow.dmg" > /dev/null
+# A laid-out DMG (background, icon spots) through dmgbuild, kept in a local venv; a plain one without it.
+venv=".build/dmgvenv"
+if [ ! -x "$venv/bin/dmgbuild" ]; then
+  python3 -m venv "$venv" > /dev/null 2>&1 && "$venv/bin/pip" install -q dmgbuild > /dev/null 2>&1 || true
+fi
+if [ -x "$venv/bin/dmgbuild" ]; then
+  swift tools/make_dmg_background.swift "$work/background.png"
+  "$venv/bin/dmgbuild" -s tools/dmg_settings.py -D app="$app" -D background="$work/background.png" \
+    "Brow $version" "$dist/Brow.dmg" > /dev/null
+else
+  mkdir "$work/dmg"
+  cp -R "$app" "$work/dmg/"
+  ln -s /Applications "$work/dmg/Applications"
+  hdiutil create -volname "Brow $version" -srcfolder "$work/dmg" -ov -format UDZO "$dist/Brow.dmg" > /dev/null
+fi
 echo "built $app and $dist/Brow.dmg"
