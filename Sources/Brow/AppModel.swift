@@ -71,7 +71,11 @@ struct Notice: Equatable {
 
 @MainActor
 final class AppModel: ObservableObject {
-    @Published var expanded = false
+    @Published var expanded = false {
+        // The launcher starts from its grid every time the panel opens.
+        didSet { if !expanded { launcherGrid = true } }
+    }
+    @Published var launcherGrid = true
     @Published var pinned = false
     @Published var dropTargeted = false
     @Published var dropToAirDrop = false

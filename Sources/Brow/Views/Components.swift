@@ -30,6 +30,10 @@ enum Theme {
             ? NSColor(white: 1, alpha: 0.07)
             : NSColor(white: 0, alpha: 0.07)
     })
+    // The raised thumb of a segmented control: lifted grey in the dark, white in the light.
+    static let thumb = Color(nsColor: NSColor(name: nil) { appearance in
+        appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? NSColor(white: 1, alpha: 0.14) : .white
+    })
     static let dim = ink.opacity(0.55)
     static let faint = ink.opacity(0.4)
     // SF Pro by default: it's drawn to sit with SF Symbols, which every icon here is.
@@ -459,22 +463,30 @@ extension Placeholder where Action == EmptyView {
     }
 }
 
+// Options on a quiet track; the chosen one sits on a raised neutral thumb that slides between them.
 struct Segmented: View {
     var options: [String]
     @Binding var selection: Int
+    @Namespace private var thumb
 
     var body: some View {
-        HStack(spacing: 2) {
+        HStack(spacing: 0) {
             ForEach(options.indices, id: \.self) { i in
-                Button { withAnimation(.easeInOut(duration: 0.15)) { selection = i } } label: {
+                let selected = selection == i
+                Button { withAnimation(.snappy(duration: 0.22)) { selection = i } } label: {
                     Text(options[i])
-                        .font(.app(size: 10, weight: .semibold))
-                        .foregroundStyle(selection == i ? .black : Theme.dim)
+                        .font(.app(size: 10, weight: selected ? .semibold : .medium))
+                        .foregroundStyle(selected ? Theme.ink : Theme.dim)
+                        .lineLimit(1)
                         .padding(.horizontal, 10)
                         .frame(height: 22)
                         .background {
-                            if selection == i {
-                                Color.clear.buttonFace(RoundedRectangle(cornerRadius: 6, style: .continuous), Theme.accent)
+                            if selected {
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .fill(Theme.thumb)
+                                    .shadow(color: .black.opacity(0.12), radius: 1, y: 0.5)
+                                    .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(Theme.stroke, lineWidth: 0.5))
+                                    .matchedGeometryEffect(id: "thumb", in: thumb)
                             }
                         }
                         .contentShape(Rectangle())
@@ -483,7 +495,35 @@ struct Segmented: View {
             }
         }
         .padding(2)
-        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.ink.opacity(0.06)))
+        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.ink.opacity(0.055)))
+    }
+}
+
+// A tab's icon drawn as a tinted template image: steadier across light and dark than a live symbol.
+struct TabIcon: View {
+    let name: String
+    var size: CGFloat = 11
+    var weight: NSFont.Weight = .medium
+
+    var body: some View {
+        let config = NSImage.SymbolConfiguration(pointSize: size, weight: weight)
+        if let image = NSImage(systemSymbolName: name, accessibilityDescription: nil)?.withSymbolConfiguration(config) {
+            Image(nsImage: image).renderingMode(.template)
+        } else {
+            Image(systemName: name).font(.system(size: size, weight: .medium))
+        }
+    }
+}
+
+// The page at full height when it fits, scrolling when the panel is shorter than it (small sizes, roomy layouts).
+struct FitOrScroll<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        ViewThatFits(in: .vertical) {
+            content
+            ScrollView(.vertical) { content }.scrollIndicators(.never)
+        }
     }
 }
 

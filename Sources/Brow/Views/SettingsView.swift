@@ -15,205 +15,334 @@ struct SettingsView: View {
     private static let waterSteps = [0, 30, 60, 90]
     private static let stretchSteps = [0, 45, 60, 90]
 
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 6) {
-                section("Appearance")
-                card {
-                    row("circle.lefthalf.filled", "Theme", "The notch itself always stays black") {
-                        Segmented(options: ThemeMode.allCases.map(\.title), selection: index($settings.theme, ThemeMode.allCases))
-                    }
-                    row("paintpalette", "Accent", "Buttons, highlights and the mini player") {
-                        HStack(spacing: 6) {
-                            ForEach(AccentChoice.allCases, id: \.self) { choice in
-                                Button { settings.accent = choice } label: {
-                                    Circle().fill(choice.primary).frame(width: 14, height: 14)
-                                        .overlay(Circle().strokeBorder(Theme.ink.opacity(settings.accent == choice ? 0.9 : 0), lineWidth: 2))
-                                        .padding(2)
-                                        .contentShape(Circle())
-                                }
-                                .buttonStyle(.plain)
-                                .help(choice.rawValue.capitalized)
-                            }
-                        }
-                    }
-                    row("sidebar.left", "Layout", "Where the tabs sit") {
-                        Segmented(options: LayoutStyle.allCases.map(\.title), selection: index($settings.layout, LayoutStyle.allCases))
-                    }
-                    row("arrow.up.left.and.arrow.down.right", "Panel size", "How big the panel opens") {
-                        Segmented(options: PanelSize.allCases.map(\.title), selection: index($settings.size, PanelSize.allCases))
-                    }
-                    row("textformat", "Font", "SF Pro matches the icons; Be Vietnam Pro is rounder") {
-                        Segmented(options: ["SF Pro", "Be Vietnam Pro"], selection: Binding(get: { settings.systemFont ? 0 : 1 },
-                                                                                          set: { settings.systemFont = $0 == 0 }))
-                    }
-                    row("capsule.portrait", "Notch shape", "How the panel opens out of the notch") {
-                        Segmented(options: NotchStyle.allCases.map(\.title), selection: index($settings.notchStyle, NotchStyle.allCases))
-                    }
+    @State private var section: Section = .appearance
 
-                }
-                section("Notch")
-                card {
-                    row("cursorarrow.motionlines", "Open on hover", "Off: click the notch or press ⌥ Space") {
-                        Toggle("", isOn: $settings.openOnHover)
-                    }
-                    row("timer", "Close after leaving", "How long the panel waits for the pointer to come back") {
-                        Segmented(options: ["Fast", "Normal", "Relaxed"], selection: index($settings.closeDelay, Self.delays))
-                    }
-                    row("command", "Shortcut", "Open and close the panel from anywhere; click to change it") {
-                        HStack(spacing: 8) {
-                            ShortcutRecorder()
-                            Toggle("", isOn: $settings.hotkey)
-                        }
-                    }
-                    row("arrow.up.left.and.arrow.down.right.rectangle", "Hide in full screen", "Out of the way during videos and presentations") {
-                        Toggle("", isOn: $settings.hideInFullScreen)
-                    }
-                    row("music.note.list", "Song changes", "The new song's title shows in the notch for a moment") {
-                        Toggle("", isOn: $settings.songFlash)
-                    }
-                    row("text.quote", "Lyrics in the notch", "The line being sung, beside the notch, while it's closed") {
-                        Toggle("", isOn: $settings.lyricsInNotch)
-                    }
-                    row("speaker.wave.2", "Volume & brightness", "The level shows in the notch when it changes") {
-                        Toggle("", isOn: $settings.volumeHUD)
-                    }
-                    row("arrow.down.circle", "Downloads", "Progress of browser downloads in Downloads, and when they finish") {
-                        Toggle("", isOn: $settings.downloadsInNotch)
-                    }
-                    row("hand.draw", "Gestures", "Over the notch: swipe sideways to change song, scroll for volume") {
-                        Toggle("", isOn: $settings.gestures)
-                    }
-                    row("bubble.left.and.bubble.right", "Messages",
-                        messages.trusted ? "Unread counts from Dock badges: WhatsApp, Telegram, Slack, Mail…"
-                            : "Needs Accessibility access to read Dock badges") {
-                        HStack(spacing: 8) {
-                            if !messages.trusted {
-                                PillButton(text: "Allow", color: Theme.accent) {
-                                    messages.requestAccess()
-                                    NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
-                                }
-                            }
-                            Toggle("", isOn: $settings.messageAlerts)
-                        }
-                    }
-                    row("app.badge", "Badges from every app", "Not only chat apps, any app showing a Dock badge") {
-                        Toggle("", isOn: $settings.messageAllApps)
-                    }
-                    row("capslock", "Keyboard", "Caps Lock and keyboard language changes") {
-                        Toggle("", isOn: $settings.keyboardAlerts)
-                    }
-                    row("music.note", "Mini player", "Artwork and bars beside the notch while music plays") {
-                        Toggle("", isOn: $settings.miniPlayer)
-                    }
-                    row("quote.bubble", "Lyrics", "From LRCLIB, NetEase, QQ Music and Kugou: the song's title and artist are sent to look them up") {
-                        Toggle("", isOn: $settings.lyrics)
-                    }
-                    row("bell.badge", "Notch alerts", "Charging, low battery, headphones, screenshots") {
-                        Toggle("", isOn: $settings.notchAlerts)
-                    }
-
-                }
-                section("Shelf & Clipboard")
-                card {
-                    row("camera.viewfinder", "Screenshots to Shelf", "New screenshots land on the Shelf, ready to drag") {
-                        Toggle("", isOn: $settings.screenshotsToShelf)
-                    }
-                    row("doc.on.clipboard", "Clipboard history", "Keeps the last 100 texts and images you copy") {
-                        Toggle("", isOn: $clipboard.enabled)
-                    }
-
-                }
-                section("Wellbeing")
-                card {
-                    row("drop", "Drink water", "Minutes between reminders, 8:00 to 22:00") {
-                        Segmented(options: ["Off", "30", "60", "90"], selection: index($settings.waterEvery, Self.waterSteps))
-                    }
-                    row("eye", "Eye breaks", "Every 20 minutes, look 6 m away for 20 seconds") {
-                        Toggle("", isOn: $settings.eyeBreaks)
-                    }
-                    row("figure.walk", "Stand up", "Minutes between stretch reminders") {
-                        Segmented(options: ["Off", "45", "60", "90"], selection: index($settings.stretchEvery, Self.stretchSteps))
-                    }
-                }
-
-                section("Prayer times")
-                card {
-                    row("location", "Location", prayer.place?.name ?? "Not set") {
-                        CityMenu(label: "Change")
-                    }
-                    row("function", "Method", "Fajr and Isha angles") {
-                        Menu {
-                            ForEach(PrayerTimes.Method.allCases) { m in Button(m.title) { prayer.method = m } }
-                        } label: {
-                            Text(prayer.method.title).font(.app(size: 10, weight: .semibold))
-                        }
-                        .menuStyle(.borderlessButton)
-                        .fixedSize()
-                    }
-                    row("sun.haze", "Asr", "Hanafi waits for a shadow twice an object's length") {
-                        Segmented(options: ["Standard", "Hanafi"], selection: Binding(get: { prayer.hanafi ? 1 : 0 },
-                                                                                   set: { prayer.hanafi = $0 == 1 }))
-                    }
-                    row("moon", "Prayer alerts", "A notice and a sound in the notch at each prayer") {
-                        Toggle("", isOn: $prayer.alerts)
-                    }
-                    row("hourglass", "Countdown in the notch", "Before each prayer, and Imsak and iftar in Ramadan") {
-                        Toggle("", isOn: $settings.prayerCountdown)
-                    }
-                    row("alarm", "Remind me before", "Minutes before each prayer") {
-                        Segmented(options: ["Off", "5", "10", "15"], selection: index($prayer.reminder, Self.reminders))
-                    }
-
-                }
-                section("System")
-                card {
-                    row("power", "Open at login", loginError ?? "Start Brow when you log in") {
-                        Toggle("", isOn: $launchAtLogin)
-                            .onChange(of: launchAtLogin) { _, on in setLaunchAtLogin(on) }
-                    }
-                    row("arrow.down.app", "Updates", updateCaption) {
-                        HStack(spacing: 8) {
-                            if updater.updateAvailable, let page = updater.page {
-                                PillButton(text: "Get \(updater.latest ?? "")", color: Theme.accent) { NSWorkspace.shared.open(page) }
-                            } else {
-                                PillButton(text: updater.checking ? "Checking…" : "Check now", color: Theme.accent2) { updater.check() }
-                            }
-                            Toggle("", isOn: $updater.automatic).help("Check once a day")
-                        }
-                    }
-                    row("lock.shield", "Full Disk Access", "Needed to clean Safari's cache") {
-                        PillButton(text: "Open Settings", color: Theme.accent2) {
-                            NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")!)
-                        }
-                    }
-                }
-                HStack {
-                    Text("Brow \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev")")
-                        .font(.app(size: 9)).foregroundStyle(Theme.faint)
-                    Spacer()
-                    PillButton(text: "Quit Brow", icon: "xmark", color: Theme.red) { NSApp.terminate(nil) }
-                }
-                .padding(.top, 4)
+    enum Section: String, CaseIterable, Identifiable {
+        case appearance, notch, inNotch, shelf, wellbeing, prayer, system
+        var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .appearance: "Appearance"
+            case .notch: "Notch"
+            case .inNotch: "In the notch"
+            case .shelf: "Shelf & Clipboard"
+            case .wellbeing: "Wellbeing"
+            case .prayer: "Prayer times"
+            case .system: "System"
             }
         }
-        .scrollIndicators(.never)
+        var icon: String {
+            switch self {
+            case .appearance: "paintbrush.fill"
+            case .notch: "rectangle.topthird.inset.filled"
+            case .inNotch: "bell.badge.fill"
+            case .shelf: "tray.full.fill"
+            case .wellbeing: "heart.fill"
+            case .prayer: "moon.fill"
+            case .system: "gearshape.fill"
+            }
+        }
+    }
+
+    // Sections down the side, one at a time on the right, so nothing is a long scroll.
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            VStack(alignment: .leading, spacing: 1) {
+                ForEach(Section.allCases) { item in
+                    let active = section == item
+                    Button { withAnimation(.snappy(duration: 0.2)) { section = item } } label: {
+                        HStack(spacing: 7) {
+                            TabIcon(name: item.icon, size: 10, weight: .semibold).frame(width: 14)
+                                .foregroundStyle(active ? Theme.accent : Theme.dim)
+                            Text(item.title).font(.app(size: 10.5, weight: active ? .semibold : .regular)).lineLimit(1)
+                                .foregroundStyle(active ? Theme.ink : Theme.ink.opacity(0.75))
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.horizontal, 8)
+                        .frame(height: 22)
+                        .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(active ? Theme.ink.opacity(0.08) : .clear))
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+                Spacer(minLength: 6)
+                Text("Brow \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev")")
+                    .font(.mono(size: 8.5)).foregroundStyle(Theme.faint).padding(.leading, 8)
+                Button { NSApp.terminate(nil) } label: {
+                    Label("Quit", systemImage: "power").font(.app(size: 9.5, weight: .semibold)).foregroundStyle(Theme.red)
+                        .padding(.horizontal, 8).frame(height: 20)
+                }
+                .buttonStyle(PressStyle())
+            }
+            .padding(5)
+            .frame(width: 138)
+            .frame(maxHeight: .infinity, alignment: .top)
+            .card()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 8) {
+                    content
+                }
+                .padding(.bottom, 2)
+            }
+            .scrollIndicators(.never)
+            .id(section)
+        }
+    }
+
+    @ViewBuilder private var content: some View {
+        switch section {
+        case .appearance: appearance
+        case .notch: notch
+        case .inNotch: inNotch
+        case .shelf: shelfSection
+        case .wellbeing: wellbeing
+        case .prayer: prayerSection
+        case .system: system
+        }
+    }
+
+    private var appearance: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            card {
+                pickerRow("Theme", "The notch itself always stays black") {
+                    HStack(spacing: 6) {
+                        ForEach(ThemeMode.allCases, id: \.self) { mode in
+                            choice(mode.title, selected: settings.theme == mode) { settings.theme = mode } preview: { ThemeSwatch(mode: mode) }
+                        }
+                    }
+                }
+                row("paintpalette", "Accent", "Buttons, highlights and the mini player") {
+                    HStack(spacing: 5) {
+                        ForEach(AccentChoice.allCases, id: \.self) { option in
+                            Button { settings.accent = option } label: {
+                                Circle().fill(option.primary).frame(width: 13, height: 13)
+                                    .overlay(Circle().strokeBorder(Theme.background, lineWidth: settings.accent == option ? 2 : 0))
+                                    .overlay(Circle().strokeBorder(option.primary, lineWidth: settings.accent == option ? 1 : 0).padding(-2))
+                                    .padding(3)
+                                    .contentShape(Circle())
+                            }
+                            .buttonStyle(.plain)
+                            .help(option.rawValue.capitalized)
+                        }
+                    }
+                }
+            }
+            card {
+                pickerRow("Layout", settings.layout.caption) {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 6), spacing: 6) {
+                        ForEach(LayoutStyle.allCases, id: \.self) { layout in
+                            choice(layout.title, selected: settings.layout == layout) { settings.layout = layout } preview: { LayoutSketch(layout: layout) }
+                        }
+                    }
+                }
+                pickerRow("Notch shape", "How the panel opens out of the notch") {
+                    HStack(spacing: 6) {
+                        ForEach(NotchStyle.allCases, id: \.self) { style in
+                            choice(style.title, selected: settings.notchStyle == style) { settings.notchStyle = style } preview: { ShapeSketch(style: style) }
+                        }
+                    }
+                }
+            }
+            card {
+                row("arrow.up.left.and.arrow.down.right", "Panel size", "How big the panel opens") {
+                    Segmented(options: PanelSize.allCases.map(\.title), selection: index($settings.size, PanelSize.allCases))
+                }
+                row("textformat", "Font", "SF Pro matches the icons; Be Vietnam Pro is rounder") {
+                    Segmented(options: ["SF Pro", "Be Vietnam Pro"], selection: Binding(get: { settings.systemFont ? 0 : 1 },
+                                                                                      set: { settings.systemFont = $0 == 0 }))
+                }
+            }
+        }
+    }
+
+    private var notch: some View {
+        card {
+            row("cursorarrow.motionlines", "Open on hover", "Off: click the notch or press the shortcut") {
+                Toggle("", isOn: $settings.openOnHover)
+            }
+            row("timer", "Close after leaving", "How long the panel waits for the pointer to come back") {
+                Segmented(options: ["Fast", "Normal", "Relaxed"], selection: index($settings.closeDelay, Self.delays))
+            }
+            row("command", "Shortcut", "Open and close the panel from anywhere; click to change it") {
+                HStack(spacing: 8) {
+                    ShortcutRecorder()
+                    Toggle("", isOn: $settings.hotkey)
+                }
+            }
+            row("hand.draw", "Gestures", "Over the notch: swipe sideways to change song, scroll for volume") {
+                Toggle("", isOn: $settings.gestures)
+            }
+            row("arrow.up.left.and.arrow.down.right.rectangle", "Hide in full screen", "Out of the way during videos and presentations") {
+                Toggle("", isOn: $settings.hideInFullScreen)
+            }
+        }
+    }
+
+    private var inNotch: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            card {
+                row("bubble.left.and.bubble.right", "Messages",
+                    messages.trusted ? "Unread counts from Dock badges: WhatsApp, Telegram, Slack, Mail…"
+                        : "Needs Accessibility access to read Dock badges") {
+                    HStack(spacing: 8) {
+                        if !messages.trusted {
+                            PillButton(text: "Allow", color: Theme.accent) {
+                                messages.requestAccess()
+                                NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
+                            }
+                        }
+                        Toggle("", isOn: $settings.messageAlerts)
+                    }
+                }
+                row("app.badge", "Badges from every app", "Not only chat apps, any app showing a Dock badge") {
+                    Toggle("", isOn: $settings.messageAllApps)
+                }
+                row("bell.badge", "Notch alerts", "Charging, low battery, headphones, screenshots") {
+                    Toggle("", isOn: $settings.notchAlerts)
+                }
+                row("speaker.wave.2", "Volume & brightness", "The level shows in the notch when it changes") {
+                    Toggle("", isOn: $settings.volumeHUD)
+                }
+                row("arrow.down.circle", "Downloads", "Progress of browser downloads, and when they finish") {
+                    Toggle("", isOn: $settings.downloadsInNotch)
+                }
+                row("capslock", "Keyboard", "Caps Lock and keyboard language changes") {
+                    Toggle("", isOn: $settings.keyboardAlerts)
+                }
+            }
+            card {
+                row("music.note", "Mini player", "Artwork and bars beside the notch while music plays") {
+                    Toggle("", isOn: $settings.miniPlayer)
+                }
+                row("music.note.list", "Song changes", "The new song's title shows for a moment") {
+                    Toggle("", isOn: $settings.songFlash)
+                }
+                row("text.quote", "Lyrics in the notch", "The line being sung, beside the notch, while it's closed") {
+                    Toggle("", isOn: $settings.lyricsInNotch)
+                }
+                row("quote.bubble", "Lyrics", "LRCLIB, NetEase, QQ Music and Kugou: title and artist are sent to look them up") {
+                    Toggle("", isOn: $settings.lyrics)
+                }
+            }
+        }
+    }
+
+    private var shelfSection: some View {
+        card {
+            row("camera.viewfinder", "Screenshots to Shelf", "New screenshots land on the Shelf, ready to drag") {
+                Toggle("", isOn: $settings.screenshotsToShelf)
+            }
+            row("doc.on.clipboard", "Clipboard history", "Keeps the last 100 texts and images you copy") {
+                Toggle("", isOn: $clipboard.enabled)
+            }
+        }
+    }
+
+    private var wellbeing: some View {
+        card {
+            row("drop", "Drink water", "Minutes between reminders, 8:00 to 22:00") {
+                Segmented(options: ["Off", "30", "60", "90"], selection: index($settings.waterEvery, Self.waterSteps))
+            }
+            row("eye", "Eye breaks", "Every 20 minutes, look 6 m away for 20 seconds") {
+                Toggle("", isOn: $settings.eyeBreaks)
+            }
+            row("figure.walk", "Stand up", "Minutes between stretch reminders") {
+                Segmented(options: ["Off", "45", "60", "90"], selection: index($settings.stretchEvery, Self.stretchSteps))
+            }
+        }
+    }
+
+    private var prayerSection: some View {
+        card {
+            row("location", "Location", prayer.place?.name ?? "Not set") {
+                CityMenu(label: "Change")
+            }
+            row("function", "Method", "Fajr and Isha angles") {
+                Menu {
+                    ForEach(PrayerTimes.Method.allCases) { m in Button(m.title) { prayer.method = m } }
+                } label: {
+                    Text(prayer.method.title).font(.app(size: 10, weight: .semibold))
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+            }
+            row("sun.haze", "Asr", "Hanafi waits for a shadow twice an object's length") {
+                Segmented(options: ["Standard", "Hanafi"], selection: Binding(get: { prayer.hanafi ? 1 : 0 },
+                                                                           set: { prayer.hanafi = $0 == 1 }))
+            }
+            row("moon", "Prayer alerts", "A notice and a sound in the notch at each prayer") {
+                Toggle("", isOn: $prayer.alerts)
+            }
+            row("hourglass", "Countdown in the notch", "Before each prayer, and Imsak and iftar in Ramadan") {
+                Toggle("", isOn: $settings.prayerCountdown)
+            }
+            row("alarm", "Remind me before", "Minutes before each prayer") {
+                Segmented(options: ["Off", "5", "10", "15"], selection: index($prayer.reminder, Self.reminders))
+            }
+        }
+    }
+
+    private var system: some View {
+        card {
+            row("power", "Open at login", loginError ?? "Start Brow when you log in") {
+                Toggle("", isOn: $launchAtLogin)
+                    .onChange(of: launchAtLogin) { _, on in setLaunchAtLogin(on) }
+            }
+            row("arrow.down.app", "Updates", updateCaption) {
+                HStack(spacing: 8) {
+                    if updater.updateAvailable, let page = updater.page {
+                        PillButton(text: "Get \(updater.latest ?? "")", color: Theme.accent) { NSWorkspace.shared.open(page) }
+                    } else {
+                        PillButton(text: updater.checking ? "Checking…" : "Check now", color: Theme.accent2) { updater.check() }
+                    }
+                    Toggle("", isOn: $updater.automatic).help("Check once a day")
+                }
+            }
+            row("lock.shield", "Full Disk Access", "Needed to clean Safari's cache") {
+                PillButton(text: "Open Settings", color: Theme.accent2) {
+                    NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")!)
+                }
+            }
+        }
+    }
+
+    // A title over a row of visual choices.
+    private func pickerRow(_ title: String, _ caption: String, @ViewBuilder content: () -> some View) -> some View {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(title).font(.app(size: 11, weight: .medium))
+                Text(caption).font(.app(size: 9)).foregroundStyle(Theme.faint).lineLimit(1)
+            }
+            content()
+        }
+        .padding(11)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .overlay(alignment: .top) { Rectangle().fill(Theme.stroke).frame(height: 1) }
+    }
+
+    private func choice(_ title: String, selected: Bool, action: @escaping () -> Void,
+                        @ViewBuilder preview: () -> some View) -> some View {
+        Button(action: action) {
+            VStack(spacing: 5) {
+                preview()
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 40)
+                    .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .strokeBorder(selected ? Theme.accent : Theme.stroke, lineWidth: selected ? 1.5 : 1))
+                Text(title).font(.app(size: 9.5, weight: selected ? .semibold : .regular))
+                    .foregroundStyle(selected ? Theme.ink : Theme.dim).lineLimit(1)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressStyle())
     }
 
     private func index<T: Equatable>(_ value: Binding<T>, _ all: [T]) -> Binding<Int> {
         Binding(get: { all.firstIndex(of: value.wrappedValue) ?? 0 }, set: { value.wrappedValue = all[$0] })
     }
 
-    private func section(_ title: String) -> some View {
-        Text(title.uppercased())
-            .font(.app(size: 8.5, weight: .semibold))
-            .tracking(0.9)
-            .foregroundStyle(Theme.faint)
-            .padding(.top, 8)
-            .padding(.leading, 4)
-    }
-
-    // One card per section; rows are split by hairlines, the first one hidden under the card's edge.
     private var updateCaption: String {
         if updater.failed { return "Couldn't reach GitHub (the repository must be public)" }
         if updater.updateAvailable { return "Brow \(updater.latest ?? "") is out, you have \(updater.current)" }
@@ -251,6 +380,135 @@ struct SettingsView: View {
         } catch {
             loginError = "Move Brow to Applications first"
             launchAtLogin = SMAppService.mainApp.status == .enabled
+        }
+    }
+}
+
+// A tiny light, dark or half-and-half panel.
+private struct ThemeSwatch: View {
+    let mode: ThemeMode
+
+    var body: some View {
+        let dark = Color(red: 0.07, green: 0.07, blue: 0.08), light = Color(red: 0.95, green: 0.95, blue: 0.94)
+        GeometryReader { geo in
+            ZStack {
+                switch mode {
+                case .dark: dark
+                case .light: light
+                default: HStack(spacing: 0) { light; dark }
+                }
+                VStack(alignment: .leading, spacing: 3) {
+                    Capsule().fill(Theme.accent).frame(width: geo.size.width * 0.35, height: 4)
+                    Capsule().fill(Color.gray.opacity(0.5)).frame(width: geo.size.width * 0.55, height: 3)
+                    Capsule().fill(Color.gray.opacity(0.35)).frame(width: geo.size.width * 0.45, height: 3)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .padding(7)
+            }
+        }
+    }
+}
+
+// A wireframe of each layout, drawn with blocks.
+private struct LayoutSketch: View {
+    let layout: LayoutStyle
+
+    var body: some View {
+        let block = Theme.ink.opacity(0.13), accent = Theme.accent.opacity(0.8)
+        ZStack {
+            Theme.ink.opacity(0.04)
+            Group {
+                switch layout {
+                case .studio:
+                    HStack(spacing: 3) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Capsule().fill(accent).frame(height: 3)
+                            ForEach(0..<4, id: \.self) { _ in Capsule().fill(block).frame(height: 3) }
+                        }
+                        .padding(3).frame(width: 18).frame(maxHeight: .infinity, alignment: .top)
+                        .background(RoundedRectangle(cornerRadius: 3).fill(block.opacity(0.5)))
+                        contentBlocks(block)
+                    }
+                case .sidebar:
+                    HStack(spacing: 3) {
+                        VStack(spacing: 3) {
+                            Circle().fill(accent).frame(width: 4, height: 4)
+                            ForEach(0..<4, id: \.self) { _ in Circle().fill(block).frame(width: 4, height: 4) }
+                        }
+                        .padding(.vertical, 3).frame(width: 9).frame(maxHeight: .infinity, alignment: .top)
+                        .background(RoundedRectangle(cornerRadius: 3).fill(block.opacity(0.5)))
+                        contentBlocks(block)
+                    }
+                case .tabs:
+                    VStack(spacing: 3) {
+                        HStack(spacing: 2) {
+                            Capsule().fill(accent).frame(width: 12, height: 4)
+                            ForEach(0..<5, id: \.self) { _ in Circle().fill(block).frame(width: 4, height: 4) }
+                            Spacer(minLength: 0)
+                        }
+                        contentBlocks(block)
+                    }
+                case .classic:
+                    VStack(spacing: 3) {
+                        Capsule().fill(block).frame(width: 22, height: 3).frame(maxWidth: .infinity, alignment: .leading)
+                        contentBlocks(block)
+                        Capsule().fill(block).frame(width: 30, height: 5)
+                    }
+                case .minimal:
+                    VStack(spacing: 3) {
+                        HStack(spacing: 2) {
+                            Capsule().fill(accent).frame(width: 18, height: 4)
+                            Image(systemName: "chevron.down").font(.system(size: 4, weight: .bold)).foregroundStyle(block)
+                            Spacer(minLength: 0)
+                        }
+                        RoundedRectangle(cornerRadius: 2).fill(block)
+                    }
+                case .launcher:
+                    VStack(spacing: 2) {
+                        ForEach(0..<2, id: \.self) { row in
+                            HStack(spacing: 2) {
+                                ForEach(0..<4, id: \.self) { col in
+                                    RoundedRectangle(cornerRadius: 2).fill(row == 0 && col == 0 ? accent : block)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .padding(5)
+        }
+    }
+
+    private func contentBlocks(_ block: Color) -> some View {
+        VStack(spacing: 2) {
+            RoundedRectangle(cornerRadius: 2).fill(block).frame(height: 7)
+            HStack(spacing: 2) {
+                RoundedRectangle(cornerRadius: 2).fill(block)
+                RoundedRectangle(cornerRadius: 2).fill(block).frame(width: 12)
+            }
+        }
+    }
+}
+
+// The panel's outline for each notch shape, as it drops out of a black bar.
+private struct ShapeSketch: View {
+    let style: NotchStyle
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width, h = geo.size.height
+            ZStack(alignment: .top) {
+                Theme.ink.opacity(0.04)
+                Rectangle().fill(Color.black).frame(height: 6)
+                NotchShape(style: style, neckWidth: w * 0.34, neckHeight: 6, radius: 6)
+                    .fill(Theme.ink.opacity(0.18))
+                    .frame(width: w * 0.72, height: h * 0.78)
+                    .overlay(alignment: .top) {
+                        NotchShape(style: style, neckWidth: w * 0.34, neckHeight: 6, radius: 6)
+                            .stroke(Theme.accent.opacity(0.7), lineWidth: 1)
+                            .frame(width: w * 0.72, height: h * 0.78)
+                    }
+            }
         }
     }
 }

@@ -242,13 +242,7 @@ private struct FocusPage: View {
                             .foregroundStyle(focus.phase == .focus ? Theme.ink : Theme.accent2)
                             .contentTransition(.numericText())
                         Spacer(minLength: 4)
-                        // The presets sit beside the clock, so the page fits the panel's height.
-                        VStack(alignment: .trailing, spacing: 1) {
-                            ForEach(FocusTimer.presets.indices, id: \.self) { i in
-                                let p = FocusTimer.presets[i]
-                                chip("\(p.focus)/\(p.rest)", active: focus.preset == i) { focus.choose(i) }
-                            }
-                        }
+                        Text(focus.phase == .focus ? "Focus" : "Break").font(.app(size: 9.5, weight: .medium)).foregroundStyle(Theme.faint)
                     }
                     SegmentMeter(value: 1 - left / max(focus.duration, 1), color: focus.phase == .focus ? Theme.accent : Theme.accent2)
                 }
@@ -258,8 +252,28 @@ private struct FocusPage: View {
                 PrimaryButton(text: focus.isRunning ? "Pause" : "Start", icon: focus.isRunning ? "pause.fill" : "play.fill") {
                     focus.toggle()
                 }
+                // The lengths as a small menu in the button row, so the page fits short panels too.
+                Menu {
+                    ForEach(FocusTimer.presets.indices, id: \.self) { i in
+                        let p = FocusTimer.presets[i]
+                        Button("\(p.focus) min focus, \(p.rest) min break") { focus.choose(i) }
+                    }
+                } label: {
+                    let p = FocusTimer.presets[focus.preset]
+                    HStack(spacing: 3) {
+                        Text("\(p.focus)/\(p.rest)").font(.mono(size: 9, weight: .semibold))
+                        Image(systemName: "chevron.down").font(.system(size: 6, weight: .bold))
+                    }
+                    .foregroundStyle(Theme.dim)
+                    .padding(.horizontal, 6)
+                    .frame(height: 22)
+                    .buttonFace(RoundedRectangle(cornerRadius: 7, style: .continuous), Theme.ink.opacity(0.08))
+                }
+                .menuStyle(.button)
+                .buttonStyle(.plain)
+                .menuIndicator(.hidden)
+                .fixedSize()
                 IconButton(icon: "arrow.counterclockwise") { focus.reset() }.help("Reset")
-                IconButton(icon: "forward.end.fill") { focus.skip() }.help("Skip")
             }
         }
     }

@@ -3,6 +3,7 @@ import SwiftUI
 // The first Brow look: a greeting on top, a six-card overview, and the tabs as a dock along the bottom.
 
 struct GreetingHeader: View {
+    @EnvironmentObject var model: AppModel
     @EnvironmentObject var cleaner: Cleaner
     @EnvironmentObject var prayer: PrayerTimes
 
@@ -20,12 +21,11 @@ struct GreetingHeader: View {
     }
 
     var body: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text("\(greeting), \(name)").font(.app(size: 14, weight: .bold)).lineLimit(1)
-                Text(Date().formatted(.dateTime.weekday(.wide).month(.wide).day()) + " · " + prayer.hijri)
-                    .font(.app(size: 9.5, weight: .medium)).foregroundStyle(Theme.faint)
-            }
+        // One line, so the page under it keeps its height: the greeting on Overview, the page's name elsewhere.
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(model.tab == .home ? "\(greeting), \(name)" : model.tab.title).font(.app(size: 14, weight: .bold)).lineLimit(1)
+            Text(Date().formatted(.dateTime.weekday(.wide).month(.wide).day()) + " · " + prayer.hijri)
+                .font(.app(size: 9.5, weight: .medium)).foregroundStyle(Theme.faint).lineLimit(1)
             Spacer()
             HStack(spacing: 6) {
                 if let next = prayer.next {
@@ -64,8 +64,7 @@ struct DockBar: View {
 
     private func button(_ icon: String, _ help: String, active: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: icon)
-                .font(.system(size: 10, weight: .semibold))
+            TabIcon(name: icon, size: 10, weight: .semibold)
                 .foregroundStyle(active ? Theme.ink : Theme.dim)
                 .frame(width: 26, height: 20)
                 .background(Capsule().fill(Theme.ink.opacity(active ? 0.16 : 0)))

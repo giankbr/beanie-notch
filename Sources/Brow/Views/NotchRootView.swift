@@ -247,7 +247,7 @@ struct ExpandedView: View {
             Color.clear.frame(height: model.closedSize.height + (settings.notchStyle == .floating ? 8 : 0))
             Group {
                 if settings.layout == .classic {
-                    VStack(spacing: 10) {
+                    VStack(spacing: 8) {
                         GreetingHeader()
                         page
                         DockBar()
@@ -260,6 +260,27 @@ struct ExpandedView: View {
                             page
                         }
                     }
+                } else if settings.layout == .minimal {
+                    VStack(spacing: 10) {
+                        HStack(spacing: 8) {
+                            TabMenu()
+                            Header(showsTitle: false)
+                        }
+                        page
+                    }
+                } else if settings.layout == .launcher {
+                    VStack(spacing: 10) {
+                        HStack(spacing: 8) {
+                            LauncherTitle()
+                            Header(showsTitle: false)
+                        }
+                        if model.launcherGrid {
+                            LauncherGrid().transition(.opacity.combined(with: .scale(scale: 0.98)))
+                        } else {
+                            page.transition(.opacity)
+                        }
+                    }
+                    .animation(.snappy(duration: 0.25), value: model.launcherGrid)
                 } else if settings.layout == .sidebar {
                     HStack(spacing: 12) {
                         Rail()
@@ -288,7 +309,7 @@ struct ExpandedView: View {
     }
 
     private var page: some View {
-        Group {
+        FitOrScroll {
             switch model.tab {
             case .home: HomeView()
             case .today: TodayView()
@@ -465,7 +486,7 @@ private struct StudioSidebar: View {
             withAnimation(.easeInOut(duration: 0.18)) { model.tab = tab }
         } label: {
             HStack(spacing: 8) {
-                Image(systemName: tab.icon).font(.system(size: 10.5, weight: .medium)).frame(width: 15)
+                TabIcon(name: tab.icon, size: 10.5).frame(width: 15)
                     .foregroundStyle(active ? Theme.ink : Theme.dim)
                 Text(tab.label).font(.app(size: 11, weight: active ? .medium : .regular)).lineLimit(1)
                     .foregroundStyle(active ? Theme.ink : Theme.ink.opacity(0.75))
@@ -538,7 +559,7 @@ private struct TopTabs: View {
                     withAnimation(.easeInOut(duration: 0.18)) { model.tab = tab }
                 } label: {
                     HStack(spacing: 5) {
-                        Image(systemName: tab.icon).font(.system(size: 10.5, weight: .semibold))
+                        TabIcon(name: tab.icon, size: 10.5, weight: .semibold)
                         if active { Text(tab.title).font(.app(size: 10, weight: .semibold)).lineLimit(1) }
                     }
                     .foregroundStyle(active ? Theme.accent : Theme.dim)
@@ -560,18 +581,18 @@ private struct TopTabs: View {
 
 private struct Rail: View {
     @EnvironmentObject var model: AppModel
+    @EnvironmentObject var settings: Settings
 
     var body: some View {
-        VStack(spacing: 3) {
+        VStack(spacing: settings.size == .compact ? 1 : 2) {
             ForEach(Tab.allCases) { tab in
                 let active = model.tab == tab
                 Button {
                     withAnimation(.easeInOut(duration: 0.18)) { model.tab = tab }
                 } label: {
-                    Image(systemName: tab.icon)
-                        .font(.system(size: 12, weight: .semibold))
+                    TabIcon(name: tab.icon, size: 12, weight: .semibold)
                         .foregroundStyle(active ? Theme.accent : Theme.dim)
-                        .frame(width: 32, height: 26)
+                        .frame(width: 32, height: settings.size == .compact ? 21 : 24)
                         .background(RoundedRectangle(cornerRadius: 9, style: .continuous)
                             .fill(active ? Theme.accent.opacity(0.14) : .clear))
                         .overlay(alignment: .leading) {
@@ -589,5 +610,117 @@ private struct Rail: View {
         .frame(maxHeight: .infinity)
         .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.surface))
         .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Theme.stroke))
+    }
+}
+
+// Minimal layout: the page's title is the menu to every other page.
+private struct TabMenu: View {
+    @EnvironmentObject var model: AppModel
+
+    var body: some View {
+        Menu {
+            ForEach(Tab.allCases) { tab in
+                Button { model.tab = tab } label: { Label(tab.title, systemImage: tab.icon) }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                TabIcon(name: model.tab.icon, size: 13, weight: .semibold).foregroundStyle(Theme.accent)
+                Text(model.tab.title).font(.app(size: 15, weight: .bold)).foregroundStyle(Theme.ink)
+                Image(systemName: "chevron.down").font(.system(size: 8, weight: .bold)).foregroundStyle(Theme.dim)
+            }
+            .padding(.horizontal, 8)
+            .frame(height: 28)
+            .buttonFace(RoundedRectangle(cornerRadius: 8, style: .continuous), Theme.ink.opacity(0.06), quiet: true)
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
+        .fixedSize()
+    }
+}
+
+// Launcher layout: the grid's name, or a way back to the grid from a page.
+private struct LauncherTitle: View {
+    @EnvironmentObject var model: AppModel
+
+    var body: some View {
+        if model.launcherGrid {
+            Text(Date().formatted(.dateTime.weekday(.wide).day().month(.wide)))
+                .font(.app(size: 15, weight: .bold)).foregroundStyle(Theme.ink).lineLimit(1)
+        } else {
+            Button { model.launcherGrid = true } label: {
+                HStack(spacing: 7) {
+                    Image(systemName: "square.grid.3x2.fill").font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Theme.dim)
+                        .frame(width: 24, height: 22)
+                        .buttonFace(RoundedRectangle(cornerRadius: 7, style: .continuous), Theme.ink.opacity(0.08))
+                    Text(model.tab.title).font(.app(size: 15, weight: .bold)).foregroundStyle(Theme.ink)
+                }
+            }
+            .buttonStyle(PressStyle())
+            .help("All pages")
+        }
+    }
+}
+
+// Every page as a tile, with what's live on it.
+private struct LauncherGrid: View {
+    @EnvironmentObject var model: AppModel
+    @EnvironmentObject var stats: SystemStats
+    @EnvironmentObject var calendar: CalendarFeed
+    @EnvironmentObject var prayer: PrayerTimes
+    @EnvironmentObject var shelf: Shelf
+    @EnvironmentObject var clipboard: ClipboardHistory
+    @EnvironmentObject var media: MediaController
+    @EnvironmentObject var toggles: QuickToggles
+
+    var body: some View {
+        // Two rows that share the panel's height, so the tiles fill it at every size.
+        let tabs = Tab.allCases
+        let rows = [Array(tabs.prefix(5)), Array(tabs.dropFirst(5))]
+        VStack(spacing: 8) {
+            ForEach(rows.indices, id: \.self) { r in
+                HStack(spacing: 8) {
+                    ForEach(rows[r]) { tab in tile(tab) }
+                }
+            }
+        }
+    }
+
+    private func tile(_ tab: Tab) -> some View {
+        Button {
+            model.tab = tab
+            model.launcherGrid = false
+        } label: {
+            VStack(alignment: .leading, spacing: 0) {
+                TabIcon(name: tab.icon, size: 13, weight: .semibold)
+                    .foregroundStyle(Theme.accent)
+                    .frame(width: 28, height: 28)
+                    .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.accent.opacity(0.14)))
+                Spacer(minLength: 6)
+                Text(tab.label).font(.app(size: 11.5, weight: .semibold)).foregroundStyle(Theme.ink).lineLimit(1)
+                Text(caption(tab)).font(.app(size: 9)).foregroundStyle(Theme.faint).lineLimit(1)
+            }
+            .padding(10)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .buttonFace(RoundedRectangle(cornerRadius: 12, style: .continuous), Theme.surface)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressStyle())
+    }
+
+    private func caption(_ tab: Tab) -> String {
+        switch tab {
+        case .home: "CPU \(Int(stats.cpu * 100))% · \(formatMemory(stats.ramUsed))"
+        case .today: calendar.items.first?.title ?? "No events ahead"
+        case .prayer: prayer.next.map { "\(prayer.label($0)) \($0.time.formatted(date: .omitted, time: .shortened))" } ?? "Set your place"
+        case .shelf: shelf.items.isEmpty ? "Drop files here" : "\(shelf.items.count) files"
+        case .clipboard: "\(clipboard.entries.count) copied"
+        case .music: media.now.map { Lyrics.clean(title: $0.title, artist: $0.artist).0 } ?? "Nothing playing"
+        case .ai: "Claude Code · Codex"
+        case .controls: toggles.darkMode ? "Dark mode on" : "Quick switches"
+        case .tools: "Uninstall · large files"
+        case .settings: "Look and behaviour"
+        }
     }
 }
