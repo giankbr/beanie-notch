@@ -126,16 +126,23 @@ private struct LargeFilesView: View {
     @EnvironmentObject var largeFiles: LargeFiles
 
     var body: some View {
-        if largeFiles.scanning {
+        if largeFiles.scanning && !largeFiles.scanned {
             Placeholder(icon: "magnifyingglass", title: "Scanning…", caption: "Downloads, Desktop, Documents and Movies")
         } else if !largeFiles.scanned {
             Placeholder(icon: "externaldrive", title: "Find what takes the space",
                         caption: "Files of 500 MB or more, and installers left in Downloads") {
                 PrimaryButton(text: "Scan", icon: "magnifyingglass") { largeFiles.scan() }.frame(width: 140)
             }
-        } else if largeFiles.items.isEmpty {
+        } else if largeFiles.items.isEmpty && !largeFiles.scanning {
             Placeholder(icon: "checkmark.circle", title: "Nothing big here", caption: "No file of 500 MB or more, no installers left")
         } else {
+            if largeFiles.scanning {
+                HStack(spacing: 6) {
+                    ProgressView().controlSize(.mini)
+                    Text("Still looking through Documents; more may appear").font(.app(size: 9)).foregroundStyle(Theme.faint)
+                    Spacer()
+                }
+            }
             ScrollView {
                 LazyVStack(spacing: 4) {
                     ForEach(largeFiles.items) { item in

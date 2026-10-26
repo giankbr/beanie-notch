@@ -153,13 +153,21 @@ final class LargeFiles: ObservableObject {
 
     var total: Int64 { items.reduce(0) { $0 + $1.size } }
 
+    // Spotlight and the small folders answer in under a second; Documents, which can hold whole code projects,
+    // is walked after that and its finds join the list as they come.
     func scan() {
         guard !scanning else { return }
         scanning = true
+        items = []
         Task {
-            items = await Task.detached(priority: .userInitiated) { Self.find() }.value
-            scanning = false
+            let quick = await Task.detached(priority: .userInitiated) {
+                Self.spotlight() + Self.walk(["Downloads", "Desktop", "Movies"])
+            }.value
+            merge(quick)
             scanned = true
+            let deep = await Task.detached(priority: .utility) { Self.walk(["Documents"]) }.value
+            merge(deep)
+            scanning = false
         }
     }
 
@@ -169,26 +177,63 @@ final class LargeFiles: ObservableObject {
         }
     }
 
+    private func merge(_ found: [Item]) {
+        var byPath = Dictionary(items.map { ($0.url.path, $0) }, uniquingKeysWith: { a, _ in a })
+        for item in found { byPath[item.url.path] = item }
+        items = Array(byPath.values.sorted { $0.size > $1.size }.prefix(60))
+    }
+
+    nonisolated private static let threshold: Int64 = 500_000_000
+    // Folders full of dependencies or build output: millions of small files, rarely anything to delete by hand.
+    nonisolated private static let skipped: Set = ["node_modules", "Pods", "vendor", "venv", "__pycache__", "site-packages", "Carthage",
+                                       "DerivedData", "bower_components", "Library"]
+
+    nonisolated private static func spotlight() -> [Item] {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        return ["Downloads", "Desktop", "Documents", "Movies"].flatMap { name -> [Item] in
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/mdfind")
+            process.arguments = ["-onlyin", home.appendingPathComponent(name).path, "kMDItemFSSize > \(threshold)"]
+            let pipe = Pipe()
+            process.standardOutput = pipe
+            process.standardError = FileHandle.nullDevice
+            guard (try? process.run()) != nil else { return [] }
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            process.waitUntilExit()
+            return String(decoding: data, as: UTF8.self).split(separator: "\n").compactMap { line in
+                let url = URL(fileURLWithPath: String(line))
+                return item(url, downloads: home.appendingPathComponent("Downloads").path)
+            }
+        }
+    }
+
     // Files of 500 MB or more, plus installers left in Downloads.
-    nonisolated private static func find() -> [Item] {
+    nonisolated private static func walk(_ folders: [String]) -> [Item] {
         let fm = FileManager.default
         let home = fm.homeDirectoryForCurrentUser
         let downloads = home.appendingPathComponent("Downloads").path
-        let installerTypes: Set = ["dmg", "pkg", "iso", "xip"]
-        let keys: Set<URLResourceKey> = [.totalFileAllocatedSizeKey, .isRegularFileKey]
+        let keys: Set<URLResourceKey> = [.totalFileAllocatedSizeKey, .isRegularFileKey, .isDirectoryKey]
         var found: [Item] = []
-        for name in ["Downloads", "Desktop", "Documents", "Movies"] {
+        for name in folders {
             guard let e = fm.enumerator(at: home.appendingPathComponent(name), includingPropertiesForKeys: Array(keys),
                                         options: [.skipsHiddenFiles, .skipsPackageDescendants]) else { continue }
             for case let url as URL in e {
-                guard let v = try? url.resourceValues(forKeys: keys), v.isRegularFile == true else { continue }
-                let size = Int64(v.totalFileAllocatedSize ?? 0)
-                let installer = url.path.hasPrefix(downloads) && installerTypes.contains(url.pathExtension.lowercased())
-                if size >= 500_000_000 || (installer && size >= 1_000_000) {
-                    found.append(Item(url: url, size: size, installer: installer))
+                guard let v = try? url.resourceValues(forKeys: keys) else { continue }
+                if v.isDirectory == true {
+                    if skipped.contains(url.lastPathComponent) { e.skipDescendants() }
+                    continue
+                }
+                if v.isRegularFile == true, let match = item(url, size: Int64(v.totalFileAllocatedSize ?? 0), downloads: downloads) {
+                    found.append(match)
                 }
             }
         }
-        return Array(found.sorted { $0.size > $1.size }.prefix(60))
+        return found
+    }
+
+    nonisolated private static func item(_ url: URL, size known: Int64? = nil, downloads: String) -> Item? {
+        let size = known ?? Int64((try? url.resourceValues(forKeys: [.totalFileAllocatedSizeKey]).totalFileAllocatedSize) ?? 0)
+        let installer = url.path.hasPrefix(downloads) && ["dmg", "pkg", "iso", "xip"].contains(url.pathExtension.lowercased())
+        return size >= threshold || (installer && size >= 1_000_000) ? Item(url: url, size: size, installer: installer) : nil
     }
 }
