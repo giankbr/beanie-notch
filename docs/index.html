@@ -267,6 +267,36 @@ footer { padding: 40px 0 0; overflow: hidden; }
   .two { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+
+/* Motion: reveal on scroll, a hero that flattens out of a tilt, slow layers for depth */
+.reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
+.reveal.in { opacity: 1; transform: none; }
+h2 em { transition: opacity .9s .15s, transform .9s .15s cubic-bezier(.2,.7,.2,1); }
+.reveal:not(.in) h2 em, h2.reveal:not(.in) em { opacity: 0; transform: translateY(14px); }
+.hero h1 .w { display: inline-block; opacity: 0; transform: translateY(.4em); filter: blur(8px); animation: rise .9s cubic-bezier(.2,.7,.2,1) forwards; animation-delay: calc(var(--i) * 70ms + 100ms); }
+@keyframes rise { to { opacity: 1; transform: none; filter: none; } }
+.hero .pill, .hero .lead, .hero .cta-row, .hero .meta { opacity: 0; animation: rise .8s cubic-bezier(.2,.7,.2,1) forwards; }
+.hero .pill { animation-delay: 0s; transform: translateY(10px); }
+.hero .lead { animation-delay: .45s; transform: translateY(12px); }
+.hero .cta-row { animation-delay: .6s; transform: translateY(12px); }
+.hero .meta { animation-delay: .75s; transform: translateY(12px); }
+.stage { perspective: 1400px; }
+.hero-shot { transform-origin: 50% 0%; transform: rotateX(var(--tilt, 18deg)) scale(var(--zoom, .92)); will-change: transform; opacity: 0; animation: fadein 1s .5s forwards; }
+@keyframes fadein { to { opacity: 1; } }
+.hero-shot img { transform: translateY(var(--shift, 0px)); will-change: transform; }
+.hero::before { content: ""; position: absolute; inset: -120px 0 auto; height: 620px; background: radial-gradient(42% 38% at 50% 52%, color-mix(in srgb, var(--accent) 14%, transparent), transparent); pointer-events: none; z-index: -1; transform: translateY(var(--glow, 0px)); }
+.closed-card .strip img { transform: translateY(-34px); transition: transform .7s cubic-bezier(.3,1.4,.5,1) .25s; }
+.closed-card.in .strip img { transform: none; }
+.panel-card .shot img, .preview img { transition: transform .6s cubic-bezier(.2,.7,.2,1); }
+.panel-card:hover .shot img { transform: translateY(-6px) scale(1.02); }
+.card, .feature { transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s, border-color .35s; }
+.panel-card:hover, .closed-card:hover, .feature:hover, .mini:hover { transform: translateY(-4px); box-shadow: 0 18px 40px -22px rgba(0,0,0,.35); }
+nav.scrolled { box-shadow: 0 1px 0 var(--border); }
+.watermark { transform: translateY(var(--wm, 0px)); }
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .hero h1 .w, .hero .pill, .hero .lead, .hero .cta-row, .hero .meta, .hero-shot { opacity: 1 !important; transform: none !important; filter: none !important; animation: none !important; }
+  .closed-card .strip img, .watermark, .hero-shot img { transform: none !important; }
+}
 </style>
 </head>
 <body>
@@ -290,7 +320,7 @@ footer { padding: 40px 0 0; overflow: hidden; }
 <header class="hero">
   <div class="wrap">
     <a class="pill" href="https://github.com/giankbr/brow"><b>FREE</b>Open source · macOS 14+ · Universal <i data-lucide="arrow-right"></i></a>
-    <h1>The notch,<br>finally earning its place.</h1>
+    <h1 id="headline">The notch,<br>finally earning its place.</h1>
     <p class="lead">Hover the notch or press ⌥ Space. System stats, your next meeting, prayer times, AI usage, a file shelf, clipboard history and synced lyrics — in a 2.6 MB native app that idles near 0% CPU.</p>
     <div class="cta-row">
       <a class="btn btn-primary" href="https://github.com/giankbr/brow/releases/latest"><i data-lucide="apple"></i>Download for macOS</a>
@@ -303,7 +333,7 @@ footer { padding: 40px 0 0; overflow: hidden; }
       <span><i data-lucide="shield-check"></i>No tracking</span>
     </div>
   </div>
-  <div class="hero-shot"><img src="landing-page-assets/overview.png" alt="Brow's Overview panel open under the notch: health, CPU, memory, network, disk, cleanup and quick settings"></div>
+  <div class="stage"><div class="hero-shot"><img src="landing-page-assets/overview.png" alt="Brow's Overview panel open under the notch: health, CPU, memory, network, disk, cleanup and quick settings"></div></div>
   <div style="position:relative;max-width:1200px;margin:0 auto"><div class="hero-glow"></div></div>
 </header>
 
@@ -591,6 +621,68 @@ footer { padding: 40px 0 0; overflow: hidden; }
   fetch("https://api.github.com/repos/giankbr/brow/releases/latest").then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
     if (j && j.tag_name) document.getElementById("version").textContent = j.tag_name;
   }).catch(function () {});
+
+
+  // Headline words rise in one after another.
+  var h = document.getElementById("headline");
+  var i = 0;
+  h.innerHTML = h.innerHTML.split("<br>").map(function (line) {
+    return line.split(" ").map(function (w) { return '<span class="w" style="--i:' + (i++) + '">' + w + '</span>'; }).join(" ");
+  }).join("<br>");
+
+  var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Reveal as things scroll into view; siblings in a grid come in a beat apart.
+  var targets = document.querySelectorAll("section h2, section .eyebrow, section .sub, .card, .feature, .stat, .gestures, details, .foot");
+  targets.forEach(function (el) {
+    el.classList.add("reveal");
+    var siblings = el.parentElement ? Array.prototype.indexOf.call(el.parentElement.children, el) : 0;
+    if (el.matches(".card, .feature, .stat")) el.style.setProperty("--d", (Math.min(siblings, 6) * 0.07) + "s");
+  });
+  if (still || !("IntersectionObserver" in window)) {
+    targets.forEach(function (el) { el.classList.add("in"); });
+  } else {
+    var seen = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        e.target.classList.add("in");
+        if (e.target.classList.contains("stat")) count(e.target.querySelector("strong"));
+        seen.unobserve(e.target);
+      });
+    }, { rootMargin: "0px 0px -10% 0px", threshold: 0.12 });
+    targets.forEach(function (el) { seen.observe(el); });
+  }
+
+  // Figures count up to their value the first time they show.
+  function count(el) {
+    var text = el.textContent, m = text.match(/[\d.]+/);
+    if (!m || still) return;
+    var target = parseFloat(m[0]), decimals = (m[0].split(".")[1] || "").length, start = performance.now();
+    (function step(t) {
+      var k = Math.min(1, (t - start) / 1100), eased = 1 - Math.pow(1 - k, 3);
+      el.textContent = text.replace(m[0], (target * eased).toFixed(decimals));
+      if (k < 1) requestAnimationFrame(step);
+    })(start);
+  }
+
+  // Parallax: the hero screenshot flattens out of its tilt, the glow and the watermark drift slower than the page.
+  var shot = document.querySelector(".hero-shot"), shotImg = shot.querySelector("img"), heroEl = document.querySelector(".hero");
+  var wm = document.querySelector(".watermark"), navEl = document.querySelector("nav"), ticking = false;
+  function frame() {
+    ticking = false;
+    var y = window.scrollY, vh = window.innerHeight;
+    navEl.classList.toggle("scrolled", y > 8);
+    if (still) return;
+    var p = Math.min(1, Math.max(0, y / (vh * 0.6)));
+    shot.style.setProperty("--tilt", (18 * (1 - p)).toFixed(2) + "deg");
+    shot.style.setProperty("--zoom", (0.92 + 0.08 * p).toFixed(3));
+    shotImg.style.setProperty("--shift", (-24 * p).toFixed(1) + "px");
+    heroEl.style.setProperty("--glow", (y * 0.35).toFixed(1) + "px");
+    var r = wm.getBoundingClientRect();
+    wm.style.setProperty("--wm", ((r.top - vh) * -0.18).toFixed(1) + "px");
+  }
+  window.addEventListener("scroll", function () { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }, { passive: true });
+  frame();
 
   if (window.lucide) lucide.createIcons();
 })();
