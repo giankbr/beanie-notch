@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brow — The notch, finally earning its place</title>
+<meta name="description" content="Brow turns the MacBook notch into a dashboard: system stats, your next meeting, prayer times, AI usage, a file shelf, clipboard history and synced lyrics. Free, open source, 2.6 MB.">
+<meta property="og:title" content="Brow — The notch, finally earning its place">
+<meta property="og:description" content="A tiny native macOS app that turns the notch into a dashboard. Free and open source.">
+<meta property="og:image" content="landing-page-assets/overview.png">
+<link rel="icon" href="landing-page-assets/brow-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
+<style>
+:root {
+  --bg: #FAFAF8; --surface: #FFFFFF; --surface-2: #EEEEEB; --inner: #F5F5F2; --border: #E3E3DF; --border-strong: #CFCFCA;
+  --text-1: #111111; --text-2: #55555A; --text-3: #8C8C8C; --title-2: #A3A3A3; --accent: #3B8BFF; --live: #16A34A;
+  --sky: #81A9D3; --ui-1: #F2F2EF; --ui-2: #E8E8E4; --ui-3: #D4D4D0; --ui-active: #FFFFFF; --bg-deep: #F3F3F0;
+  --banner-bg: #E8F0FF; --banner-fg: #1F5FCC; --font: "Be Vietnam Pro", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121212; --surface: #1B1B1B; --surface-2: #222222; --inner: #161616; --border: #2A2A2A; --border-strong: #3A3A3A;
+    --text-1: #F2F2F2; --text-2: #A1A1A1; --text-3: #6B6B6B; --title-2: #707070; --live: #4ADE80;
+    --ui-1: #1C1C1C; --ui-2: #262626; --ui-3: #333333; --ui-active: #171717; --bg-deep: #0C0C0C;
+    --banner-bg: #0E1626; --banner-fg: #A9C8FF; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121212; --surface: #1B1B1B; --surface-2: #222222; --inner: #161616; --border: #2A2A2A; --border-strong: #3A3A3A;
+  --text-1: #F2F2F2; --text-2: #A1A1A1; --text-3: #6B6B6B; --title-2: #707070; --live: #4ADE80;
+  --ui-1: #1C1C1C; --ui-2: #262626; --ui-3: #333333; --ui-active: #171717; --bg-deep: #0C0C0C;
+  --banner-bg: #0E1626; --banner-fg: #A9C8FF; color-scheme: dark;
+}
+:root[data-font="sf"] { --font: -apple-system, "SF Pro Display", "SF Pro Text", system-ui, sans-serif; }
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--text-1); font-family: var(--font); -webkit-font-smoothing: antialiased; transition: background .25s, color .25s; }
+img { display: block; max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+i[data-lucide], svg.lucide { width: 16px; height: 16px; stroke-width: 1.75; flex-shrink: 0; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 9px; height: 52px; padding: 0 26px; border-radius: 16px; font: 600 16px var(--font); border: 0; cursor: pointer; transition: transform .15s, box-shadow .15s, filter .15s; white-space: nowrap; }
+.btn:active { transform: translateY(1px) scale(.99); }
+.btn-primary { color: #fff; background: linear-gradient(180deg, #4C96FF, #2F7BF0); box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 -2px 0 rgba(0,0,0,.12) inset, 0 10px 24px -8px rgba(59,139,255,.65); }
+.btn-primary:hover { filter: brightness(1.06); }
+.btn-ghost { color: var(--text-1); background: var(--ui-1); box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 -3px 0 var(--ui-3) inset, 0 8px 20px -10px rgba(0,0,0,.25); }
+.btn-ghost:hover { background: var(--ui-2); }
+.btn-sm { height: 38px; padding: 0 16px; border-radius: 12px; font-size: 14px; }
+
+/* Announcement + nav */
+.banner { background: var(--banner-bg); color: var(--banner-fg); border-bottom: 1px solid var(--border); font-size: 13.5px; font-weight: 500; }
+.banner a { display: flex; gap: 8px; align-items: center; justify-content: center; padding: 9px 16px; text-align: center; }
+nav { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: saturate(160%) blur(14px); -webkit-backdrop-filter: saturate(160%) blur(14px); }
+nav .wrap { display: flex; align-items: center; gap: 36px; height: 76px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; letter-spacing: -.3px; }
+.brand img { width: 30px; height: 30px; border-radius: 8px; }
+.nav-links { display: flex; gap: 28px; font-size: 14.5px; color: var(--text-2); font-weight: 500; }
+.nav-links a:hover { color: var(--text-1); }
+.nav-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.icon-btn { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 11px; border: 1px solid var(--border); background: var(--surface); color: var(--text-2); cursor: pointer; }
+.icon-btn:hover { color: var(--text-1); }
+
+/* Hero */
+.hero { text-align: center; padding: 72px 0 0; position: relative; }
+.pill { display: inline-flex; align-items: center; gap: 10px; padding: 5px 12px 5px 6px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); font-size: 13px; color: var(--text-2); }
+.pill b { font-size: 11px; letter-spacing: .6px; padding: 3px 9px; border-radius: 999px; background: var(--surface-2); color: var(--text-1); }
+h1 { font-size: clamp(42px, 7vw, 76px); line-height: 1.04; font-weight: 700; letter-spacing: -2.5px; margin: 26px 0 22px; }
+.lead { font-size: 18px; line-height: 1.6; color: var(--text-2); max-width: 640px; margin: 0 auto; }
+.cta-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 34px; }
+.meta { display: flex; gap: 28px; justify-content: center; flex-wrap: wrap; margin-top: 26px; font-size: 14px; color: var(--text-2); }
+.meta span { display: inline-flex; gap: 8px; align-items: center; }
+.meta svg { color: var(--text-3); }
+.hero-shot { position: relative; margin: 60px auto 0; max-width: 1200px; background: var(--sky); border-radius: 24px; padding: 0 58px; overflow: hidden; }
+.hero-shot img { width: 100%; }
+.hero-glow { position: absolute; left: 6%; right: 6%; bottom: -40px; height: 90px; background: radial-gradient(60% 100% at 50% 0%, rgba(59,139,255,.55), transparent 70%); filter: blur(24px); z-index: -1; }
+
+/* Stats */
+.stats { margin-top: 90px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.stats .wrap { display: grid; grid-template-columns: repeat(4, 1fr); max-width: 1040px; }
+.stat { text-align: center; padding: 56px 12px; position: relative; }
+.stat + .stat::before { content: ""; position: absolute; left: 0; top: 50%; height: 44px; transform: translateY(-50%); width: 1px; background: var(--border); }
+.stat strong { display: block; font-size: 40px; font-weight: 600; letter-spacing: -1px; }
+.stat span { display: block; font-size: 14px; color: var(--text-3); margin-top: 8px; }
+
+/* Sections */
+section { padding: 120px 0; }
+.eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; letter-spacing: 1.6px; text-transform: uppercase; color: var(--text-2); }
+.eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+h2 { font-size: clamp(38px, 5vw, 56px); font-weight: 600; letter-spacing: -2px; line-height: 1.08; margin: 22px 0 22px; }
+h2 em { font-style: normal; color: var(--title-2); display: block; }
+.sub { font-size: 17px; line-height: 1.65; color: var(--text-2); max-width: 580px; }
+.center { text-align: center; }
+.center .sub { margin: 0 auto; }
+.head-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 40px; flex-wrap: wrap; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 22px; overflow: hidden; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+.panel-card .shot { background: var(--sky); margin: 8px 8px 0; border-radius: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center; aspect-ratio: 16 / 6.5; }
+.panel-card .shot img { width: 92%; }
+.panel-card .txt { display: grid; grid-template-columns: 200px 1fr; gap: 16px; padding: 24px 22px 26px; }
+.panel-card h3, .closed-card h3 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -.2px; }
+.panel-card p, .closed-card p, .mini p { margin: 0; color: var(--text-2); font-size: 15px; line-height: 1.6; }
+.panels { margin-top: 64px; }
+.also { margin-top: 64px; }
+.mini { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.mini h3 { margin: 0; font-size: 19px; font-weight: 600; }
+.mini .ui { background: var(--inner); border: 1px solid var(--border); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-height: 196px; font-size: 13.5px; }
+.drop { border: 1px solid var(--border-strong); border-radius: 12px; background: var(--surface-2); padding: 14px; text-align: center; font-weight: 500; }
+.drop small { display: block; color: var(--text-3); font-size: 11.5px; margin-top: 4px; font-weight: 400; }
+.drop b { color: var(--accent); font-weight: 500; }
+.row { display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-bottom: 1px solid var(--border); }
+.row:last-child { border: 0; }
+.row small { color: var(--text-3); font-size: 11.5px; display: block; }
+.row .r { margin-left: auto; color: var(--text-3); font-size: 12px; }
+.chip { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; display: flex; gap: 10px; align-items: center; }
+.app-row { display: flex; gap: 12px; align-items: center; background: var(--surface); border-radius: 12px; padding: 10px; }
+.app-row .ico { width: 32px; height: 32px; border-radius: 8px; background: #6E5BFF; display: grid; place-items: center; color: #fff; }
+.app-row strong { font-size: 14px; font-weight: 600; }
+.app-row .size { margin-left: auto; color: var(--accent); font-weight: 600; }
+
+/* Closed notch */
+#closed { background: var(--bg-deep); border-top: 1px solid var(--border); }
+.gestures { display: grid; gap: 12px; font-size: 15px; }
+.gestures div { display: flex; gap: 12px; align-items: center; }
+.gestures kbd { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 9px; background: var(--surface-2); font: 500 14px var(--font); color: var(--text-1); }
+.gestures b { font-weight: 600; }
+.gestures span { color: var(--text-3); }
+.closed-grid { margin-top: 56px; }
+.closed-card .strip { background: var(--sky); height: 92px; display: flex; justify-content: center; align-items: flex-start; overflow: hidden; }
+/* Every crop is the notch at 2×, 64 px tall: shown at 1× they all share one scale. */
+.closed-card .strip img { height: 32px; width: auto; max-width: 96%; object-fit: contain; object-position: top; }
+.closed-card .txt { padding: 22px 24px 24px; display: grid; gap: 8px; }
+.more { background: var(--accent); color: #fff; border: 0; padding: 30px 28px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+.more h3 { color: #fff; font-size: 24px; }
+.more p { color: rgba(255,255,255,.88); }
+
+/* Features */
+.feature { padding: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 22px; }
+.feature > div { background: var(--inner); border-radius: 17px; padding: 22px 22px 24px; height: 100%; }
+.feature h3 { display: flex; gap: 12px; align-items: center; margin: 0 0 14px; font-size: 18px; font-weight: 600; }
+.feature h3 span { width: 36px; height: 36px; border-radius: 10px; background: var(--surface-2); display: grid; place-items: center; }
+.feature p { margin: 0; color: var(--text-2); font-size: 15px; line-height: 1.6; }
+
+/* Customize */
+.custom { margin-top: 64px; display: grid; grid-template-columns: 1.6fr 1fr; padding: 0; }
+.preview { background: var(--sky); position: relative; display: flex; align-items: center; justify-content: center; padding: 60px 36px; min-height: 520px; }
+.preview img { width: 100%; max-width: 690px; transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+.preview .live { position: absolute; left: 24px; bottom: 22px; font-size: 13px; color: #fff; background: rgba(28,42,66,.78); padding: 7px 14px; border-radius: 999px; display: flex; align-items: center; gap: 8px; }
+.preview .live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #4ADE80; }
+.settings { padding: 30px 32px; display: flex; flex-direction: column; gap: 24px; }
+.settings h3 { margin: 0; font-size: 20px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+.settings h3 small { font-size: 12px; color: var(--text-3); font-weight: 400; }
+.settings label { display: block; font-size: 13.5px; color: var(--text-2); margin-bottom: 10px; }
+.seg { display: flex; background: var(--ui-2); border-radius: 12px; padding: 3px; }
+.seg button { flex: 1; border: 0; background: transparent; font: 500 14px var(--font); color: var(--text-2); padding: 8px 6px; border-radius: 9px; cursor: pointer; transition: background .2s, color .2s; }
+.seg button[aria-pressed="true"] { background: var(--ui-active); color: var(--text-1); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.12), 0 0 0 .5px var(--border); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.dots { display: flex; gap: 10px; flex-wrap: wrap; }
+.dots button { width: 28px; height: 28px; border-radius: 50%; border: 0; cursor: pointer; background: var(--c); box-shadow: 0 0 0 2px var(--surface), 0 0 0 2px transparent; transition: box-shadow .2s; }
+.dots button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text-1); }
+.shapes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.shapes button { border: 1px solid var(--border); background: var(--ui-1); border-radius: 12px; height: 64px; cursor: pointer; font: 500 13px var(--font); color: var(--text-2); display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 0 0 8px; }
+.shapes button::before { content: ""; background: #000; width: 46px; height: 14px; border-radius: 0 0 10px 10px; }
+.shapes button[data-s="seamless"]::before { width: 76px; border-radius: 0; }
+.shapes button[data-s="floating"]::before { width: 46px; border-radius: 10px; margin-top: 8px; }
+.shapes button[aria-pressed="true"] { border-color: var(--text-1); background: var(--ui-active); color: var(--text-1); font-weight: 600; }
+.toggle-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 20px; }
+.toggle-row strong { font-size: 15px; font-weight: 600; display: block; }
+.toggle-row small { color: var(--text-3); font-size: 12.5px; }
+.switch { width: 40px; height: 24px; border-radius: 999px; background: var(--accent); position: relative; border: 0; cursor: pointer; transition: background .2s; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 19px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .2s; }
+.switch[aria-checked="false"] { background: var(--ui-3); }
+.switch[aria-checked="false"]::after { left: 3px; }
+
+/* FAQ */
+.faq { display: grid; grid-template-columns: 1fr 1.25fr; gap: 80px; }
+details { border-top: 1px solid var(--border); }
+details:last-child { border-bottom: 1px solid var(--border); }
+summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 0; font-size: 17px; font-weight: 500; }
+summary::-webkit-details-marker { display: none; }
+summary svg { color: var(--text-3); transition: transform .2s; }
+details[open] summary svg { transform: rotate(180deg); }
+details p { margin: 0 0 20px; color: var(--text-2); font-size: 15px; line-height: 1.65; }
+code { font-family: var(--mono); font-size: .9em; background: var(--surface-2); padding: 2px 6px; border-radius: 6px; }
+
+/* CTA */
+.cta { display: grid; grid-template-columns: 1fr 1fr; padding: 0; }
+.cta .left { padding: 64px; }
+.cta h2 { margin-top: 20px; }
+.steps { margin-top: 32px; border-top: 1px solid var(--border); }
+.steps div { display: grid; grid-template-columns: 28px 150px 1fr; gap: 14px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border); }
+.steps span { width: 26px; height: 26px; border-radius: 50%; background: var(--surface-2); display: grid; place-items: center; font-size: 12.5px; }
+.steps strong { font-weight: 600; font-size: 15px; }
+.steps p { margin: 0; color: var(--text-3); font-size: 14.5px; line-height: 1.5; }
+.cta .right { background: var(--sky); position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 80px 40px 50px; }
+.cta .right .menubar { position: absolute; top: 0; left: 0; right: 0; height: 28px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; font-size: 12px; color: rgba(255,255,255,.9); }
+.cta .right .notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 72%; max-width: 440px; }
+.cta .right .window { width: 100%; max-width: 480px; filter: drop-shadow(0 24px 40px rgba(20,40,70,.35)); }
+.term { width: 100%; max-width: 450px; background: #111; color: #EDEDED; font: 400 12.5px var(--mono); border-radius: 12px; padding: 12px 14px; display: flex; gap: 14px; align-items: center; }
+.term span { color: #777; }
+.term code { background: none; padding: 0; flex: 1; overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+.term button { background: none; border: 0; color: #999; cursor: pointer; display: grid; place-items: center; }
+.term button:hover { color: #fff; }
+
+/* Footer */
+footer { padding: 40px 0 0; overflow: hidden; }
+.foot { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 28px; margin: 0 24px; max-width: 1392px; margin-inline: auto; }
+.running { position: absolute; top: 0; left: 50%; transform: translateX(-50%); background: #000; color: #fff; font-size: 13px; padding: 9px 20px; border-radius: 0 0 18px 18px; display: flex; gap: 10px; align-items: center; white-space: nowrap; }
+.running::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #4ADE80; }
+.foot-top { display: flex; align-items: center; gap: 24px; padding: 80px 72px 48px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.foot-top img { width: 88px; height: 88px; border-radius: 22px; box-shadow: 0 16px 30px -12px rgba(59,139,255,.6); }
+.foot-top h4 { margin: 0; font-size: 40px; font-weight: 700; letter-spacing: -1.2px; }
+.foot-top p { margin: 4px 0 0; color: var(--text-2); font-size: 17px; }
+.foot-top .cta-row { margin: 0 0 0 auto; }
+.cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding: 44px 72px; }
+.cols h5 { margin: 0 0 16px; font-size: 12px; letter-spacing: 1.6px; color: var(--text-3); font-weight: 600; }
+.cols a, .cols span { display: flex; gap: 8px; align-items: center; font-size: 15px; padding: 7px 0; color: var(--text-1); }
+.cols a:hover { color: var(--accent); }
+.new { font-size: 11px; color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); padding: 2px 7px; border-radius: 999px; }
+.credits { display: grid; grid-template-columns: 1fr 1.7fr; gap: 40px; margin: 0 72px; padding: 44px 0; border-top: 1px solid var(--border); }
+.credits h4 { margin: 18px 0 14px; font-size: 22px; font-weight: 600; }
+.credits p { margin: 0; color: var(--text-3); font-size: 14px; line-height: 1.6; max-width: 300px; }
+.chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; align-content: flex-start; }
+.chips a { display: inline-flex; gap: 8px; align-items: center; border: 1px solid var(--border); border-radius: 999px; padding: 8px 14px; font-size: 14.5px; font-weight: 500; }
+.chips a svg { color: var(--text-3); }
+.chips a:hover { border-color: var(--border-strong); }
+.font-note { grid-column: 2; text-align: right; font-size: 12.5px; color: var(--text-3); display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
+.bottom { display: flex; justify-content: space-between; padding: 22px 72px; background: var(--inner); border-top: 1px solid var(--border); border-radius: 0 0 28px 28px; font-size: 13.5px; color: var(--text-3); flex-wrap: wrap; gap: 8px; }
+.watermark { font-size: clamp(120px, 26vw, 400px); font-weight: 800; letter-spacing: -.035em; line-height: .78; text-align: center; margin-top: 30px; background: linear-gradient(180deg, var(--ui-3), transparent 92%); -webkit-background-clip: text; background-clip: text; color: transparent; user-select: none; }
+
+/* Small screens */
+@media (max-width: 960px) {
+  .nav-links { display: none; }
+  .grid-2, .grid-3, .faq, .cta, .custom, .credits { grid-template-columns: 1fr; }
+  .faq { gap: 32px; }
+  .panel-card .txt { grid-template-columns: 1fr; gap: 6px; }
+  .stats .wrap { grid-template-columns: repeat(2, 1fr); }
+  .stat:nth-child(3)::before { display: none; }
+  .hero-shot { padding: 0 14px; border-radius: 16px; margin-inline: 16px; }
+  .cta .left { padding: 40px 28px; }
+  .cols { grid-template-columns: repeat(2, 1fr); padding: 36px 28px; }
+  .foot-top { padding: 72px 28px 36px; }
+  .foot-top .cta-row { margin: 0; justify-content: flex-start; }
+  .credits { margin: 0 28px; }
+  .chips { justify-content: flex-start; }
+  .font-note { grid-column: 1; justify-content: flex-start; text-align: left; }
+  .bottom { padding: 20px 28px; }
+  section { padding: 84px 0; }
+  .steps div { grid-template-columns: 28px 1fr; }
+  .steps p { grid-column: 2; }
+}
+@media (max-width: 560px) {
+  .btn { height: 48px; padding: 0 20px; font-size: 15px; }
+  nav .btn-ghost { display: none; }
+  .meta { gap: 14px 20px; }
+  .preview { min-height: 300px; padding: 40px 16px; }
+  .settings { padding: 24px 20px; }
+  .two { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+
+<div class="banner"><a href="#faq">✦ Notchy is now Brow. Your settings, pins and Shelf come along. <i data-lucide="arrow-right"></i></a></div>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#"><img src="landing-page-assets/brow-icon.png" alt="">Brow</a>
+    <div class="nav-links">
+      <a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#customize">Customize</a><a href="#faq">FAQ</a>
+    </div>
+    <div class="nav-right">
+      <button class="icon-btn" id="themeBtn" aria-label="Switch light or dark"><i data-lucide="moon"></i></button>
+      <a class="btn btn-ghost btn-sm" href="https://github.com/giankbr/brow"><i data-lucide="github"></i>Star on GitHub</a>
+      <a class="btn btn-primary btn-sm" href="https://github.com/giankbr/brow/releases/latest"><i data-lucide="apple"></i>Download</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <a class="pill" href="https://github.com/giankbr/brow"><b>FREE</b>Open source · macOS 14+ · Universal <i data-lucide="arrow-right"></i></a>
+    <h1>The notch,<br>finally earning its place.</h1>
+    <p class="lead">Hover the notch or press ⌥ Space. System stats, your next meeting, prayer times, AI usage, a file shelf, clipboard history and synced lyrics — in a 2.6 MB native app that idles near 0% CPU.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/giankbr/brow/releases/latest"><i data-lucide="apple"></i>Download for macOS</a>
+      <a class="btn btn-ghost" href="https://github.com/giankbr/brow">View source <i data-lucide="arrow-right"></i></a>
+    </div>
+    <div class="meta">
+      <span><i data-lucide="code"></i>Swift + SwiftUI</span>
+      <span><i data-lucide="package"></i>0 dependencies</span>
+      <span><i data-lucide="cpu"></i>Apple silicon &amp; Intel</span>
+      <span><i data-lucide="shield-check"></i>No tracking</span>
+    </div>
+  </div>
+  <div class="hero-shot"><img src="landing-page-assets/overview.png" alt="Brow's Overview panel open under the notch: health, CPU, memory, network, disk, cleanup and quick settings"></div>
+  <div style="position:relative;max-width:1200px;margin:0 auto"><div class="hero-glow"></div></div>
+</header>
+
+<div class="stats">
+  <div class="wrap">
+    <div class="stat"><strong>2.6 MB</strong><span>download size</span></div>
+    <div class="stat"><strong>~0%</strong><span>CPU when idle</span></div>
+    <div class="stat"><strong>19</strong><span>call services to Join</span></div>
+    <div class="stat"><strong>4</strong><span>lyrics sources, no keys</span></div>
+  </div>
+</div>
+
+<section id="features">
+  <div class="wrap">
+    <div class="center">
+      <span class="eyebrow">Panels</span>
+      <h2>Nine panels.<em>One hover away.</em></h2>
+      <p class="sub">Everything you'd open three apps for, folded into the black strip you were ignoring.</p>
+    </div>
+    <div class="grid-2 panels">
+      <article class="card panel-card"><div class="shot"><img src="landing-page-assets/today.png" alt="Today panel"></div><div class="txt"><h3>Today</h3><p>Weather, next event with Join for 19 call services, tasks, and a focus timer.</p></div></article>
+      <article class="card panel-card"><div class="shot"><img src="landing-page-assets/prayer.png" alt="Prayer times panel"></div><div class="txt"><h3>Prayer times</h3><p>Kemenag, MWL, Umm al-Qura. Hijri date, qibla compass, Ramadan mode.</p></div></article>
+      <article class="card panel-card"><div class="shot"><img src="landing-page-assets/music.png" alt="Now playing panel"></div><div class="txt"><h3>Now playing</h3><p>Any player, YouTube included. Synced lyrics, sleep timer, output picker.</p></div></article>
+      <article class="card panel-card"><div class="shot"><img src="landing-page-assets/ai-usage.png" alt="AI usage panel"></div><div class="txt"><h3>AI usage</h3><p>Claude Code and Codex, read from local logs: tokens, API cost, rate limits.</p></div></article>
+    </div>
+
+    <div class="also">
+      <span class="eyebrow">Also in the panel</span>
+      <div class="grid-3" style="margin-top:22px">
+        <article class="card mini">
+          <h3>Shelf</h3>
+          <div class="ui">
+            <div class="drop"><i data-lucide="upload" style="margin:0 auto 6px;display:block"></i>Drop on the notch or <b>AirDrop</b><small>Right third sends by AirDrop</small></div>
+            <div class="row"><i data-lucide="file-text" style="color:#E5484D"></i><div>Q3-Board-Report.pdf<small>4.2 MB</small></div><i data-lucide="x" class="r"></i></div>
+            <div class="row"><i data-lucide="image" style="color:#8E4EC6"></i><div>Screenshot 09.41.png<small>2.6 MB</small></div><i data-lucide="x" class="r"></i></div>
+          </div>
+          <p>Drop files on the notch, drag them out later. Right third sends by AirDrop. Screenshots land here.</p>
+        </article>
+        <article class="card mini">
+          <h3>Clipboard</h3>
+          <div class="ui">
+            <div class="chip"><i data-lucide="search"></i>invoice</div>
+            <div class="row"><i data-lucide="type"></i>INV-2026-0142 · Rp 4.800.000<span class="r">2m</span></div>
+            <div class="row"><i data-lucide="image"></i>invoice_oct.png (OCR)<span class="r">1h</span></div>
+            <div class="row"><i data-lucide="pin" style="color:var(--accent)"></i>Invoice terms — net 14<span class="r">Pinned</span></div>
+          </div>
+          <p>Text, image and file history with fuzzy search and on-device OCR. Passwords are skipped.</p>
+        </article>
+        <article class="card mini">
+          <h3>Tools</h3>
+          <div class="ui">
+            <div class="app-row"><span class="ico"><i data-lucide="box"></i></span><div><strong>OldEditor.app</strong><small style="display:block;color:var(--text-3);font-size:11.5px">14 leftovers found</small></div><span class="size">2.3 GB</span></div>
+            <div class="row"><i data-lucide="folder"></i>~/Library/Caches/oldeditor<span class="r">1.9 GB</span></div>
+            <div class="row"><i data-lucide="folder"></i>~/Library/Application Support<span class="r">412 MB</span></div>
+          </div>
+          <p>An uninstaller that finds the leftovers, a large-file finder and a camera mirror. Nothing is recorded.</p>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="closed">
+  <div class="wrap">
+    <div class="head-row">
+      <div>
+        <span class="eyebrow">Closed notch</span>
+        <h2>Even closed,<em>still useful.</em></h2>
+        <p class="sub">The notch grows just enough to show what matters right now, then tucks itself away again.</p>
+      </div>
+      <div class="gestures">
+        <div><kbd>↔</kbd><b>Swipe</b><span>next song</span></div>
+        <div><kbd>↕</kbd><b>Scroll</b><span>volume</span></div>
+        <div><kbd>⌘</kbd><b>⌥ Space</b><span>open the panel</span></div>
+      </div>
+    </div>
+    <div class="grid-2 closed-grid">
+      <article class="card closed-card"><div class="strip"><img src="landing-page-assets/notch-lyrics-crop.png" alt="Lyrics in the notch"></div><div class="txt"><h3>Lyrics</h3><p>Synced lyrics while music plays, or a mini player.</p></div></article>
+      <article class="card closed-card"><div class="strip"><img src="landing-page-assets/notch-volume-crop.png" alt="Volume level in the notch"></div><div class="txt"><h3>Volume &amp; brightness</h3><p>Levels as you change them. Scroll on the notch for volume.</p></div></article>
+      <article class="card closed-card"><div class="strip"><img src="landing-page-assets/notch-download-crop.png" alt="Download progress in the notch"></div><div class="txt"><h3>Downloads</h3><p>Live progress, and a note when the file lands.</p></div></article>
+      <article class="card closed-card"><div class="strip"><img src="landing-page-assets/notch-timer-crop.png" alt="Timer in the notch"></div><div class="txt"><h3>Timers</h3><p>Focus and countdown timers, always in view.</p></div></article>
+      <article class="card closed-card"><div class="strip"><img src="landing-page-assets/notch-messages-crop.png" alt="Unread WhatsApp messages in the notch"></div><div class="txt"><h3>Notices</h3><p>Unread counts and short notices from your apps.</p></div></article>
+      <article class="card closed-card"><div class="strip"><img src="landing-page-assets/notch-airpods-crop.png" alt="AirPods charge in the notch"></div><div class="txt"><h3>AirPods</h3><p>Charge for each bud and the case when they connect.</p></div></article>
+      <article class="card closed-card"><div class="strip"><img src="landing-page-assets/notch-prayer-crop.png" alt="Prayer countdown in the notch"></div><div class="txt"><h3>Prayer</h3><p>A countdown before each prayer, calculated on your Mac.</p></div></article>
+      <article class="card closed-card more"><i data-lucide="sparkles" style="width:24px;height:24px"></i><h3>And more</h3><p>Charging, Caps Lock, screenshots, Shortcuts results and updates, as short notices.</p></article>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="center">
+      <span class="eyebrow">Under the hood</span>
+      <h2>Built the way<em>a Mac app should be.</em></h2>
+      <p class="sub">Small, native, and polite about permissions.</p>
+    </div>
+    <div class="grid-3" style="margin-top:64px">
+      <article class="feature"><div><h3><span><i data-lucide="feather"></i></span>Native and tiny</h3><p>Swift and SwiftUI with no third-party dependencies. A 2.6 MB universal binary that idles near 0% CPU.</p></div></article>
+      <article class="feature"><div><h3><span><i data-lucide="lock"></i></span>Private by default</h3><p>Prayer times are worked out on the Mac. No analytics, no tracking, no API keys.</p></div></article>
+      <article class="feature"><div><h3><span><i data-lucide="key-round"></i></span>Asks only when needed</h3><p>Calendars, Location, Camera — macOS prompts the first time a feature actually needs access.</p></div></article>
+      <article class="feature"><div><h3><span><i data-lucide="keyboard"></i></span>No Accessibility grant</h3><p>The global shortcut is a Carbon hot key, so ⌥ Space works without handing over input control.</p></div></article>
+      <article class="feature"><div><h3><span><i data-lucide="unplug"></i></span>Degrades gracefully</h3><p>Brightness, Night Shift and DDC load at run time. Missing symbols just switch that feature off.</p></div></article>
+      <article class="feature"><div><h3><span><i data-lucide="refresh-cw"></i></span>Updates from GitHub</h3><p>Optionally checks GitHub Releases once a day. Grab the DMG, drag to Applications, done.</p></div></article>
+    </div>
+  </div>
+</section>
+
+<section id="customize" style="padding-top:0">
+  <div class="wrap">
+    <span class="eyebrow">Make it yours</span>
+    <h2>Your notch,<em>your look.</em></h2>
+    <p class="sub">Layouts, themes, accents, sizes and notch shapes. Every choice previews live, right where it will sit. Try it here: this page follows along.</p>
+    <div class="card custom">
+      <div class="preview">
+        <img id="previewImg" src="landing-page-assets/controls.png" alt="Brow's Controls panel">
+        <div class="live" id="liveLabel">Live preview · Studio · Dark · Blue · Medium · Drop</div>
+      </div>
+      <div class="settings">
+        <h3>Appearance <small>⌘ ,</small></h3>
+        <div><label>Layout</label><div class="seg" data-key="layout"><button aria-pressed="true">Studio</button><button>Compact</button><button>Top tabs</button><button>Classic</button></div></div>
+        <div class="two">
+          <div><label>Theme</label><div class="seg" data-key="theme"><button>Dark</button><button>Light</button></div></div>
+          <div><label>Panel size</label><div class="seg" data-key="size"><button>S</button><button aria-pressed="true">M</button><button>L</button></div></div>
+        </div>
+        <div><label>Accent</label><div class="dots" id="dots"></div></div>
+        <div><label>Notch shape</label><div class="shapes" data-key="shape"><button data-s="drop" aria-pressed="true">Drop</button><button data-s="seamless">Seamless</button><button data-s="floating">Floating</button></div></div>
+        <div><label>Typeface</label><div class="seg" data-key="font"><button>SF Pro</button><button aria-pressed="true">Be Vietnam Pro</button></div></div>
+        <div class="toggle-row"><div><strong>Lyrics in closed notch</strong><small>Synced, from 4 free sources</small></div><button class="switch" role="switch" aria-checked="true" aria-label="Lyrics in closed notch"></button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq" style="border-top:1px solid var(--border)">
+  <div class="wrap faq">
+    <div>
+      <span class="eyebrow">FAQ</span>
+      <h2>Questions,<em>answered.</em></h2>
+      <p class="sub">Brow is free, open and tiny. If something isn't covered here, <a href="https://github.com/giankbr/brow/issues" style="color:var(--accent)">open an issue on GitHub</a>.</p>
+    </div>
+    <div>
+      <details><summary>Does it work on a Mac without a notch?<i data-lucide="chevron-down"></i></summary><p>Yes. On Macs without a notch, Brow draws a notch-like strip at the top centre of the screen. Pick the floating shape in Settings if you prefer it detached.</p></details>
+      <details open><summary>Why does macOS say the app can't be opened?<i data-lucide="chevron-down"></i></summary><p>Brow is ad-hoc signed, not notarized. Right-click the app and choose Open once, or run <code>xattr -dr com.apple.quarantine /Applications/Brow.app</code>.</p></details>
+      <details><summary>Is my location sent anywhere?<i data-lucide="chevron-down"></i></summary><p>Prayer times are worked out on your Mac. For the weather, only your place's coordinates go to Open-Meteo, with no account, no key and no tracking. Lyrics lookups send just the song title and artist.</p></details>
+      <details><summary>Coming from Notchy?<i data-lucide="chevron-down"></i></summary><p>Brow is the same app under a new name. Settings, pins and Shelf come along on first launch. Turn Open at login on again, then delete Notchy.app.</p></details>
+      <details><summary>Does it need Accessibility permission?<i data-lucide="chevron-down"></i></summary><p>Only for Messages, to read the unread badges on Dock icons (just the numbers). Everything else, including the ⌥ Space shortcut, works without it.</p></details>
+      <details><summary>Can I use it on Intel Macs?<i data-lucide="chevron-down"></i></summary><p>Yes. Brow is a universal app for Apple silicon and Intel on macOS 14 or later. Brightness for external monitors over DDC works on Apple silicon only.</p></details>
+    </div>
+  </div>
+</section>
+
+<section id="download" style="padding-top:0">
+  <div class="wrap">
+    <div class="card cta">
+      <div class="left">
+        <span class="eyebrow">Get Brow</span>
+        <h2>Give your notch<em>a job.</em></h2>
+        <p class="sub">Free and open source. A 2.6 MB universal app for macOS 14 or later.</p>
+        <div class="cta-row" style="justify-content:flex-start">
+          <a class="btn btn-primary" href="https://github.com/giankbr/brow/releases/latest"><i data-lucide="apple"></i>Download Brow.dmg</a>
+          <a class="btn btn-ghost" href="https://github.com/giankbr/brow"><i data-lucide="github"></i>View on GitHub</a>
+        </div>
+        <div class="steps">
+          <div><span>1</span><strong>Open the DMG</strong><p>Drag Brow into Applications.</p></div>
+          <div><span>2</span><strong>First launch</strong><p>It's ad-hoc signed, so right-click and choose Open once.</p></div>
+          <div><span>3</span><strong>Hover the notch</strong><p>Or press ⌥ Space. That's it.</p></div>
+        </div>
+      </div>
+      <div class="right">
+        <div class="menubar"><i data-lucide="apple" style="width:13px;height:13px"></i><span id="clock">09:41</span></div>
+        <img class="notch" src="landing-page-assets/notch-download-crop.png" alt="">
+        <img class="window" src="landing-page-assets/install-window.png" alt="The Brow disk image: drag Brow into Applications">
+        <div class="term"><span>$</span><code id="cmd">xattr -dr com.apple.quarantine /Applications/Brow.app</code><button id="copy" aria-label="Copy command"><i data-lucide="copy"></i></button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="foot">
+    <div class="running">Running locally · 0.1% CPU</div>
+    <div class="foot-top">
+      <img src="landing-page-assets/brow-icon.png" alt="">
+      <div><h4>Brow</h4><p>The notch, finally earning its place.</p></div>
+      <div class="cta-row">
+        <a class="btn btn-ghost" href="https://github.com/giankbr/brow"><i data-lucide="github"></i>Star on GitHub</a>
+        <a class="btn btn-primary" href="https://github.com/giankbr/brow/releases/latest"><i data-lucide="apple"></i>Download Brow.dmg</a>
+      </div>
+    </div>
+    <div class="cols">
+      <div><h5>PRODUCT</h5><a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#features">AI usage <span class="new">New</span></a><a href="#customize">Customize</a><a href="https://github.com/giankbr/brow/releases">Releases</a></div>
+      <div><h5>PROJECT</h5><a href="https://github.com/giankbr/brow">GitHub</a><a href="https://github.com/giankbr/brow#build">Build from source</a><a href="https://github.com/giankbr/brow/releases">Changelog</a><a href="https://github.com/giankbr/brow/issues">Report an issue</a></div>
+      <div><h5>PRIVACY</h5><span>No tracking</span><span>Location stays on Mac</span><span>No API keys</span><a href="https://github.com/giankbr/brow#install">Permissions</a></div>
+      <div><h5>REQUIREMENTS</h5><span>macOS 14 or later</span><span>Apple silicon &amp; Intel</span><span>2.6 MB download</span><span id="version">v1.3.0</span></div>
+    </div>
+    <div class="credits">
+      <div><span class="eyebrow">Credits</span><h4>Standing on open source.</h4><p>Ideas studied from these projects. Brow's code is written from scratch.</p></div>
+      <div class="chips" id="chips"></div>
+      <div class="font-note"><i data-lucide="type"></i>Be Vietnam Pro © The Be Vietnam Pro Project Authors · SIL Open Font License</div>
+    </div>
+    <div class="bottom"><span>© 2026 Brow</span><span>Made with Swift · no analytics</span></div>
+  </div>
+  <div class="watermark" aria-hidden="true">BROW</div>
+</footer>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  function store(key, value) { try { if (value === undefined) return localStorage.getItem(key); localStorage.setItem(key, value); } catch (e) { return null; } }
+
+  // Credits
+  var projects = [["NotchDrop","Lakr233/NotchDrop"],["DynamicNotchKit","MrKai77/DynamicNotchKit"],["Boring.notch","TheBoredTeam/boring.notch"],["Atoll","Ebullioscopic/Atoll"],["Stats","exelban/stats"],["Maccy","p0deje/Maccy"],["KeyboardShortcuts","sindresorhus/KeyboardShortcuts"],["Pearcleaner","alienator88/Pearcleaner"],["LyricsX","ddddxxx/LyricsX"],["Hidden Bar","dwarvesf/hidden"],["MeetingBar","leits/MeetingBar"],["MonitorControl","MonitorControl/MonitorControl"],["Itsycal","sfsam/Itsycal"]];
+  document.getElementById("chips").innerHTML = projects.map(function (p) {
+    return '<a href="https://github.com/' + p[1] + '"><i data-lucide="github"></i>' + p[0] + '</a>';
+  }).join("");
+
+  // Accent dots, the app's ten accents
+  var accents = [["Blue","#3B8BFF"],["Gold","#F2C230"],["Mint","#3DDC97"],["Teal","#2BD4C5"],["Ocean","#2E9BFF"],["Indigo","#6366F1"],["Violet","#A855F7"],["Rose","#EC4899"],["Crimson","#EF4444"],["Graphite","#D4D4D4"]];
+  var dots = document.getElementById("dots");
+  dots.innerHTML = accents.map(function (a, i) {
+    return '<button style="--c:' + a[1] + '" aria-label="' + a[0] + '" aria-pressed="' + (i === 0) + '" data-name="' + a[0] + '"></button>';
+  }).join("");
+
+  var state = { layout: "Studio", theme: "Dark", size: "M", accent: "Blue", shape: "Drop", font: "Be Vietnam Pro" };
+  var sizes = { S: "Small", M: "Medium", L: "Large" };
+  function label() {
+    document.getElementById("liveLabel").textContent = "Live preview · " + state.layout + " · " + state.theme + " · " + state.accent + " · " + sizes[state.size] + " · " + state.shape;
+  }
+
+  function setTheme(mode, save) {
+    root.setAttribute("data-theme", mode);
+    state.theme = mode === "dark" ? "Dark" : "Light";
+    document.querySelectorAll('[data-key="theme"] button').forEach(function (b) { b.setAttribute("aria-pressed", String(b.textContent === state.theme)); });
+    var btn = document.getElementById("themeBtn");
+    btn.innerHTML = '<i data-lucide="' + (mode === "dark" ? "sun" : "moon") + '"></i>';
+    if (window.lucide) lucide.createIcons();
+    if (save) store("theme", mode);
+    label();
+  }
+  var saved = store("theme");
+  var dark = saved ? saved === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  setTheme(dark ? "dark" : "light", false);
+  document.getElementById("themeBtn").addEventListener("click", function () {
+    setTheme(root.getAttribute("data-theme") === "dark" ? "light" : "dark", true);
+  });
+
+  document.querySelectorAll(".seg, .shapes").forEach(function (group) {
+    group.addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      group.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+      var key = group.dataset.key, value = b.textContent.trim();
+      if (key === "theme") return setTheme(value === "Dark" ? "dark" : "light", true);
+      if (key === "font") { root.setAttribute("data-font", value === "SF Pro" ? "sf" : "vietnam"); }
+      if (key === "size") { document.getElementById("previewImg").style.transform = "scale(" + ({ S: .86, M: 1, L: 1.1 })[value] + ")"; }
+      state[key] = value;
+      label();
+    });
+  });
+  dots.addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    dots.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+    root.style.setProperty("--accent", b.style.getPropertyValue("--c"));
+    state.accent = b.dataset.name;
+    label();
+  });
+  document.querySelector(".switch").addEventListener("click", function () {
+    this.setAttribute("aria-checked", String(this.getAttribute("aria-checked") !== "true"));
+  });
+
+  document.getElementById("copy").addEventListener("click", function () {
+    var text = document.getElementById("cmd").textContent, btn = this;
+    (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(function () {
+      btn.innerHTML = '<i data-lucide="check"></i>'; lucide.createIcons();
+      setTimeout(function () { btn.innerHTML = '<i data-lucide="copy"></i>'; lucide.createIcons(); }, 1500);
+    }).catch(function () {});
+  });
+
+  function tick() {
+    var d = new Date();
+    document.getElementById("clock").textContent = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  }
+  tick(); setInterval(tick, 30000);
+
+  // The newest release's version, when GitHub answers (the repository has to be public).
+  fetch("https://api.github.com/repos/giankbr/brow/releases/latest").then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+    if (j && j.tag_name) document.getElementById("version").textContent = j.tag_name;
+  }).catch(function () {});
+
+  if (window.lucide) lucide.createIcons();
+})();
+</script>
+</body>
+</html>
