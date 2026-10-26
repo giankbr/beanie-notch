@@ -73,11 +73,16 @@ Brow is written in Swift and SwiftUI with no third-party dependencies. The downl
 |---|---|
 | ![Timer](docs/notch-timer.png) | ![Download](docs/notch-download.png) |
 
+| Messages |
+|---|
+| ![Unread messages](docs/notch-messages.png) |
+
 - Lyrics or a mini player while music plays.
 - Volume and brightness levels.
 - Download progress.
 - Timer, meeting and prayer countdowns.
 - AirPods charge, for each bud and the case.
+- **Messages:** when WhatsApp, Telegram, Slack, Discord, Messages, Mail, Teams, Signal or LINE gets a new unread badge in the Dock, the notch shows it. Click the notch to open the app. The header also keeps a count, with a menu that jumps into each app.
 - Short notices: charging, Caps Lock, screenshots, finished downloads, Shortcuts results, updates.
 - **Gestures:** swipe sideways over the notch to change songs; scroll up or down for volume.
 
@@ -113,6 +118,7 @@ macOS asks for access only when a feature needs it:
 | Downloads, Desktop, Documents | Download progress, screenshots to the Shelf, large files |
 | Automation | Volume, dark mode and Dock hiding (through System Events) |
 | Camera | The mirror in Tools; nothing is recorded |
+| Accessibility | Reading the unread badges on Dock icons (only the numbers, never the messages) |
 | Local network | Phone drop |
 
 ## Build
@@ -135,6 +141,7 @@ Commit messages follow [Conventional Commits](https://www.conventionalcommits.or
   - External monitors are reached over DDC/CI through IOAVService.
   - All of these are loaded at run time, so a missing symbol only switches that feature off.
 - **AI usage:** Brow reads the logs Claude Code and Codex already write (`~/.claude/projects`, `~/.codex/sessions`), and only the new lines on each pass. Costs are Anthropic API list prices for the same tokens, not what a subscription charges. Brow never reads or sends sign-in tokens, which is why Cursor and Antigravity, which keep usage on their servers, are listed but not measured.
+- **Messages:** read from the badges on Dock icons through Accessibility, every 2 seconds. Brow only sees the count on the icon, so the app has to be in the Dock (running or kept there). macOS keeps message contents to itself, so there is no sender or text.
 - **Global shortcut:** registered through Carbon hot keys, so it needs no Accessibility permission.
 - **Network:**
   - Lyrics come from LRCLIB, NetEase, QQ Music and Kugou; only the title and artist are sent.
