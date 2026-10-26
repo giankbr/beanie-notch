@@ -1,5 +1,5 @@
 {
-  "name": "notch-app-tooling",
+  "name": "brow-tooling",
   "private": true,
   "description": "Commit message linting only; the app itself is Swift (see build.sh).",
   "scripts": {

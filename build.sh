@@ -1,17 +1,17 @@
 #!/bin/bash
-# Builds dist/Notchy.app (universal, ad-hoc signed) and dist/Notchy.dmg.
+# Builds dist/Brow.app (universal, ad-hoc signed) and dist/Brow.dmg.
 set -euo pipefail
 cd "$(dirname "$0")"
 version="${VERSION:-1.0.0}"
 dist="dist"
-app="$dist/Notchy.app"
+app="$dist/Brow.app"
 
 swift build -c release --arch arm64 --arch x86_64 -Xswiftc -Osize -Xlinker -dead_strip
 
 rm -rf "$dist"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources" "$app/Contents/Frameworks"
-cp .build/apple/Products/Release/Notchy "$app/Contents/MacOS/Notchy"
-strip -x "$app/Contents/MacOS/Notchy"
+cp .build/apple/Products/Release/Brow "$app/Contents/MacOS/Brow"
+strip -x "$app/Contents/MacOS/Brow"
 
 # The Now Playing helper: plain clang against Xcode's SDK (the Command Line Tools one may lag the OS).
 dev="$(xcode-select -p)"
@@ -26,12 +26,12 @@ cp -R Resources/Fonts "$app/Contents/Resources/Fonts"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 swift tools/make_icon.swift "$work/icon.png"
-mkdir "$work/Notchy.iconset"
+mkdir "$work/Brow.iconset"
 for s in 16 32 128 256 512; do
-  sips -z $s $s "$work/icon.png" --out "$work/Notchy.iconset/icon_${s}x${s}.png" > /dev/null
-  sips -z $((s * 2)) $((s * 2)) "$work/icon.png" --out "$work/Notchy.iconset/icon_${s}x${s}@2x.png" > /dev/null
+  sips -z $s $s "$work/icon.png" --out "$work/Brow.iconset/icon_${s}x${s}.png" > /dev/null
+  sips -z $((s * 2)) $((s * 2)) "$work/icon.png" --out "$work/Brow.iconset/icon_${s}x${s}@2x.png" > /dev/null
 done
-iconutil -c icns "$work/Notchy.iconset" -o "$app/Contents/Resources/Notchy.icns"
+iconutil -c icns "$work/Brow.iconset" -o "$app/Contents/Resources/Brow.icns"
 
 codesign --force --deep --sign - "$app"
 codesign --verify --deep --strict "$app"
@@ -39,5 +39,5 @@ codesign --verify --deep --strict "$app"
 mkdir "$work/dmg"
 cp -R "$app" "$work/dmg/"
 ln -s /Applications "$work/dmg/Applications"
-hdiutil create -volname "Notchy $version" -srcfolder "$work/dmg" -ov -format UDZO "$dist/Notchy.dmg" > /dev/null
-echo "built $app and $dist/Notchy.dmg"
+hdiutil create -volname "Brow $version" -srcfolder "$work/dmg" -ov -format UDZO "$dist/Brow.dmg" > /dev/null
+echo "built $app and $dist/Brow.dmg"

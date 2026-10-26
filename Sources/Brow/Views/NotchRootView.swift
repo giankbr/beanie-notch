@@ -296,6 +296,7 @@ struct ExpandedView: View {
             case .shelf: ShelfView()
             case .clipboard: ClipboardView()
             case .music: MusicView()
+            case .ai: AIView()
             case .controls: ControlsView()
             case .tools: ToolsView()
             case .settings: SettingsView()
@@ -403,6 +404,7 @@ private struct StudioSidebar: View {
             item(.shelf, count: shelf.items.isEmpty ? nil : "\(shelf.items.count)")
             item(.clipboard, count: clipboard.entries.isEmpty ? nil : "\(clipboard.entries.count)")
             group("System")
+            item(.ai)
             item(.controls)
             item(.tools)
             item(.settings)
@@ -423,7 +425,7 @@ private struct StudioSidebar: View {
         }
         .foregroundStyle(Theme.faint)
         .padding(.leading, 10)
-        .padding(.top, settings.size == .compact ? 3 : 6)
+        .padding(.top, settings.size == .large ? 6 : 3)
         .padding(.bottom, 2)
     }
 
@@ -449,8 +451,8 @@ private struct StudioSidebar: View {
                 }
             }
             .padding(.horizontal, 8)
-            // Nine rows have to fit the compact panel too.
-            .frame(height: settings.size == .compact ? 20 : 23)
+            // Ten rows have to fit every panel size.
+            .frame(height: settings.size == .large ? 23 : settings.size == .regular ? 21 : 19)
             .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(active ? Theme.ink.opacity(0.09) : .clear))
             .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(active ? Theme.stroke : .clear))
             .contentShape(Rectangle())

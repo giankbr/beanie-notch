@@ -18,7 +18,7 @@ struct CameraMirror: NSViewRepresentable {
 
 final class CameraPreview: NSView {
     private let session = AVCaptureSession()
-    private let queue = DispatchQueue(label: "notchy.camera")
+    private let queue = DispatchQueue(label: "brow.camera")
     private let preview: AVCaptureVideoPreviewLayer
 
     override init(frame: NSRect) {

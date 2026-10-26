@@ -235,22 +235,22 @@ private struct FocusPage: View {
             TimelineView(.periodic(from: .now, by: focus.isRunning ? 1 : 3600)) { context in
                 let left = focus.left(at: context.date)
                 VStack(alignment: .leading, spacing: 6) {
-                    HStack(alignment: .firstTextBaseline) {
+                    HStack(alignment: .center) {
                         Text(formatClock(left))
                             .font(.app(size: 28, weight: .bold))
                             .monospacedDigit()
                             .foregroundStyle(focus.phase == .focus ? Theme.ink : Theme.accent2)
                             .contentTransition(.numericText())
                         Spacer(minLength: 4)
-                        Text(focus.phase == .focus ? "Focus" : "Break").font(.app(size: 9.5, weight: .medium)).foregroundStyle(Theme.faint)
+                        // The presets sit beside the clock, so the page fits the panel's height.
+                        VStack(alignment: .trailing, spacing: 1) {
+                            ForEach(FocusTimer.presets.indices, id: \.self) { i in
+                                let p = FocusTimer.presets[i]
+                                chip("\(p.focus)/\(p.rest)", active: focus.preset == i) { focus.choose(i) }
+                            }
+                        }
                     }
                     SegmentMeter(value: 1 - left / max(focus.duration, 1), color: focus.phase == .focus ? Theme.accent : Theme.accent2)
-                }
-            }
-            HStack(spacing: 2) {
-                ForEach(FocusTimer.presets.indices, id: \.self) { i in
-                    let p = FocusTimer.presets[i]
-                    chip("\(p.focus)/\(p.rest)", active: focus.preset == i) { focus.choose(i) }
                 }
             }
             Spacer(minLength: 0)

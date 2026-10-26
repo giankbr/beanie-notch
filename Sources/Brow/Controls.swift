@@ -264,7 +264,7 @@ final class Displays: ObservableObject {
     }
 
     @Published private(set) var screens: [Screen] = []
-    private let queue = DispatchQueue(label: "notchy.ddc")
+    private let queue = DispatchQueue(label: "brow.ddc")
     private var pending: [String: Double] = [:]
 
     private typealias GetBrightness = @convention(c) (CGDirectDisplayID, UnsafeMutablePointer<Float>) -> Int32

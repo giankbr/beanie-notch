@@ -69,7 +69,7 @@ private struct UninstallerView: View {
                     detail(app)
                 } else {
                     Placeholder(icon: "shippingbox", title: "Pick an app",
-                                caption: "Notchy finds the caches, preferences and support files it leaves behind")
+                                caption: "Brow finds the caches, preferences and support files it leaves behind")
                 }
             }
         }

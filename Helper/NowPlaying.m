@@ -1,5 +1,5 @@
 // Loaded by /usr/bin/perl, which macOS still lets read the system's Now Playing (MediaRemote).
-// notchy_stream prints one JSON line per change; notchy_send runs the command in NOTCHY_CMD and returns.
+// brow_stream prints one JSON line per change; brow_send runs the command in BROW_CMD and returns.
 #import <AppKit/AppKit.h>
 #import <Foundation/Foundation.h>
 #include <dlfcn.h>
@@ -61,7 +61,7 @@ static void emit(void) {
     });
 }
 
-void notchy_stream(void *perl, void *cv) {
+void brow_stream(void *perl, void *cv) {
     RegisterFn reg = mr("MRMediaRemoteRegisterForNowPlayingNotifications");
     if (!reg) return;
     reg(dispatch_get_main_queue());
@@ -71,7 +71,7 @@ void notchy_stream(void *perl, void *cv) {
         [NSNotificationCenter.defaultCenter addObserverForName:name object:nil queue:nil usingBlock:^(NSNotification *n) { emit(); }];
     }
     emit();
-    // Exits with the app: stdin closes when Notchy quits.
+    // Exits with the app: stdin closes when Brow quits.
     dispatch_source_t src = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, STDIN_FILENO, 0, dispatch_get_main_queue());
     dispatch_source_set_event_handler(src, ^{
         char buf[64];
@@ -82,8 +82,8 @@ void notchy_stream(void *perl, void *cv) {
     CFRunLoopRun();
 }
 
-void notchy_send(void *perl, void *cv) {
-    const char *cmd = getenv("NOTCHY_CMD");
+void brow_send(void *perl, void *cv) {
+    const char *cmd = getenv("BROW_CMD");
     if (!cmd) return;
     if (strncmp(cmd, "seek:", 5) == 0) {
         SetTimeFn setTime = mr("MRMediaRemoteSetElapsedTime");

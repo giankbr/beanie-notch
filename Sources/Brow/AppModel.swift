@@ -3,7 +3,7 @@ import Combine
 import SwiftUI
 
 enum Tab: String, CaseIterable, Identifiable {
-    case home, today, prayer, shelf, clipboard, music, controls, tools, settings
+    case home, today, prayer, shelf, clipboard, music, ai, controls, tools, settings
     var id: String { rawValue }
 
     var icon: String {
@@ -14,6 +14,7 @@ enum Tab: String, CaseIterable, Identifiable {
         case .shelf: "tray.full.fill"
         case .clipboard: "doc.on.clipboard.fill"
         case .music: "music.note"
+        case .ai: "sparkles"
         case .controls: "switch.2"
         case .tools: "wrench.and.screwdriver.fill"
         case .settings: "gearshape.fill"
@@ -25,6 +26,7 @@ enum Tab: String, CaseIterable, Identifiable {
         switch self {
         case .prayer: "Prayer"
         case .music: "Music"
+        case .ai: "AI usage"
         default: title
         }
     }
@@ -37,6 +39,7 @@ enum Tab: String, CaseIterable, Identifiable {
         case .shelf: "Shelf"
         case .clipboard: "Clipboard"
         case .music: "Now Playing"
+        case .ai: "AI usage"
         case .controls: "Controls"
         case .tools: "Tools"
         case .settings: "Settings"
@@ -109,6 +112,7 @@ final class AppModel: ObservableObject {
     let worldClock = WorldClock()
     let notes = Notes()
     let updater = Updater()
+    let aiUsage = AIUsage()
     private let volumeWatcher = VolumeWatcher()
     private let brightnessWatcher = BrightnessWatcher()
     private let keyboard = KeyboardWatcher()
@@ -152,7 +156,7 @@ final class AppModel: ObservableObject {
                               left: ok ? "Shortcut done" : "Shortcut failed", right: name))
         }
         updater.onNewVersion = { [weak self] version in
-            self?.show(Notice(icon: "arrow.down.app.fill", color: Theme.accent2, left: "Update", right: "Notchy \(version) is out", duration: 6))
+            self?.show(Notice(icon: "arrow.down.app.fill", color: Theme.accent2, left: "Update", right: "Brow \(version) is out", duration: 6))
         }
         // AirPods and other Bluetooth headphones: their charge follows the "Connected" notice once it's known.
         audio.onBluetooth = { [weak self] name in
@@ -276,6 +280,7 @@ extension View {
             .environmentObject(m.worldClock)
             .environmentObject(m.notes)
             .environmentObject(m.updater)
+            .environmentObject(m.aiUsage)
     }
 }
 

@@ -115,7 +115,7 @@ final class Lyrics: ObservableObject {
         components.queryItems = query
         guard let url = components.url else { return [] }
         var request = URLRequest(url: url, timeoutInterval: 10)
-        request.setValue("Notchy/1.0 (macOS notch app)", forHTTPHeaderField: "User-Agent")
+        request.setValue("Brow/1.0 (macOS notch app)", forHTTPHeaderField: "User-Agent")
         guard let (data, response) = try? await URLSession.shared.data(for: request),
               (response as? HTTPURLResponse)?.statusCode == 200 else { return [] }
         return (try? JSONDecoder().decode([Record].self, from: data)) ?? []
@@ -204,7 +204,7 @@ final class Lyrics: ObservableObject {
 
     nonisolated private static func request<T: Decodable>(_ url: URL, referer: String, body: Data? = nil) async -> T? {
         var request = URLRequest(url: url, timeoutInterval: 8)
-        request.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Notchy/1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Brow/1.0", forHTTPHeaderField: "User-Agent")
         request.setValue(referer, forHTTPHeaderField: "Referer")
         if let body {
             request.httpMethod = "POST"

@@ -20,13 +20,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         Font.registerAppFonts()
+        Self.migrateFromNotchy()
         model = AppModel()
         controller = NotchController(model: model)
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        statusItem.button?.image = NSImage(systemSymbolName: "rectangle.topthird.inset.filled", accessibilityDescription: "Notchy")
+        statusItem.button?.image = NSImage(systemSymbolName: "rectangle.topthird.inset.filled", accessibilityDescription: "Brow")
         let menu = NSMenu()
-        let open = NSMenuItem(title: "Open Notchy", action: #selector(openNotch), keyEquivalent: "")
+        let open = NSMenuItem(title: "Open Brow", action: #selector(openNotch), keyEquivalent: "")
         open.target = self
         menu.addItem(open)
         let clean = NSMenuItem(title: "Full System Clean", action: #selector(fullClean), keyEquivalent: "")
@@ -36,8 +37,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         color.target = self
         menu.addItem(color)
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Quit Notchy", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        menu.addItem(withTitle: "Quit Brow", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         statusItem.menu = menu
+    }
+
+    // The app was called Notchy: its settings, pins and Shelf come along the first time Brow opens.
+    private static func migrateFromNotchy() {
+        let defaults = UserDefaults.standard
+        guard let id = Bundle.main.bundleIdentifier, !defaults.bool(forKey: "migratedFromNotchy") else { return }
+        if let old = defaults.persistentDomain(forName: "id.morfotech.notchy"), !old.isEmpty {
+            defaults.setPersistentDomain(old.merging(defaults.persistentDomain(forName: id) ?? [:]) { $1 }, forName: id)
+        }
+        defaults.set(true, forKey: "migratedFromNotchy")
     }
 
     @objc private func openNotch() { controller.expand(pinned: true) }

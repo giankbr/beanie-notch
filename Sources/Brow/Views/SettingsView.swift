@@ -151,7 +151,7 @@ struct SettingsView: View {
                 }
                 section("System")
                 card {
-                    row("power", "Open at login", loginError ?? "Start Notchy when you log in") {
+                    row("power", "Open at login", loginError ?? "Start Brow when you log in") {
                         Toggle("", isOn: $launchAtLogin)
                             .onChange(of: launchAtLogin) { _, on in setLaunchAtLogin(on) }
                     }
@@ -172,10 +172,10 @@ struct SettingsView: View {
                     }
                 }
                 HStack {
-                    Text("Notchy \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev")")
+                    Text("Brow \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev")")
                         .font(.app(size: 9)).foregroundStyle(Theme.faint)
                     Spacer()
-                    PillButton(text: "Quit Notchy", icon: "xmark", color: Theme.red) { NSApp.terminate(nil) }
+                    PillButton(text: "Quit Brow", icon: "xmark", color: Theme.red) { NSApp.terminate(nil) }
                 }
                 .padding(.top, 4)
             }
@@ -199,7 +199,7 @@ struct SettingsView: View {
     // One card per section; rows are split by hairlines, the first one hidden under the card's edge.
     private var updateCaption: String {
         if updater.failed { return "Couldn't reach GitHub (the repository must be public)" }
-        if updater.updateAvailable { return "Notchy \(updater.latest ?? "") is out, you have \(updater.current)" }
+        if updater.updateAvailable { return "Brow \(updater.latest ?? "") is out, you have \(updater.current)" }
         if updater.latest != nil { return "Up to date (\(updater.current))" }
         return "Looks for a new release on GitHub once a day"
     }
@@ -232,7 +232,7 @@ struct SettingsView: View {
             if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
             loginError = nil
         } catch {
-            loginError = "Move Notchy to Applications first"
+            loginError = "Move Brow to Applications first"
             launchAtLogin = SMAppService.mainApp.status == .enabled
         }
     }
