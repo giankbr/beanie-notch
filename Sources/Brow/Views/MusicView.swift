@@ -5,9 +5,12 @@ import SwiftUI
 struct MusicView: View {
     @EnvironmentObject var media: MediaController
     @EnvironmentObject var lyrics: Lyrics
+    @EnvironmentObject var settings: Settings
 
     var body: some View {
-        if let now = media.now {
+        if let now = media.now, settings.size == .mini {
+            CompactPlayer(now: now, tint: media.tint ?? Theme.accent)
+        } else if let now = media.now {
             let tint = media.tint ?? Theme.accent
             let showsLyrics = lyrics.state == .synced || lyrics.state == .plain || lyrics.state == .loading
             // Narrow layouts drop the lyrics column rather than squeeze or spill the player.
@@ -292,5 +295,69 @@ private struct ProgressTrack: View {
             })
         }
         .frame(height: 12)
+    }
+}
+
+// Mini size: cover, song, progress and the three main buttons in one row, lyrics beside them.
+private struct CompactPlayer: View {
+    @EnvironmentObject var media: MediaController
+    @EnvironmentObject var lyrics: Lyrics
+    let now: NowPlaying
+    let tint: Color
+
+    var body: some View {
+        let shown = Lyrics.clean(title: now.title, artist: now.artist)
+        HStack(spacing: 14) {
+            Artwork(tint: tint, side: 104)
+            VStack(alignment: .leading, spacing: 5) {
+                Text(now.app).font(.app(size: 9, weight: .semibold)).foregroundStyle(tint).lineLimit(1)
+                Text(shown.0.isEmpty ? now.title : shown.0).font(.app(size: 13, weight: .bold)).lineLimit(1)
+                Text(shown.1.isEmpty ? now.artist : shown.1).font(.app(size: 10)).foregroundStyle(Theme.dim).lineLimit(1)
+                TimelineView(.periodic(from: .now, by: now.playing ? 1 : 3600)) { context in
+                    let position = now.position(at: context.date)
+                    VStack(spacing: 3) {
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                Capsule().fill(Theme.ink.opacity(0.12))
+                                Capsule().fill(tint).frame(width: geo.size.width * (now.duration > 0 ? position / now.duration : 0))
+                            }
+                        }
+                        .frame(height: 4)
+                        HStack {
+                            Text(formatClock(position))
+                            Spacer()
+                            Text("-" + formatClock(max(0, now.duration - position)))
+                        }
+                        .font(.mono(size: 8.5)).foregroundStyle(Theme.faint)
+                    }
+                }
+                HStack(spacing: 10) {
+                    control("backward.fill") { media.previous() }
+                    control(now.playing ? "pause.fill" : "play.fill", primary: true) { media.playPause() }
+                    control("forward.fill") { media.next() }
+                }
+            }
+            .frame(width: 200)
+            if lyrics.state != .idle && lyrics.state != .none {
+                Rectangle().fill(Theme.stroke).frame(width: 1).padding(.vertical, 2)
+                LyricsColumn(now: now, tint: tint).frame(maxWidth: .infinity)
+            } else {
+                Spacer(minLength: 0)
+            }
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(LinearGradient(colors: [tint.opacity(0.2), tint.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing)))
+    }
+
+    private func control(_ icon: String, primary: Bool = false, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon).font(.system(size: primary ? 12 : 10, weight: .bold))
+                .foregroundStyle(primary ? Color.white : Theme.ink)
+                .frame(width: primary ? 30 : 24, height: primary ? 30 : 24)
+                .background(Circle().fill(primary ? tint : Theme.ink.opacity(0.08)))
+        }
+        .buttonStyle(PressStyle())
     }
 }

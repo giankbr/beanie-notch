@@ -59,20 +59,22 @@ struct SettingsView: View {
                             Spacer(minLength: 0)
                         }
                         .padding(.horizontal, 8)
-                        .frame(height: 22)
+                        .frame(height: settings.size == .mini ? 18 : 22)
                         .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(active ? Theme.ink.opacity(0.08) : .clear))
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
                 Spacer(minLength: 6)
-                Text("Brow \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev")")
-                    .font(.mono(size: 8.5)).foregroundStyle(Theme.faint).padding(.leading, 8)
-                Button { NSApp.terminate(nil) } label: {
-                    Label("Quit", systemImage: "power").font(.app(size: 9.5, weight: .semibold)).foregroundStyle(Theme.red)
-                        .padding(.horizontal, 8).frame(height: 20)
+                if settings.size != .mini {
+                    Text("Brow \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev")")
+                        .font(.mono(size: 8.5)).foregroundStyle(Theme.faint).padding(.leading, 8)
+                    Button { NSApp.terminate(nil) } label: {
+                        Label("Quit", systemImage: "power").font(.app(size: 9.5, weight: .semibold)).foregroundStyle(Theme.red)
+                            .padding(.horizontal, 8).frame(height: 20)
+                    }
+                    .buttonStyle(PressStyle())
                 }
-                .buttonStyle(PressStyle())
             }
             .padding(5)
             .frame(width: 138)

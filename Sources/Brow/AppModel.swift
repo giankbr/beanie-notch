@@ -87,7 +87,7 @@ final class AppModel: ObservableObject {
     var openSize: CGSize {
         let body = settings.size.body
         // Studio's labelled sidebar needs room of its own.
-        var extra: CGFloat = settings.layout == .studio ? 96 : 0
+        var extra: CGFloat = settings.layout == .studio && settings.size != .mini ? 96 : 0
         if settings.notchStyle == .seamless { extra += NotchStyle.ear * 2 }
         return CGSize(width: body.width + extra, height: closedSize.height + body.height)
     }

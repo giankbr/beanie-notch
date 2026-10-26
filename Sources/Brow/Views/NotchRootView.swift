@@ -18,7 +18,9 @@ struct NotchRootView: View {
     // Only the outline animates. The panel's content keeps its open size the whole time, so nothing is laid
     // out again frame by frame, and it stays built between openings instead of being rebuilt on each one.
     var body: some View {
-        let shape = NotchShape(style: settings.notchStyle, neckWidth: model.expanded ? model.closedSize.width : model.closedWidth,
+        // Mini opens across the menu bar either side of the notch, so its top row is as wide as the panel.
+        let neck = model.expanded ? (settings.size == .mini ? model.openSize.width : model.closedSize.width) : model.closedWidth
+        let shape = NotchShape(style: settings.notchStyle, neckWidth: neck,
                               neckHeight: model.closedSize.height,
                               radius: model.expanded ? 24 : 10)
         let open = model.openSize
@@ -242,6 +244,34 @@ struct ExpandedView: View {
     @EnvironmentObject var settings: Settings
 
     var body: some View {
+        Group {
+            if settings.size == .mini { mini } else { full }
+        }
+        .font(.app(size: 11))
+        .foregroundStyle(Theme.ink)
+        .symbolRenderingMode(.monochrome)
+    }
+
+    // Mini: the tabs sit in the menu bar row either side of the notch, and the page gets everything below.
+    private var mini: some View {
+        let inset = 12 + (settings.notchStyle == .seamless ? NotchStyle.ear : 0)
+        return VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                EarTabs(tabs: Array(Tab.allCases.prefix(5))).frame(maxWidth: .infinity, alignment: .leading)
+                Color.clear.frame(width: model.closedSize.width + 16)
+                EarTabs(tabs: Array(Tab.allCases.dropFirst(5))).frame(maxWidth: .infinity, alignment: .trailing)
+            }
+            .padding(.horizontal, inset)
+            .frame(height: model.closedSize.height)
+            .padding(.top, settings.notchStyle == .floating ? 8 : 0)
+            page
+                .padding(.horizontal, inset)
+                .padding(.top, 6)
+                .padding(.bottom, 10)
+        }
+    }
+
+    private var full: some View {
         VStack(spacing: 0) {
             // The menu bar's height: the notch and the menu bar items live there.
             Color.clear.frame(height: model.closedSize.height + (settings.notchStyle == .floating ? 8 : 0))
@@ -303,9 +333,6 @@ struct ExpandedView: View {
             .padding(.top, 8)
             .padding(.bottom, 12)
         }
-        .font(.app(size: 11))
-        .foregroundStyle(Theme.ink)
-        .symbolRenderingMode(.monochrome)
     }
 
     // Dashboard pages scroll when the panel is shorter than them; the rest size or scroll their own content
@@ -723,6 +750,29 @@ private struct LauncherGrid: View {
         case .controls: toggles.darkMode ? "Dark mode on" : "Quick switches"
         case .tools: "Uninstall · large files"
         case .settings: "Look and behaviour"
+        }
+    }
+}
+
+// Icon tabs for one side of the notch in the Mini size.
+private struct EarTabs: View {
+    @EnvironmentObject var model: AppModel
+    let tabs: [Tab]
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(tabs) { tab in
+                let active = model.tab == tab
+                Button { withAnimation(.snappy(duration: 0.2)) { model.tab = tab } } label: {
+                    TabIcon(name: tab.icon, size: 10.5, weight: .semibold)
+                        .foregroundStyle(active ? Theme.accent : Color.white.opacity(0.55))
+                        .frame(width: 26, height: 22)
+                        .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(active ? Theme.accent.opacity(0.18) : .clear))
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help(tab.title)
+            }
         }
     }
 }

@@ -42,12 +42,14 @@ enum LayoutStyle: String, CaseIterable {
 }
 
 enum PanelSize: String, CaseIterable {
-    case compact, regular, large
+    case mini, compact, regular, large
 
     var title: String { rawValue.capitalized }
 
+    // Mini matches the open size of the common notch apps (about 640 × 200 with the notch row).
     var body: CGSize {
         switch self {
+        case .mini: CGSize(width: 640, height: 168)
         case .compact: CGSize(width: 600, height: 270)
         case .regular: CGSize(width: 680, height: 300)
         case .large: CGSize(width: 780, height: 350)
