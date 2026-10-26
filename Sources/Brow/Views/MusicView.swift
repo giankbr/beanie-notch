@@ -9,7 +9,7 @@ struct MusicView: View {
     var body: some View {
         if let now = media.now {
             let tint = media.tint ?? Theme.accent
-            let showsLyrics = lyrics.state == .synced || lyrics.state == .plain
+            let showsLyrics = lyrics.state == .synced || lyrics.state == .plain || lyrics.state == .loading
             // Narrow layouts drop the lyrics column rather than squeeze or spill the player.
             ViewThatFits(in: .horizontal) {
                 if showsLyrics {
@@ -231,7 +231,9 @@ private struct LyricsColumn: View {
 
     var body: some View {
         Group {
-            if lyrics.state == .synced {
+            if lyrics.state == .loading {
+                LoadingView(text: "Finding lyrics…")
+            } else if lyrics.state == .synced {
                 TimelineView(.periodic(from: .now, by: now.playing ? 0.5 : 3600)) { context in
                     let current = lyrics.index(at: now.position(at: context.date))
                     // Two lines either side of the one being sung, the far ones fading into the card.

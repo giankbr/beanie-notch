@@ -174,7 +174,9 @@ private struct ShortcutsCard: View {
             .padding(.horizontal, 8)
             .frame(height: 22)
             .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(Theme.ink.opacity(0.06)))
-            if shortcuts.loaded && shortcuts.names.isEmpty {
+            if !shortcuts.loaded {
+                LoadingView(text: "Loading shortcuts…")
+            } else if shortcuts.names.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("No shortcuts yet").font(.app(size: 9.5)).foregroundStyle(Theme.faint)
                     PillButton(text: "Open Shortcuts", color: Theme.accent) {

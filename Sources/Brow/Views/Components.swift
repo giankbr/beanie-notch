@@ -515,6 +515,19 @@ struct TabIcon: View {
     }
 }
 
+// A small spinner with what's being waited for.
+struct LoadingView: View {
+    var text: String
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ProgressView().controlSize(.small)
+            Text(text).font(.app(size: 10)).foregroundStyle(Theme.dim)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
 // The page at full height when it fits, scrolling when the panel is shorter than it (small sizes, roomy layouts).
 struct FitOrScroll<Content: View>: View {
     @ViewBuilder var content: Content

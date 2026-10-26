@@ -308,17 +308,19 @@ struct ExpandedView: View {
         .symbolRenderingMode(.monochrome)
     }
 
+    // Dashboard pages scroll when the panel is shorter than them; the rest size or scroll their own content
+    // (the player's artwork and the camera preview take their size from the panel, so they can't be measured).
     private var page: some View {
-        FitOrScroll {
+        Group {
             switch model.tab {
             case .home: HomeView()
-            case .today: TodayView()
-            case .prayer: PrayerView()
+            case .today: FitOrScroll { TodayView() }
+            case .prayer: FitOrScroll { PrayerView() }
             case .shelf: ShelfView()
             case .clipboard: ClipboardView()
             case .music: MusicView()
-            case .ai: AIView()
-            case .controls: ControlsView()
+            case .ai: FitOrScroll { AIView() }
+            case .controls: FitOrScroll { ControlsView() }
             case .tools: ToolsView()
             case .settings: SettingsView()
             }

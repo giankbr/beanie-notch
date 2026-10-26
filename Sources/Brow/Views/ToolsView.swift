@@ -22,7 +22,9 @@ struct ToolsView: View {
             case 0: UninstallerView()
             case 1: LargeFilesView()
             default:
+                // The spinner sits behind the preview and disappears once the first frames cover it.
                 CameraMirror()
+                    .background { LoadingView(text: "Starting camera…") }
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                     .overlay(alignment: .bottomLeading) {
                         Pill(text: "Camera on while this shows", color: .white, dot: true).padding(10)
@@ -44,20 +46,24 @@ private struct UninstallerView: View {
         HStack(spacing: 10) {
             VStack(spacing: 6) {
                 SearchField(placeholder: "Search apps", text: $query)
-                ScrollView {
-                    LazyVStack(spacing: 2) {
-                        ForEach(filtered) { app in
-                            let active = uninstaller.selected == app
-                            HStack(spacing: 8) {
-                                Image(nsImage: NSWorkspace.shared.icon(forFile: app.url.path)).resizable().frame(width: 18, height: 18)
-                                Text(app.name).font(.app(size: 10.5, weight: active ? .semibold : .regular)).lineLimit(1)
-                                Spacer(minLength: 0)
+                if uninstaller.apps.isEmpty {
+                    LoadingView(text: "Listing apps…")
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 2) {
+                            ForEach(filtered) { app in
+                                let active = uninstaller.selected == app
+                                HStack(spacing: 8) {
+                                    Image(nsImage: NSWorkspace.shared.icon(forFile: app.url.path)).resizable().frame(width: 18, height: 18)
+                                    Text(app.name).font(.app(size: 10.5, weight: active ? .semibold : .regular)).lineLimit(1)
+                                    Spacer(minLength: 0)
+                                }
+                                .padding(.horizontal, 8)
+                                .frame(height: 26)
+                                .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(active ? Theme.accent.opacity(0.14) : .clear))
+                                .contentShape(Rectangle())
+                                .onTapGesture { uninstaller.select(app) }
                             }
-                            .padding(.horizontal, 8)
-                            .frame(height: 26)
-                            .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(active ? Theme.accent.opacity(0.14) : .clear))
-                            .contentShape(Rectangle())
-                            .onTapGesture { uninstaller.select(app) }
                         }
                     }
                 }

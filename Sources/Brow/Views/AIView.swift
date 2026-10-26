@@ -9,6 +9,19 @@ struct AIView: View {
     private var codex: AIUsage.Provider? { usage.providers.first { $0.id == "codex" } }
 
     var body: some View {
+        Group {
+            // The first read goes through every log of the past week, which takes a moment.
+            if usage.providers.isEmpty {
+                LoadingView(text: "Reading Claude Code and Codex logs…").frame(minHeight: 160)
+            } else {
+                content
+            }
+        }
+        .onAppear { usage.setActive(true) }
+        .onDisappear { usage.setActive(false) }
+    }
+
+    private var content: some View {
         VStack(spacing: 10) {
             HStack(spacing: 0) {
                 StatCell(label: "Today", color: Theme.accent, value: money(claude?.today.cost),
@@ -37,8 +50,6 @@ struct AIView: View {
             }
             .frame(maxHeight: .infinity)
         }
-        .onAppear { usage.setActive(true) }
-        .onDisappear { usage.setActive(false) }
     }
 
     private var totalToday: Int { (claude?.today.tokens ?? 0) + (codex?.today.tokens ?? 0) }
