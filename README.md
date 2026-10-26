@@ -14,6 +14,10 @@ Brow is written in Swift and SwiftUI with no third-party dependencies. The downl
 |---|---|
 | ![AI usage](docs/ai.png) | ![Controls](docs/controls.png) |
 
+| Launcher layout | Settings |
+|---|---|
+| ![Launcher layout](docs/launcher.png) | ![Settings](docs/settings.png) |
+
 ## Features
 
 ### Open panel
@@ -88,10 +92,18 @@ Brow is written in Swift and SwiftUI with no third-party dependencies. The downl
 
 ### Look
 
-- Four layouts: Studio, Compact, Top tabs and Classic.
+- Six layouts:
+  - **Studio**: a labelled side menu.
+  - **Compact**: an icon rail.
+  - **Top tabs**: tabs along the top.
+  - **Classic**: a greeting and a dock.
+  - **Minimal**: just the page; the title is the menu.
+  - **Launcher**: opens on a grid of live tiles.
+- Every page fits every layout and size, and scrolls when the panel is too short for it.
 - Dark and light themes, 10 accent colors and 3 panel sizes.
 - Three notch shapes: drop, seamless and floating.
-- Flat buttons that light up under the pointer.
+- Flat buttons that light up under the pointer, and segmented controls with a sliding thumb.
+- Settings in sections, with visual pickers for the theme, layout and notch shape.
 - SF Pro or Be Vietnam Pro.
 
 ## Install
