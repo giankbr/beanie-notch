@@ -258,7 +258,30 @@ footer { padding: 40px 0 0; overflow: hidden; }
   .steps div { grid-template-columns: 28px 1fr; }
   .steps p { grid-column: 2; }
 }
+/* Grid children may shrink below their content (long buttons, nowrap rows) instead of widening the page. */
+.cta > *, .custom > *, .faq > *, .grid-2 > *, .grid-3 > * { min-width: 0; }
+@media (max-width: 960px) {
+  .closed-grid { gap: 12px; }
+  .closed-card .strip { height: 64px; }
+  /* Same scale for every notch crop: 2x images shown at 0.3125x their pixel height. */
+  .closed-card .strip img { height: 20px; max-width: none; }
+  .closed-card .txt { padding: 14px 18px 16px; gap: 4px; }
+  .closed-card h3 { font-size: 16px; }
+  .closed-card p { font-size: 14px; }
+  .more { padding: 22px 20px; }
+  .more h3 { font-size: 20px; }
+  .head-row { gap: 24px; }
+  .gestures { grid-template-columns: repeat(3, auto); justify-content: start; gap: 10px 18px; font-size: 14px; }
+  .gestures div { gap: 8px; }
+  .gestures span { display: none; }
+}
 @media (max-width: 560px) {
+  .cta .left { padding: 32px 20px; }
+  .cta .right { padding: 64px 16px 32px; }
+  .cta .right .menubar { display: none; }
+  .cta-row .btn { flex: 1 1 auto; justify-content: center; }
+  .row { flex-wrap: wrap; }
+  h2 { letter-spacing: -1.2px; }
   .btn { height: 48px; padding: 0 20px; font-size: 15px; }
   nav .btn-ghost { display: none; }
   .meta { gap: 14px 20px; }
