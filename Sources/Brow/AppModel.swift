@@ -65,6 +65,8 @@ struct Notice: Equatable {
     var duration: TimeInterval = 4
     // Shown even with notch alerts off: meetings, prayer times, the focus timer.
     var essential = false
+    // Clicking the closed notch while this shows opens it (a chat app) instead of the panel.
+    var open: URL?
 }
 
 @MainActor
@@ -113,6 +115,7 @@ final class AppModel: ObservableObject {
     let notes = Notes()
     let updater = Updater()
     let aiUsage = AIUsage()
+    let messages = MessageBadges()
     private let volumeWatcher = VolumeWatcher()
     private let brightnessWatcher = BrightnessWatcher()
     private let keyboard = KeyboardWatcher()
@@ -167,6 +170,20 @@ final class AppModel: ObservableObject {
                                   color: Theme.accent2, left: name, right: levels, duration: 5))
             }
         }
+        messages.onNew = { [weak self] badge in
+            self?.show(Notice(icon: "bubble.left.and.bubble.right.fill", color: Theme.accent2, left: badge.name,
+                              right: badge.count == 1 ? "New message" : "\(badge.count) unread", duration: 6, open: badge.app))
+        }
+        settings.$messageAlerts.sink { [weak self] on in
+            guard let self else { return }
+            messages.setEnabled(on)
+            // Asked once; after that the Settings row offers it again.
+            if on, !messages.trusted, !UserDefaults.standard.bool(forKey: "askedAccessibility") {
+                UserDefaults.standard.set(true, forKey: "askedAccessibility")
+                messages.requestAccess()
+            }
+        }.store(in: &sinks)
+        settings.$messageAllApps.sink { [weak self] all in self?.messages.allApps = all }.store(in: &sinks)
         downloads.onDone = { [weak self] url in
             self?.show(Notice(icon: "arrow.down.circle.fill", color: Theme.accent, left: "Downloaded", right: url.lastPathComponent))
         }
@@ -287,6 +304,7 @@ extension View {
             .environmentObject(m.notes)
             .environmentObject(m.updater)
             .environmentObject(m.aiUsage)
+            .environmentObject(m.messages)
     }
 }
 

@@ -325,6 +325,7 @@ private struct Header: View {
             }
             Spacer()
             HStack(spacing: 4) {
+                MessagesMenu()
                 KeepAwakeMenu()
                 IconButton(icon: "eyedropper") { model.pickColor() }.help("Pick a color from the screen; its hex code is copied")
             }
@@ -347,6 +348,35 @@ private struct Header: View {
             } else if cleaner.total > 0 {
                 Pill(text: "\(formatBytes(cleaner.total)) can be freed", color: Theme.amber, dot: true)
             }
+        }
+    }
+}
+
+// Unread chats, from Dock badges: a count, and a menu to jump into each app.
+private struct MessagesMenu: View {
+    @EnvironmentObject var messages: MessageBadges
+
+    var body: some View {
+        if !messages.badges.isEmpty {
+            Menu {
+                ForEach(messages.badges) { badge in
+                    Button("\(badge.name) · \(badge.label)") { messages.open(badge) }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "bubble.left.and.bubble.right.fill").font(.system(size: 9, weight: .semibold))
+                    Text("\(messages.total)").font(.app(size: 10, weight: .semibold)).monospacedDigit()
+                }
+                .foregroundStyle(Theme.accent2)
+                .padding(.horizontal, 7)
+                .frame(height: 22)
+                .buttonFace(RoundedRectangle(cornerRadius: 7, style: .continuous), Theme.accent2.opacity(0.14))
+            }
+            .menuStyle(.button)
+            .buttonStyle(.plain)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .help("Unread messages")
         }
     }
 }

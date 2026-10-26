@@ -6,6 +6,7 @@ struct SettingsView: View {
     @EnvironmentObject var clipboard: ClipboardHistory
     @EnvironmentObject var prayer: PrayerTimes
     @EnvironmentObject var updater: Updater
+    @EnvironmentObject var messages: MessageBadges
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var loginError: String?
 
@@ -82,6 +83,22 @@ struct SettingsView: View {
                     }
                     row("hand.draw", "Gestures", "Over the notch: swipe sideways to change song, scroll for volume") {
                         Toggle("", isOn: $settings.gestures)
+                    }
+                    row("bubble.left.and.bubble.right", "Messages",
+                        messages.trusted ? "Unread counts from Dock badges: WhatsApp, Telegram, Slack, Mail…"
+                            : "Needs Accessibility access to read Dock badges") {
+                        HStack(spacing: 8) {
+                            if !messages.trusted {
+                                PillButton(text: "Allow", color: Theme.accent) {
+                                    messages.requestAccess()
+                                    NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
+                                }
+                            }
+                            Toggle("", isOn: $settings.messageAlerts)
+                        }
+                    }
+                    row("app.badge", "Badges from every app", "Not only chat apps, any app showing a Dock badge") {
+                        Toggle("", isOn: $settings.messageAllApps)
                     }
                     row("capslock", "Keyboard", "Caps Lock and keyboard language changes") {
                         Toggle("", isOn: $settings.keyboardAlerts)

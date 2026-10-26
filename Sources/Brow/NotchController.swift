@@ -139,7 +139,14 @@ final class NotchController {
             guard let self, model.settings.openOnHover else { return }
             expand(pinned: false)
         }
-        zone.onClick = { [weak self] in self?.expand(pinned: true) }
+        zone.onClick = { [weak self] in
+            // A message notice opens its app; otherwise the panel opens.
+            if let app = self?.model.notice?.open {
+                NSWorkspace.shared.open(app)
+            } else {
+                self?.expand(pinned: true)
+            }
+        }
         zone.onScroll = { [weak self] e in self?.scrolled(e) }
         host.onScroll = { [weak self] e in
             guard let self, let window = e.window, e.locationInWindow.y > window.frame.height - model.closedHeight else { return false }
