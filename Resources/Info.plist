@@ -45,7 +45,7 @@
 	<key>NSCalendarsUsageDescription</key>
 	<string>Notchy shows your next meetings and reminds you 5 minutes before they start.</string>
 	<key>NSDownloadsFolderUsageDescription</key>
-	<string>Notchy looks for large files and leftover installers you may want to remove.</string>
+	<string>Notchy shows browser downloads in progress, and looks for large files and leftover installers you may want to remove.</string>
 	<key>NSDesktopFolderUsageDescription</key>
 	<string>Notchy looks for large files you may want to remove.</string>
 	<key>NSDocumentsFolderUsageDescription</key>
