@@ -14,22 +14,30 @@ final class QuickToggles: ObservableObject {
     private var micVolumeBeforeMute: Float32?
 
     func refresh() {
-        darkMode = UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark"
+        darkMode = SystemSwitches.darkMode
         desktopIcons = CFPreferencesCopyAppValue("CreateDesktop" as CFString, "com.apple.finder" as CFString) as? Bool ?? true
         nightShift = NightShift.isOn
         micMuted = Microphone.isMuted
-        dockHidden = CFPreferencesCopyAppValue("autohide" as CFString, "com.apple.dock" as CFString) as? Bool ?? false
+        dockHidden = SystemSwitches.dockHidden
     }
 
-    // Through System Events, which asks once for permission to control it.
     func toggleDarkMode() {
         darkMode.toggle()
-        run("tell application \"System Events\" to tell appearance preferences to set dark mode to \(darkMode)")
+        SystemSwitches.setDarkMode(darkMode)
+        confirm()
     }
 
     func toggleDockHidden() {
         dockHidden.toggle()
-        run("tell application \"System Events\" to tell dock preferences to set autohide to \(dockHidden)")
+        SystemSwitches.setDockHidden(dockHidden)
+        confirm()
+    }
+
+    // The tiles flip right away; a moment later they show what the system actually did.
+    private func confirm() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
+            MainActor.assumeIsolated { self?.refresh() }
+        }
     }
 
     // Finder reads this once, at launch, so it's restarted; its windows come back on their own.
@@ -47,18 +55,48 @@ final class QuickToggles: ObservableObject {
     func toggleNightShift() {
         nightShift.toggle()
         NightShift.set(nightShift)
+        confirm()
     }
 
     func toggleMic() {
         micMuted.toggle()
         micVolumeBeforeMute = Microphone.setMuted(micMuted, restoring: micVolumeBeforeMute)
+        confirm()
+    }
+}
+
+// Dark mode through SkyLight and Dock hiding through CoreDock: the calls System Settings makes, so no
+// Automation permission is involved. Both are private and loaded at run time; System Events is the fallback.
+enum SystemSwitches {
+    private typealias Getter = @convention(c) () -> Bool
+    private typealias Setter = @convention(c) (Bool) -> Void
+    private static let skyLight = dlopen("/System/Library/PrivateFrameworks/SkyLight.framework/SkyLight", RTLD_LAZY)
+    private static let services = dlopen("/System/Library/Frameworks/ApplicationServices.framework/ApplicationServices", RTLD_LAZY)
+    private static let getDark = dlsym(skyLight, "SLSGetAppearanceThemeLegacy").map { unsafeBitCast($0, to: Getter.self) }
+    private static let setDark = dlsym(skyLight, "SLSSetAppearanceThemeLegacy").map { unsafeBitCast($0, to: Setter.self) }
+    private static let getDock = dlsym(services, "CoreDockGetAutoHideEnabled").map { unsafeBitCast($0, to: Getter.self) }
+    private static let setDock = dlsym(services, "CoreDockSetAutoHideEnabled").map { unsafeBitCast($0, to: Setter.self) }
+
+    static var darkMode: Bool {
+        getDark?() ?? (CFPreferencesCopyAppValue("AppleInterfaceStyle" as CFString, kCFPreferencesAnyApplication) as? String == "Dark")
     }
 
-    private func run(_ source: String) {
-        DispatchQueue.global(qos: .userInitiated).async {
-            var error: NSDictionary?
-            NSAppleScript(source: source)?.executeAndReturnError(&error)
-        }
+    static var dockHidden: Bool {
+        getDock?() ?? (CFPreferencesCopyAppValue("autohide" as CFString, "com.apple.dock" as CFString) as? Bool ?? false)
+    }
+
+    static func setDarkMode(_ on: Bool) {
+        if let setDark { setDark(on) } else { script("tell application \"System Events\" to tell appearance preferences to set dark mode to \(on)") }
+    }
+
+    static func setDockHidden(_ on: Bool) {
+        if let setDock { setDock(on) } else { script("tell application \"System Events\" to tell dock preferences to set autohide to \(on)") }
+    }
+
+    // NSAppleScript belongs on the main thread.
+    private static func script(_ source: String) {
+        var error: NSDictionary?
+        NSAppleScript(source: source)?.executeAndReturnError(&error)
     }
 }
 
