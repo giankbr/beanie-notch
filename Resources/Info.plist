@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>Notchy</string>
+	<key>CFBundleName</key>
+	<string>Notchy</string>
+	<key>CFBundleExecutable</key>
+	<string>Notchy</string>
+	<key>CFBundleIconFile</key>
+	<string>Notchy</string>
+	<key>CFBundleIdentifier</key>
+	<string>id.morfotech.notchy</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>@VERSION@</string>
+	<key>CFBundleVersion</key>
+	<string>@VERSION@</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.utilities</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Notchy reads and sets the sound volume.</string>
+	<key>NSLocationUsageDescription</key>
+	<string>Notchy works out prayer times for where you are. Your location stays on this Mac.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Notchy works out prayer times for where you are. Your location stays on this Mac.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>The mirror in Tools shows your camera so you can check how you look before a call. Nothing is recorded.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Phone drop receives files from your phone over this Wi-Fi.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Notchy shows your next meetings and reminds you 5 minutes before they start.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Notchy shows your next meetings and reminds you 5 minutes before they start.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>Notchy looks for large files and leftover installers you may want to remove.</string>
+	<key>NSDesktopFolderUsageDescription</key>
+	<string>Notchy looks for large files you may want to remove.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>Notchy looks for large files you may want to remove.</string>
+</dict>
+</plist>

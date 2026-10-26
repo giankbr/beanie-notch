@@ -1,0 +1,173 @@
+import AppKit
+import SwiftUI
+
+enum ThemeMode: String, CaseIterable {
+    case system, light, dark
+
+    var title: String { rawValue.capitalized }
+
+    var appearance: NSAppearance? {
+        switch self {
+        case .system: nil
+        case .light: NSAppearance(named: .aqua)
+        case .dark: NSAppearance(named: .darkAqua)
+        }
+    }
+}
+
+enum LayoutStyle: String, CaseIterable {
+    case studio, sidebar, tabs, classic
+
+    var title: String {
+        switch self {
+        case .classic: "Classic"
+        case .studio: "Studio"
+        case .sidebar: "Compact"
+        case .tabs: "Top tabs"
+        }
+    }
+}
+
+enum PanelSize: String, CaseIterable {
+    case compact, regular, large
+
+    var title: String { rawValue.capitalized }
+
+    var body: CGSize {
+        switch self {
+        case .compact: CGSize(width: 600, height: 270)
+        case .regular: CGSize(width: 680, height: 300)
+        case .large: CGSize(width: 780, height: 350)
+        }
+    }
+}
+
+enum AccentChoice: String, CaseIterable {
+    case mint, ocean, sunset, rose, lime, violet, teal, gold, crimson, graphite
+
+    var primary: Color {
+        switch self {
+        case .mint: Color(red: 0.33, green: 0.86, blue: 0.68)
+        case .ocean: Color(red: 0.3, green: 0.62, blue: 1.0)
+        case .sunset: Color(red: 1.0, green: 0.58, blue: 0.3)
+        case .rose: Color(red: 1.0, green: 0.42, blue: 0.6)
+        case .lime: Color(red: 0.62, green: 0.86, blue: 0.24)
+        case .violet: Color(red: 0.6, green: 0.48, blue: 1.0)
+        case .teal: Color(red: 0.2, green: 0.78, blue: 0.82)
+        case .gold: Color(red: 0.95, green: 0.76, blue: 0.3)
+        case .crimson: Color(red: 0.94, green: 0.33, blue: 0.36)
+        case .graphite: Color(red: 0.62, green: 0.65, blue: 0.7)
+        }
+    }
+
+    var secondary: Color {
+        switch self {
+        case .mint: Color(red: 0.6, green: 0.5, blue: 1.0)
+        case .ocean: Color(red: 0.25, green: 0.8, blue: 0.9)
+        case .sunset: Color(red: 0.95, green: 0.4, blue: 0.55)
+        case .rose: Color(red: 0.62, green: 0.5, blue: 1.0)
+        case .lime: Color(red: 0.25, green: 0.75, blue: 0.7)
+        case .violet: Color(red: 0.95, green: 0.45, blue: 0.75)
+        case .teal: Color(red: 0.45, green: 0.6, blue: 1.0)
+        case .gold: Color(red: 1.0, green: 0.55, blue: 0.35)
+        case .crimson: Color(red: 1.0, green: 0.62, blue: 0.3)
+        case .graphite: Color(red: 0.45, green: 0.7, blue: 1.0)
+        }
+    }
+}
+
+@MainActor
+final class Settings: ObservableObject {
+    private static let defaults = UserDefaults.standard
+
+    @Published var theme: ThemeMode { didSet { save(theme.rawValue, "theme") } }
+    @Published var layout: LayoutStyle { didSet { save(layout.rawValue, "layout") } }
+    @Published var size: PanelSize { didSet { save(size.rawValue, "size") } }
+    @Published var accent: AccentChoice {
+        didSet {
+            save(accent.rawValue, "accent")
+            applyAccent()
+        }
+    }
+    @Published var openOnHover: Bool { didSet { save(openOnHover, "openOnHover") } }
+    @Published var closeDelay: Double { didSet { save(closeDelay, "closeDelay") } }
+    @Published var miniPlayer: Bool { didSet { save(miniPlayer, "miniPlayer") } }
+    @Published var notchAlerts: Bool { didSet { save(notchAlerts, "notchAlerts") } }
+    @Published var hotkey: Bool { didSet { save(hotkey, "hotkey") } }
+    // The shortcut as Carbon wants it (virtual key code and modifier mask), and how it reads on screen.
+    @Published private(set) var hotkeyCode: Int
+    @Published private(set) var hotkeyModifiers: Int
+    @Published private(set) var hotkeyLabel: String
+    @Published var screenshotsToShelf: Bool { didSet { save(screenshotsToShelf, "screenshotsToShelf") } }
+    @Published var lyrics: Bool { didSet { save(lyrics, "lyrics") } }
+    @Published var systemFont: Bool {
+        didSet {
+            save(systemFont, "systemFont")
+            Theme.systemFont = systemFont
+        }
+    }
+    @Published var prayerCountdown: Bool { didSet { save(prayerCountdown, "prayerCountdown") } }
+    @Published var notchStyle: NotchStyle { didSet { save(notchStyle.rawValue, "notchStyle") } }
+    @Published var hideInFullScreen: Bool { didSet { save(hideInFullScreen, "hideInFullScreen") } }
+    @Published var songFlash: Bool { didSet { save(songFlash, "songFlash") } }
+    @Published var lyricsInNotch: Bool { didSet { save(lyricsInNotch, "lyricsInNotch") } }
+    @Published var keyboardAlerts: Bool { didSet { save(keyboardAlerts, "keyboardAlerts") } }
+    @Published var volumeHUD: Bool { didSet { save(volumeHUD, "volumeHUD") } }
+    @Published var downloadsInNotch: Bool { didSet { save(downloadsInNotch, "downloadsInNotch") } }
+    @Published var waterEvery: Int { didSet { save(waterEvery, "waterEvery") } }
+    @Published var eyeBreaks: Bool { didSet { save(eyeBreaks, "eyeBreaks") } }
+    @Published var stretchEvery: Int { didSet { save(stretchEvery, "stretchEvery") } }
+
+    // Changes whenever the look changes, so the panel can rebuild with the new colors.
+    var styleKey: String { "\(theme.rawValue)-\(accent.rawValue)-\(layout.rawValue)-\(notchStyle.rawValue)-\(systemFont)" }
+
+    init() {
+        let d = Self.defaults
+        theme = ThemeMode(rawValue: d.string(forKey: "theme") ?? "") ?? .dark
+        layout = LayoutStyle(rawValue: d.string(forKey: "layout") ?? "") ?? .studio
+        size = PanelSize(rawValue: d.string(forKey: "size") ?? "") ?? .regular
+        accent = AccentChoice(rawValue: d.string(forKey: "accent") ?? "") ?? .mint
+        openOnHover = d.object(forKey: "openOnHover") as? Bool ?? true
+        closeDelay = d.object(forKey: "closeDelay") as? Double ?? 1.2
+        miniPlayer = d.object(forKey: "miniPlayer") as? Bool ?? true
+        notchAlerts = d.object(forKey: "notchAlerts") as? Bool ?? true
+        hotkey = d.object(forKey: "hotkey") as? Bool ?? true
+        hotkeyCode = d.object(forKey: "hotkeyCode") as? Int ?? 49
+        hotkeyModifiers = d.object(forKey: "hotkeyModifiers") as? Int ?? 2048
+        hotkeyLabel = d.string(forKey: "hotkeyLabel") ?? "⌥ Space"
+        screenshotsToShelf = d.object(forKey: "screenshotsToShelf") as? Bool ?? true
+        lyrics = d.object(forKey: "lyrics") as? Bool ?? true
+        systemFont = d.object(forKey: "systemFont") as? Bool ?? true
+        prayerCountdown = d.object(forKey: "prayerCountdown") as? Bool ?? true
+        notchStyle = NotchStyle(rawValue: d.string(forKey: "notchStyle") ?? "") ?? .drop
+        hideInFullScreen = d.object(forKey: "hideInFullScreen") as? Bool ?? true
+        songFlash = d.object(forKey: "songFlash") as? Bool ?? true
+        lyricsInNotch = d.object(forKey: "lyricsInNotch") as? Bool ?? true
+        keyboardAlerts = d.object(forKey: "keyboardAlerts") as? Bool ?? true
+        volumeHUD = d.object(forKey: "volumeHUD") as? Bool ?? true
+        downloadsInNotch = d.object(forKey: "downloadsInNotch") as? Bool ?? true
+        waterEvery = d.object(forKey: "waterEvery") as? Int ?? 0
+        eyeBreaks = d.bool(forKey: "eyeBreaks")
+        stretchEvery = d.object(forKey: "stretchEvery") as? Int ?? 0
+        applyAccent()
+        Theme.systemFont = systemFont
+    }
+
+    func setHotkey(code: Int, modifiers: Int, label: String) {
+        hotkeyCode = code
+        hotkeyModifiers = modifiers
+        hotkeyLabel = label
+        save(code, "hotkeyCode")
+        save(modifiers, "hotkeyModifiers")
+        save(label, "hotkeyLabel")
+    }
+
+    private func applyAccent() {
+        Theme.accent = accent.primary
+        Theme.accent2 = accent.secondary
+    }
+
+    private func save(_ value: Any, _ key: String) {
+        Self.defaults.set(value, forKey: key)
+    }
+}
