@@ -1,8 +1,8 @@
-# Notchy
+# Brow
 
-A small, native macOS app that turns the MacBook notch into a dashboard. Hover the notch (or press ⌥ Space) to open it.
+A small, native macOS app that turns the MacBook notch into a dashboard. Hover over the notch (or press ⌥ Space) to open it.
 
-Written in Swift and SwiftUI, with no third-party dependencies. The download is about 2 MB, and Notchy uses close to 0% CPU when idle.
+Brow is written in Swift and SwiftUI with no third-party dependencies. The download is about 2.6 MB, and it uses close to 0% CPU when idle.
 
 ![Overview](docs/overview.png)
 
@@ -10,47 +10,88 @@ Written in Swift and SwiftUI, with no third-party dependencies. The download is 
 |---|---|
 | ![Today](docs/today.png) | ![Prayer times](docs/prayer.png) |
 
-![Now playing](docs/music.png)
+| AI usage | Controls |
+|---|---|
+| ![AI usage](docs/ai.png) | ![Controls](docs/controls.png) |
 
 ## Features
 
-**Open panel**
-- **Overview:** a health score plus CPU (with temperature), memory, network and disk, and a one-click cleanup of caches, logs and browser junk.
-- **Today:** weather, your next calendar event with a **Join** button for 19 call services (Zoom, Meet, Teams, Webex, Slack, Discord, …), tasks with time reminders, and a month view. A side card switches between a focus timer, a countdown timer and world clocks.
-- **Prayer times:** calculated on the Mac from your location (Kemenag, MWL, Umm al-Qura, Egypt, ISNA). Includes the Hijri date, a qibla compass, a countdown before each prayer, and a Ramadan mode with Imsak and the "Buka puasa" alert.
-- **Shelf:** drop files on the notch to keep them at hand, then drag them out later. Drop on the right third to send by AirDrop. Screenshots land here automatically. You can also receive files from your phone over Wi-Fi with a QR code.
-- **Clipboard:** text, image and file history with fuzzy search. Words inside images are searchable through on-device OCR. Pinned items are saved; passwords and concealed items are skipped. A Notes page is a scratchpad that saves as you type and can go to the Shelf as a text file.
-- **Now playing:** controls for any player, including YouTube in the browser. Synced lyrics come from four free sources (LRCLIB, NetEase, QQ Music, Kugou), plus a sleep timer and output picker.
-- **Controls:** one-click dark mode, Night Shift, keep awake, mic mute, Dock hiding and desktop icons. Brightness sliders for every screen, including external monitors over DDC. Your Mac's battery health and cycles, the charge of Bluetooth devices, and your Apple Shortcuts, ready to run.
-- **Tools:** an uninstaller that finds an app's leftovers, a large-file finder, and a camera mirror.
+### Open panel
+
+- **Overview:**
+  - A health score.
+  - CPU (with temperature), memory, network and disk.
+  - One-click cleanup of caches, logs and browser junk.
+- **Today:**
+  - Weather.
+  - Your next calendar event, with a **Join** button for 19 call services (Zoom, Meet, Teams, Webex, Slack, Discord, …).
+  - Tasks with time reminders.
+  - A month view.
+  - A focus timer, a countdown timer and world clocks.
+- **Prayer times:**
+  - Calculated on the Mac from your location, using the Kemenag, MWL, Umm al-Qura, Egypt or ISNA method.
+  - The Hijri date and a qibla compass.
+  - A countdown before each prayer.
+  - A Ramadan mode with Imsak and the "Buka puasa" alert.
+- **Shelf:**
+  - Drop files on the notch to keep them at hand, then drag them out later.
+  - Drop on the right third to send by AirDrop.
+  - Screenshots land here automatically.
+  - Receive files from your phone over Wi-Fi with a QR code.
+- **Clipboard:**
+  - Text, image and file history, with fuzzy search.
+  - Words inside images are searchable, through on-device OCR.
+  - Pinned items are saved; passwords and concealed items are skipped.
+  - **Notes:** a scratchpad that saves as you type and can go to the Shelf as a text file.
+- **Now playing:**
+  - Controls for any player, including YouTube in the browser.
+  - Synced lyrics from four free sources: LRCLIB, NetEase, QQ Music and Kugou.
+  - A sleep timer and an output picker.
+- **AI usage:**
+  - **Claude Code**, read from its local logs: tokens and estimated API cost for today, the last 5 hours and the week, per model, with a 7-day chart.
+  - **Codex**, read from its local logs: tokens and rate-limit windows.
+  - Cursor, Antigravity and Gemini CLI are detected, but their usage is not shown yet (see below).
+- **Controls:**
+  - Dark mode, Night Shift, keep awake, mic mute, Dock hiding and desktop icons.
+  - Brightness sliders for every screen, including external monitors over DDC.
+  - Battery health and cycle count, and the charge of Bluetooth devices.
+  - Your Apple Shortcuts, ready to run.
+- **Tools:** an uninstaller that finds an app's leftovers, a large-file finder and a camera mirror.
 - **Header:** keep the Mac awake for a while, or pick a color anywhere on screen and copy its hex code.
 
-**Closed notch**
-- Lyrics while music plays, or a mini player.
+### Closed notch
+
+| Volume | Timer |
+|---|---|
+| ![Volume](docs/notch-volume.png) | ![Timer](docs/notch-timer.png) |
+
+- Lyrics or a mini player while music plays.
 - Volume and brightness levels.
-- Download progress, and a note when a download finishes.
-- Meeting, prayer and timer countdowns.
-- AirPods charge (each bud and the case) when they connect.
-- Gestures: swipe sideways over the notch to change song, scroll up or down for volume.
-- Short notices: charging, AirPods connected, Caps Lock, screenshots, focus timer, and more.
+- Download progress.
+- Timer, meeting and prayer countdowns.
+- AirPods charge, for each bud and the case.
+- Short notices: charging, Caps Lock, screenshots, finished downloads, Shortcuts results, updates.
+- **Gestures:** swipe sideways over the notch to change songs; scroll up or down for volume.
 
-![Download in the notch](docs/notch-download.png)
+### Look
 
-**Look**
-- Layouts: Studio, Compact, Top tabs and Classic.
+- Four layouts: Studio, Compact, Top tabs and Classic.
 - Dark and light themes, 10 accent colors and 3 panel sizes.
-- 3 notch shapes: drop, seamless and floating.
+- Three notch shapes: drop, seamless and floating.
+- Flat buttons that light up under the pointer.
 - SF Pro or Be Vietnam Pro.
 
 ## Install
 
-1. Download `Notchy.dmg` from [Releases](../../releases) and drag Notchy into Applications.
+1. Download `Brow.dmg` from [Releases](../../releases) and drag Brow into Applications.
 2. The app is ad-hoc signed, not notarized. On first launch, right-click it and choose **Open**, or run:
    ```bash
-   xattr -dr com.apple.quarantine /Applications/Notchy.app
+   xattr -dr com.apple.quarantine /Applications/Brow.app
    ```
 
-Requires macOS 14 or later. Built as a universal binary for Apple silicon and Intel.
+Requires macOS 14 or later, as a universal binary for Apple silicon and Intel. Brightness control for external monitors works on Apple silicon only.
+
+**Coming from Notchy?** Brow is the same app under a new name. Your settings, pins and Shelf come along on first launch. Turn **Open at login** on again in Settings, then delete Notchy.app.
 
 macOS asks for access only when a feature needs it:
 
@@ -65,24 +106,34 @@ macOS asks for access only when a feature needs it:
 
 ## Build
 
-The build needs Xcode, which provides the macOS SDK used for the Now Playing helper.
+The build needs Xcode, which provides the macOS SDK for the Now Playing helper.
 
 ```bash
-./build.sh                   # → dist/Notchy.app and dist/Notchy.dmg
-VERSION=1.1.0 ./build.sh     # set the version
+./build.sh                   # → dist/Brow.app and dist/Brow.dmg
+VERSION=1.2.0 ./build.sh     # set the version
 ```
+
+Commit messages follow [Conventional Commits](https://www.conventionalcommits.org) and are checked by commitlint. Run `npm install` once to set up the hook.
 
 ## How it works
 
 - **Now playing:** read through the system MediaRemote framework. A small helper is loaded by `/usr/bin/perl`, because recent macOS versions only answer MediaRemote requests from Apple-signed processes.
-- **CPU temperature:** read through IOKit HID sensors. Built-in brightness goes through DisplayServices, Night Shift through CoreBrightness, and external monitors through DDC/CI over IOAVService (Apple silicon). All are loaded at run time, so missing symbols simply turn those features off.
-- **Updates:** Settings can check GitHub Releases once a day; this needs the repository to be public.
+- **Hardware:**
+  - CPU temperature comes from IOKit HID sensors.
+  - Built-in brightness goes through DisplayServices, and Night Shift through CoreBrightness.
+  - External monitors are reached over DDC/CI through IOAVService.
+  - All of these are loaded at run time, so a missing symbol only switches that feature off.
+- **AI usage:** Brow reads the logs Claude Code and Codex already write (`~/.claude/projects`, `~/.codex/sessions`), and only the new lines on each pass. Costs are Anthropic API list prices for the same tokens, not what a subscription charges. Brow never reads or sends sign-in tokens, which is why Cursor and Antigravity, which keep usage on their servers, are listed but not measured.
 - **Global shortcut:** registered through Carbon hot keys, so it needs no Accessibility permission.
-- **Network services:** lyrics come from LRCLIB, NetEase, QQ Music and Kugou, with only the title and artist sent. Weather comes from Open-Meteo. None of them needs an API key, and there is no tracking or analytics.
+- **Network:**
+  - Lyrics come from LRCLIB, NetEase, QQ Music and Kugou; only the title and artist are sent.
+  - Weather comes from Open-Meteo.
+  - Updates are checked against GitHub Releases.
+  - None of these needs an API key, and there is no tracking or analytics.
 
 ## Credits
 
-Ideas were studied from these open-source projects; Notchy's code is written from scratch:
+Ideas came from studying these open-source projects; Brow's code is written from scratch:
 NotchDrop, DynamicNotchKit, Stats, Maccy, KeyboardShortcuts, Pearcleaner, LyricsX, Boring.notch, Atoll, Hidden Bar, MeetingBar, MonitorControl and Itsycal.
 
 The Be Vietnam Pro font is © The Be Vietnam Pro Project Authors and licensed under the [SIL Open Font License](Resources/Fonts/OFL.txt).
