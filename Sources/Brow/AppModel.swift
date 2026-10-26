@@ -240,10 +240,16 @@ final class AppModel: ObservableObject {
     var showsNotchLyrics: Bool { showsMiniPlayer && settings.lyricsInNotch && media.lyrics.state == .synced }
 
     var closedWidth: CGFloat {
-        let extra: CGFloat = volume != nil ? 190 : notice != nil ? 260 : focus.isRunning ? 110
+        let extra: CGFloat = volume != nil ? 190 : notice.map(noticeWidth) ?? (focus.isRunning ? 110
             : countdown.isRunning ? 110 : downloads.current != nil ? 240 : calendar.meeting != nil ? 240 : showsPrayerCountdown ? 170
-            : showsNotchLyrics ? 340 : showsMiniPlayer ? 64 : 0
+            : showsNotchLyrics ? 340 : showsMiniPlayer ? 64 : 0)
         return closedSize.width + extra
+    }
+
+    // Each side of the camera gets room for the longer of its two texts, so neither is cut short.
+    private func noticeWidth(_ n: Notice) -> CGFloat {
+        let longest = CGFloat(max(n.left.count + 3, n.right.count))
+        return min(420, max(260, longest * 6.4 * 2 + 40))
     }
 
     var showsPrayerCountdown: Bool { settings.prayerCountdown && prayer.soon != nil }
