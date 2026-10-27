@@ -21,6 +21,12 @@ public sealed class Model
     public FocusTimer Focus { get; } = new();
     public CountdownTimer Timer { get; } = new();
     public Updater Updater { get; } = new();
+    public DevRuns Runs { get; }
+    public Rates Rates { get; }
+    public Quakes Quakes { get; }
+    public SmartCopy SmartCopy { get; }
+    public Ambient Ambient { get; } = new();
+    private DateTimeOffset fedUntil;
     public WeatherReport? Weather { get; private set; }
     public IReadOnlyList<CalendarEvent> Events { get; private set; } = [];
     public bool CalendarFailed { get; private set; }
@@ -45,10 +51,47 @@ public sealed class Model
         Focus.Choose(FocusPreset.All[Math.Clamp(Settings.FocusPreset, 0, FocusPreset.All.Length - 1)]);
         Focus.Finished += text => Raise(Glyphs.Clock, Ui.Theme.Accent, text, Focus.OnBreak ? $"{Focus.Preset.Work} min" : $"{Focus.Preset.Rest} min", 5);
         Timer.Finished += () => Raise(Glyphs.Clock, Ui.Theme.Amber, "Timer done", Timer.Length.TotalMinutes + " min", 6);
+        Runs = new DevRuns(ui);
+        Runs.Notice += n => Notice?.Invoke(n);
+        Runs.Start();
+        Rates = new Rates(Settings);
+        Quakes = new Quakes(Settings);
+        Quakes.Notice += n => Notice?.Invoke(n);
+        SmartCopy = new SmartCopy(Settings, Rates) { Copy = Clipboard.CopyText };
+        SmartCopy.Notice += n => Notice?.Invoke(n);
+        Clipboard.Copied += SmartCopy.Check;
+        Shelf.Items.CollectionChanged += (_, e) => { if (e.NewItems is { Count: > 0 }) fedUntil = DateTimeOffset.Now.AddSeconds(4); };
     }
 
     private void Raise(string glyph, Windows.UI.Color color, string left, string right, double seconds) =>
-        Notice?.Invoke(new Notice(glyph, color, left, right, TimeSpan.FromSeconds(seconds)));
+        Notice?.Invoke(new Notice(glyph, color, left, right, TimeSpan.FromSeconds(seconds), Essential: true));
+
+    public enum PetMood { Happy, Sleepy, Panic, Eating, Dancing }
+
+    // How the island's pet is feeling, as on the Mac (Windows has no drink reminder, so it's never thirsty).
+    public PetMood Mood =>
+        DateTimeOffset.Now < fedUntil ? PetMood.Eating
+        : Stats.Cpu > 0.85 ? PetMood.Panic
+        : Services.Native.Idle > TimeSpan.FromMinutes(3) ? PetMood.Sleepy
+        : Media.Playing ? PetMood.Dancing
+        : PetMood.Happy;
+
+    public bool Ramadan => new UmAlQuraCalendar().GetMonth(DateTime.Now) == 9;
+
+    // In Ramadan Maghrib is when the fast breaks.
+    public string Label(PrayerEntry e) => Ramadan && e.Name == "Maghrib" ? "Iftar" : e.Name;
+
+    // In Ramadan: how the fast stands, for the Prayer page.
+    public string? Fasting(DateTimeOffset now)
+    {
+        if (!Ramadan) return null;
+        var today = PrayersToday;
+        if (today.FirstOrDefault(e => e.Name == "Imsak") is not { } imsak || today.FirstOrDefault(e => e.Name == "Maghrib") is not { } maghrib) return null;
+        if (now < imsak.Time) return $"Sahur · Imsak in {Countdown(imsak.Time - now)}";
+        if (now < maghrib.Time) return $"Fasting · {Countdown(maghrib.Time - now)} to iftar at {Clock(maghrib.Time)}";
+        var tomorrow = PrayerTimes.Compute(DateOnly.FromDateTime(DateTime.Now.AddDays(1)), Settings.Place, Settings.Method).FirstOrDefault(e => e.Name == "Imsak");
+        return tomorrow is null ? null : $"Fast broken · Imsak tomorrow at {Clock(tomorrow.Time)}";
+    }
 
     public bool Visible(Tab tab) => tab is Tab.Home or Tab.Settings || !Settings.HiddenTabs.Contains(tab.ToString());
 
@@ -85,7 +128,19 @@ public sealed class Model
             Raise(Glyphs.Calendar, Ui.Theme.Accent2, meeting.Title, "in " + Countdown(until), 8);
         if (Settings.PrayerReminder > 0 && NextPrayer is var prayer && prayer.Time - now is var left
             && left <= TimeSpan.FromMinutes(Settings.PrayerReminder) && left > TimeSpan.Zero && announced.Add("prayer|" + prayer.Time))
-            Raise(Glyphs.Moon, Ui.Theme.Accent2, prayer.Name, "in " + Countdown(left), 8);
+            Raise(Glyphs.Moon, Ui.Theme.Accent2, Label(prayer), "in " + Countdown(left), 8);
+        if (Ramadan && Settings.PrayerCountdown)
+            foreach (var e in PrayersToday.Where(e => e.Name is "Imsak" or "Maghrib"))
+            {
+                var gap = e.Time - now;
+                if (e.Name == "Imsak" && gap <= TimeSpan.FromMinutes(15) && gap > TimeSpan.Zero && announced.Add("sahur|" + e.Time))
+                    Raise("\uE7EC", Ui.Theme.Amber, "Imsak in " + Countdown(gap), "Finish sahur · " + Clock(e.Time), 10);
+                if (gap <= TimeSpan.Zero && gap > TimeSpan.FromMinutes(-1) && announced.Add("fast|" + e.Time))
+                    Raise(Glyphs.Moon, Ui.Theme.Accent, e.Name == "Imsak" ? "Imsak · the fast begins" : "Iftar · break the fast", Clock(e.Time), e.Name == "Imsak" ? 12 : 20);
+            }
+        // The focus sound plays through focus stretches only: not on breaks, and not while paused.
+        if (Focus.Running && !Focus.OnBreak && Enum.TryParse<AmbientSound>(Settings.FocusSound, out var sound)) Ambient.Play(sound);
+        else if (Ambient.Playing is not null) Ambient.Stop();
         foreach (var task in Settings.Tasks.Where(t => !t.Done && !t.Reminded && t.Remind is { } at && at <= now))
         {
             task.Reminded = true;

@@ -34,6 +34,11 @@ public sealed partial class IslandWindow
         Show(new Notice(Glyphs.Mic, Theme.Red, "Mic in use", "Zoom", TimeSpan.FromSeconds(10), Key: "microphone"));
         await Shot("03-closed-mic");
         notice = null;
+        model.Settings.NotchPet = true;
+        Update();
+        await Shot("03b-closed-pet");
+        model.Settings.NotchPet = false;
+        Update();
 
         Expand();
         var index = 4;
@@ -82,6 +87,11 @@ public sealed partial class IslandWindow
             await Shot($"{index++:00}-size-{size.ToString().ToLowerInvariant()}");
         }
         model.Settings.Size = PanelSize.Regular;
+        Pages.TodayPage.StartLeft = 3;
+        shell.Rebuild();
+        shell.Open(Tab.Today);
+        await Shot($"{index++:00}-today-rates", 6000);
+        Pages.TodayPage.StartLeft = 0;
         foreach (var (theme, tab) in new[] { (ThemeMode.Midnight, Tab.Home), (ThemeMode.Midnight, Tab.Today), (ThemeMode.Glass, Tab.Home), (ThemeMode.Glass, Tab.Settings) })
         {
             model.Settings.Theme = theme;

@@ -18,7 +18,9 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
     private readonly Grid strip = new();
     private readonly Grid left = new();
     private readonly Grid right = new();
-    private int leftMode, rightMode;
+    // Which tab the left card opens on; the CI snapshots set it to show Rates.
+    internal static int StartLeft;
+    private int leftMode = StartLeft, rightMode;
     private readonly TextBox taskInput = new() { PlaceholderText = "Add a task · \"call Budi 15.00\" sets a reminder" };
     private TextBlock? bigTime;
 
@@ -83,11 +85,47 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
     private void Left()
     {
         left.Children.Clear();
-        var subtitle = leftMode switch { 0 => "Calendar · next 24 hours", 1 => "Saved on this PC", _ => DateTime.Now.ToString("MMMM yyyy") };
-        var head = Columns(8, (V(2, Text("Up next", 13, weight: FontWeights.SemiBold), Text(subtitle, 9, Theme.Faint)), 1),
-                           (Segmented(["Agenda", "Tasks", "Month"], leftMode, i => { leftMode = i; Left(); }), null));
-        FrameworkElement body = leftMode switch { 0 => Agenda(), 1 => Tasks(), _ => Month() };
+        var subtitle = leftMode switch { 0 => "Calendar · next 24 hours", 1 => "Saved on this PC", 2 => DateTime.Now.ToString("MMMM yyyy"), _ => "In " + Rates.Local };
+        var head = Columns(8, (V(2, Text(leftMode == 3 ? "Rates" : "Up next", 13, weight: FontWeights.SemiBold), Text(subtitle, 9, Theme.Faint)), 1),
+                           (Segmented(["Agenda", "Tasks", "Month", "Rates"], leftMode, i => { leftMode = i; Left(); }), null));
+        FrameworkElement body = leftMode switch { 0 => Agenda(), 1 => Tasks(), 2 => Month(), _ => RatesView() };
         left.Children.Add(Rows(10, (head, null), (body, 1)));
+    }
+
+    // Exchange rates and gold, in the local currency, three to a row, with the change since yesterday.
+    private FrameworkElement RatesView()
+    {
+        var rates = Model.Rates;
+        if (rates.PerDollar.Count == 0)
+        {
+            _ = rates.RefreshAsync().ContinueWith(_ => Dispatch(() => { if (leftMode == 3) Left(); }), TaskScheduler.Default);
+            return Text("Getting today's rates…", 10, Theme.Faint);
+        }
+        FrameworkElement Cell(string code, double? value, double? change, string unit = "")
+        {
+            var tint = code == "Gold" ? Theme.Amber : Theme.Accent;
+            var top = Columns(4, (Text(code + unit, 8.5, tint, FontWeights.Bold), 1),
+                              (change is { } c ? Text((c >= 0 ? "▲" : "▼") + Math.Abs(c * 100).ToString("0.0") + "%", 8, c >= 0 ? Theme.Good : Theme.Red, FontWeights.SemiBold) : null, null));
+            return new Border
+            {
+                Child = V(2, top, Text(value is { } v ? Rates.Format(v, Rates.Local) : "–", 11, weight: FontWeights.SemiBold)),
+                Padding = new Thickness(S(8), S(6), S(8), S(6)),
+                CornerRadius = new CornerRadius(S(9)),
+                Background = Theme.Brush(Theme.WithAlpha(tint, 0.06)),
+            };
+        }
+        var cells = Rates.Watched.Select(c => Cell(c, rates.Value(c), rates.Change(c, rates.Value(c))))
+            .Append(Cell("Gold", rates.GoldGram, rates.Change("gold", rates.GoldGram), " / g")).ToList();
+        var grid = new Grid { ColumnSpacing = S(6), RowSpacing = S(6) };
+        for (var c = 0; c < 3; c++) grid.ColumnDefinitions.Add(new ColumnDefinition());
+        for (var r = 0; r < 2; r++) grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        for (var i = 0; i < cells.Count && i < 6; i++)
+        {
+            Grid.SetColumn(cells[i], i % 3);
+            Grid.SetRow(cells[i], i / 3);
+            grid.Children.Add(cells[i]);
+        }
+        return grid;
     }
 
     private FrameworkElement Agenda()
@@ -236,6 +274,19 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
             };
             lengths.Items.Add(item);
         }
+        lengths.Items.Add(new MenuFlyoutSeparator());
+        var sounds = new MenuFlyoutSubItem { Text = "Sound while focusing" };
+        foreach (var name in new[] { "" }.Concat(Enum.GetNames<AmbientSound>()))
+        {
+            var item = new ToggleMenuFlyoutItem
+            {
+                Text = name.Length == 0 ? "None" : Ambient.Title(Enum.Parse<AmbientSound>(name)),
+                IsChecked = Model.Settings.FocusSound == name,
+            };
+            item.Click += (_, _) => { Model.Settings.FocusSound = name; Model.Settings.Save(); Right(); };
+            sounds.Items.Add(item);
+        }
+        lengths.Items.Add(sounds);
         lengths.Items.Add(new MenuFlyoutSeparator());
         var reset = new MenuFlyoutItem { Text = "Reset" };
         reset.Click += (_, _) => { focus.Reset(); Right(); };

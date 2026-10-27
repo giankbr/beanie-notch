@@ -35,8 +35,10 @@ public sealed partial class IslandWindow : Window
     private readonly Grid root = new();
     private readonly ClosedView closed;
     private readonly Shell shell;
-    private readonly DispatcherQueueTimer collapseTimer, tick, statsTimer, dataTimer;
+    private readonly DispatcherQueueTimer collapseTimer, tick, statsTimer, dataTimer, quakeTimer;
     private Notice? notice;
+    // Alerts that can wait, held while a call is on.
+    private readonly List<Notice> held = [];
     private DateTime noticeUntil;
     private (int W, int H) placed;
 
@@ -54,7 +56,18 @@ public sealed partial class IslandWindow : Window
         root.Children.Add(closed.View);
         root.Children.Add(shell.View);
         shell.View.Visibility = Visibility.Collapsed;
-        root.PointerEntered += (_, _) => { collapseTimer?.Stop(); Expand(); };
+        // A notice with a link waits for its click instead of opening the panel on hover.
+        root.PointerEntered += (_, _) =>
+        {
+            collapseTimer?.Stop();
+            if (model.Expanded || notice?.Open is null) Expand();
+        };
+        root.PointerPressed += (_, _) =>
+        {
+            if (model.Expanded) return;
+            if (notice?.Open is { } link) _ = Windows.System.Launcher.LaunchUriAsync(link);
+            else Expand();
+        };
         root.PointerExited += (_, _) => collapseTimer?.Start();
         root.AllowDrop = true;
         root.DragOver += OnDragOver;
@@ -83,7 +96,12 @@ public sealed partial class IslandWindow : Window
         tick.Start();
         statsTimer = ui.CreateTimer();
         statsTimer.Interval = TimeSpan.FromSeconds(2);
-        statsTimer.Tick += (_, _) => { if (model.Expanded) { model.Stats.Sample(); shell.Update(); } };
+        statsTimer.Tick += (_, _) =>
+        {
+            if (model.Expanded) { model.Stats.Sample(); shell.Update(); }
+            // The pet sweats when the processor is busy, so it needs the reading while the island is closed too.
+            else if (model.Settings.NotchPet) model.Stats.Sample();
+        };
         statsTimer.Start();
 
         model.Media.Changed += Update;
@@ -100,6 +118,29 @@ public sealed partial class IslandWindow : Window
         dataTimer.Interval = TimeSpan.FromMinutes(10);
         dataTimer.Tick += (_, _) => _ = model.RefreshDataAsync();
         dataTimer.Start();
+        quakeTimer = ui.CreateTimer();
+        quakeTimer.Interval = TimeSpan.FromMinutes(1);
+        quakeTimer.Tick += (_, _) => _ = model.Quakes.CheckAsync();
+        quakeTimer.Start();
+        RulerWindow.Measured = size => Show(new Notice("\uED5E", Theme.Accent, "Copied", size, TimeSpan.FromSeconds(4), Essential: true));
+        _ = model.Quakes.CheckAsync();
+        model.Watchers.CallEnded += length =>
+        {
+            var waiting = held.ToList();
+            held.Clear();
+            Show(new Notice(Glyphs.Mic, Theme.Accent, "Call ended · " + DevRuns.Duration(length),
+                            waiting.Count == 0 ? "Nothing missed" : waiting.Count == 1 ? "1 alert held" : $"{waiting.Count} alerts held",
+                            TimeSpan.FromSeconds(4), Essential: true));
+            // Then the last few that waited, one after another.
+            foreach (var (n, i) in waiting.TakeLast(3).Select((n, i) => (n, i)))
+            {
+                var later = ui.CreateTimer();
+                later.Interval = TimeSpan.FromSeconds(4.5 * (i + 1));
+                later.IsRepeating = false;
+                later.Tick += (_, _) => Show(n);
+                later.Start();
+            }
+        };
         Update();
 
         if (SnapshotFolder is { } dir)
@@ -116,6 +157,11 @@ public sealed partial class IslandWindow : Window
 
     private void Show(Notice n)
     {
+        if (model.Watchers.CallSince is not null && !n.Essential && n.Key is not ("volume" or "caps" or "microphone" or "webcam"))
+        {
+            held.Add(n);
+            return;
+        }
         notice = n;
         noticeUntil = DateTime.UtcNow + n.Duration;
         Update();

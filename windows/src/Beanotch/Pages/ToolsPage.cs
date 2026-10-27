@@ -33,7 +33,8 @@ public sealed class ToolsPage(Model model) : PanelPage(model)
         // The header is rebuilt with a fresh bar each time: an element can only sit in one parent.
         bar = H(6);
         head.Children.Clear();
-        head.Children.Add(Columns(8, (Segmented(["Uninstaller", "Large files", "Mirror"], mode, i => { mode = i; Refresh(); }), 1), (bar, null)));
+        head.Children.Add(Columns(8, (Segmented(["Uninstaller", "Large files", "Mirror"], mode, i => { mode = i; Refresh(); }), 1), (bar, null),
+                                  (PillButton("Ruler", Theme.Accent, Island.RulerWindow.ShowRuler, "\uED5E"), null)));
         body.Children.Clear();
         if (mode == 0) Apps();
         else if (mode == 1) Large();

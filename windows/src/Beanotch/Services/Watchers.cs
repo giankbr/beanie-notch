@@ -10,8 +10,9 @@ using Windows.UI;
 namespace Beanotch.Services;
 
 // A short message in the closed island: an icon, a word or two on the left, a figure on the right, and optionally a
-// level bar (volume).
-public sealed record Notice(string Glyph, Color Color, string Left, string Right, TimeSpan Duration, double? Level = null, string? Key = null);
+// level bar (volume). Essential ones show even during a call; one with a link opens it when the island is clicked.
+public sealed record Notice(string Glyph, Color Color, string Left, string Right, TimeSpan Duration, double? Level = null, string? Key = null,
+                            bool Essential = false, Uri? Open = null);
 
 public static class Glyphs
 {
@@ -42,6 +43,12 @@ public sealed partial class Watchers
 
     public event Action<Notice>? Notice;
     public event Action<string>? Screenshot;
+
+    // A call: the mic or a camera in use for a few seconds running, by any app. Ends a few seconds after both stop.
+    public DateTimeOffset? CallSince { get; private set; }
+    public bool CallCamera => cameraApps.Count > 0;
+    public event Action<TimeSpan>? CallEnded;
+    private int activeFor, idleFor;
 
     // The download in progress, for the closed island: name, rate and how far along (when the size is known).
     public (string Name, double Rate)? Downloading { get; private set; }
@@ -100,9 +107,29 @@ public sealed partial class Watchers
     // is using it right now. This is the same list the taskbar's privacy icon reads.
     private void CheckPrivacy(bool announce = true)
     {
-        if (!settings.PrivacyAlerts && announce) return;
+        announce &= settings.PrivacyAlerts;
         Compare("microphone", micApps, Glyphs.Mic, "Mic in use", announce);
         Compare("webcam", cameraApps, Glyphs.Camera, "Camera on", announce);
+        TrackCall();
+    }
+
+    private void TrackCall()
+    {
+        var active = settings.CallMode && (micApps.Count > 0 || cameraApps.Count > 0);
+        if (active)
+        {
+            idleFor = 0;
+            if (++activeFor >= 3 && CallSince is null) CallSince = DateTimeOffset.Now.AddSeconds(-6);
+        }
+        else
+        {
+            activeFor = 0;
+            if (CallSince is { } start && ++idleFor >= 2)
+            {
+                CallSince = null;
+                CallEnded?.Invoke(DateTimeOffset.Now - start);
+            }
+        }
     }
 
     private void Compare(string capability, HashSet<string> known, string glyph, string label, bool announce)

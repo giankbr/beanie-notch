@@ -8,7 +8,7 @@ using static Beanotch.Ui.Ui;
 namespace Beanotch.Island;
 
 // What the closed island shows, most urgent first: a notice (volume, mic in use, Bluetooth, battery, Caps Lock,
-// screenshot), a download, the current lyric line or track, the coming prayer, and otherwise just the time.
+// screenshot), a call, a download, a terminal command, the current lyric line or track, the coming prayer, and otherwise just the time.
 public sealed class ClosedView
 {
     private readonly Model model;
@@ -17,6 +17,7 @@ public sealed class ClosedView
     private readonly TextBlock right = Text("", 10.5, weight: FontWeights.SemiBold);
     private readonly Border level = new();
     private readonly Grid row;
+    private readonly PetView pet;
 
     public FrameworkElement View { get; }
 
@@ -25,7 +26,8 @@ public sealed class ClosedView
         this.model = model;
         left.Foreground = Theme.Brush(Theme.Rgb(1, 1, 1));
         level.Width = S(56);
-        row = Columns(8, (icon, null), (left, 1), (level, null), (right, null));
+        pet = new PetView(() => model.Mood);
+        row = Columns(8, (pet.View, null), (icon, null), (left, 1), (level, null), (right, null));
         row.Padding = new Thickness(S(13), 0, S(13), 0);
         row.VerticalAlignment = VerticalAlignment.Center;
         View = row;
@@ -37,6 +39,8 @@ public sealed class ClosedView
         var white = Theme.Rgb(1, 1, 1);
         row.Visibility = Visibility.Visible;
         level.Visibility = Visibility.Collapsed;
+        pet.Show(false);
+        icon.Visibility = Visibility.Visible;
         right.Foreground = Theme.Brush(Theme.Rgb(1, 1, 1, 0.7));
 
         if (notice is not null)
@@ -50,9 +54,22 @@ public sealed class ClosedView
             return 300;
         }
 
+        if (model.Watchers.CallSince is { } call)
+        {
+            var muted = Controls.MicMuted;
+            Show(model.Watchers.CallCamera ? Glyphs.Camera : Glyphs.Mic, Theme.Red, "In a call" + (muted ? " · muted" : ""), Clock(DateTimeOffset.Now - call));
+            return 250;
+        }
+
         if (model.Watchers.Downloading is { } download)
         {
             Show(Glyphs.Download, Theme.Good, download.Name, Format.Rate(download.Rate));
+            return 300;
+        }
+
+        if (model.Runs.Current is { } run)
+        {
+            Show("\uE756", Theme.Accent, run.Name, DevRuns.Duration(DateTimeOffset.Now - run.Started));
             return 300;
         }
 
@@ -90,7 +107,20 @@ public sealed class ClosedView
         var until = next.Time - DateTimeOffset.Now;
         if (model.Settings.PrayerCountdown && model.Visible(Tab.Prayer) && until < TimeSpan.FromHours(1))
         {
-            Show(Glyphs.Moon, Theme.Accent2, next.Name, "in " + Model.Countdown(until));
+            Show(Glyphs.Moon, Theme.Accent2, model.Label(next), "in " + Model.Countdown(until));
+            return 230;
+        }
+
+        // Idle: the pet, when it's switched on.
+        if (model.Settings.NotchPet)
+        {
+            pet.Show(true);
+            icon.Visibility = Visibility.Collapsed;
+            var mood = model.Mood;
+            Show(Glyphs.Music, Theme.Accent, "", mood switch
+            {
+                Model.PetMood.Sleepy => "zzz", Model.PetMood.Panic => "hot!", Model.PetMood.Eating => "nom", Model.PetMood.Dancing => "♪", _ => "",
+            });
             return 230;
         }
 

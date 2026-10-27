@@ -85,7 +85,7 @@ public sealed class PrayerPage(Model model) : PanelPage(model)
         var bearing = Qibla(settings.Place.Lat, settings.Place.Lng);
         needle.Angle = bearing;
         qibla.Text = $"Qibla {Math.Round(bearing)}° {Compass(bearing)}";
-        method.Text = PrayerTimes.Title(settings.Method) + " · since the last prayer";
+        method.Text = Model.Fasting(DateTimeOffset.Now) ?? PrayerTimes.Title(settings.Method) + " · since the last prayer";
         day = DateOnly.FromDateTime(DateTime.Now);
 
         var entries = Model.PrayersToday;

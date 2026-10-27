@@ -58,7 +58,11 @@ public sealed class ClipboardWatcher
             if (content.Contains(StandardDataFormats.Text))
             {
                 var text = await content.GetTextAsync();
-                if (!string.IsNullOrWhiteSpace(text)) AddText(text);
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    AddText(text);
+                    Copied?.Invoke(text);
+                }
             }
             else if (content.Contains(StandardDataFormats.Bitmap))
             {
@@ -97,6 +101,18 @@ public sealed class ClipboardWatcher
             if (last is null) break;
             Items.Remove(last);
         }
+    }
+
+    // New text copied anywhere, for Smart copy.
+    public event Action<string>? Copied;
+
+    // Text onto the clipboard without it counting as a new copy.
+    public void CopyText(string text)
+    {
+        var package = new DataPackage();
+        package.SetText(text);
+        ownChange = true;
+        Clipboard.SetContent(package);
     }
 
     public void Copy(ClipItem item)

@@ -213,12 +213,15 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
     private FrameworkElement Island()
     {
         UIElement Toggle(string title, string caption, bool on, Action<bool> set) => Row(null, title, caption, Switch(on, v => { set(v); Save(); }));
-        return V(8, Group(Toggle("Time when idle", "Otherwise the notch stays empty and black", S0.IdleClock, v => S0.IdleClock = v)),
+        return V(8, Group(Toggle("Time when idle", "Otherwise the notch stays empty and black", S0.IdleClock, v => S0.IdleClock = v),
+                          Toggle("Notch pet", "A coffee bean that naps, sweats, eats and dances", S0.NotchPet, v => S0.NotchPet = v)),
             Group(
             Toggle("Lyrics", "The line being sung, while music plays", S0.Lyrics, v => S0.Lyrics = v),
             Toggle("Volume", "Level when it changes", S0.VolumeHud, v => S0.VolumeHud = v),
             Toggle("Downloads", "Progress from Chrome, Edge and Firefox", S0.DownloadsInIsland, v => S0.DownloadsInIsland = v),
             Toggle("Mic and camera", "When an app starts using them", S0.PrivacyAlerts, v => S0.PrivacyAlerts = v),
+            Toggle("Calls", "While the mic or camera is on: call time in the island, other alerts wait", S0.CallMode, v => S0.CallMode = v),
+            Toggle("Smart copy", "Codes from messages, prices in your currency, addresses and parcels", S0.SmartCopy, v => S0.SmartCopy = v),
             Toggle("Bluetooth and battery", "Devices connecting, charging, battery low", S0.DeviceAlerts, v => S0.DeviceAlerts = v),
             Toggle("Caps Lock", "When it turns on or off", S0.KeyboardAlerts, v => S0.KeyboardAlerts = v),
             Toggle("Meetings", "Five minutes before an event", S0.MeetingAlerts, v => S0.MeetingAlerts = v),
@@ -258,9 +261,15 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
         int[] minutes = [0, 5, 10, 15];
         var reminder = Segmented(["Off", "5 min", "10 min", "15 min"], Math.Max(0, Array.IndexOf(minutes, S0.PrayerReminder)),
                                  i => { S0.PrayerReminder = minutes[i]; Save(); });
-        return V(8, Group(Row(Glyphs.Location, "Place", "Times are worked out on this PC", city),
-                          Row(null, "Method", "", method),
-                          Picker("Reminder", "Before each prayer, in the island", reminder)));
+        var rows = new List<UIElement>
+        {
+            Row(Glyphs.Location, "Place", "Times are worked out on this PC", city),
+            Row(null, "Method", "", method),
+            Picker("Reminder", "Before each prayer, in the island", reminder),
+        };
+        if (Quakes.InIndonesia(S0.Place))
+            rows.Add(Row("\uE7BA", "Earthquakes", "From BMKG: near you, strong ones, or a tsunami risk, in red", Switch(S0.QuakeAlerts, v => { S0.QuakeAlerts = v; Save(); })));
+        return V(8, Group([.. rows]));
     }
 
     private FrameworkElement SystemSection()
@@ -272,7 +281,12 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
             ? PillButton(updater.Installing ? "Installing…" : $"Install {updater.Latest}", Theme.Accent, () => { _ = updater.InstallAsync(); Refresh(); })
             : PillButton(updater.Checking ? "Checking…" : "Check now", Theme.Accent2, () => { _ = updater.CheckAsync().ContinueWith(_ => Dispatch(Refresh), TaskScheduler.Default); Refresh(); });
         var updates = Row(Glyphs.Download, "Updates", caption, action);
+        var command = Row("\uE756", "Terminal command",
+                          DevRuns.Installed ? "Run `beanotch run npm test` in a new terminal to follow it in the island"
+                                            : "Adds `beanotch`: long builds and tests show in the island, green or red when done",
+                          DevRuns.Installed ? PillButton("Remove", Theme.Dim, () => { DevRuns.Uninstall(); Refresh(); })
+                                            : PillButton("Install", Theme.Accent, () => { DevRuns.Install(); Refresh(); }));
         var quit = Row(Glyphs.Power, "Quit", "Close Beanotch until you open it again", PillButton("Quit", Theme.Red, () => Application.Current.Exit()));
-        return V(8, Group(login, updates, quit));
+        return V(8, Group(login, updates, command, quit));
     }
 }

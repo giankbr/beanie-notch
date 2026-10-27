@@ -26,6 +26,16 @@ public sealed class AppSettings
     // When nothing else is showing, the notch is empty and black unless this puts the time in it.
     public bool IdleClock { get; set; }
     public bool MeetingAlerts { get; set; } = true;
+    public bool CallMode { get; set; } = true;
+    public bool SmartCopy { get; set; } = true;
+    public bool QuakeAlerts { get; set; } = true;
+    public string QuakeSeen { get; set; } = "";
+    public bool NotchPet { get; set; }
+    // The sound while a focus stretch runs; empty for none.
+    public string FocusSound { get; set; } = "";
+    public string RatesDay { get; set; } = "";
+    public Dictionary<string, double> RatesToday { get; set; } = [];
+    public Dictionary<string, double> RatesPrevious { get; set; } = [];
     public int PrayerReminder { get; set; } = 10;
     public string CalendarUrl { get; set; } = "";
     public List<TaskItem> Tasks { get; set; } = [];

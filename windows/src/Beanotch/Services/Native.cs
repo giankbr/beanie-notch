@@ -105,4 +105,27 @@ static partial class Native
         }
         SetWindowRgn(hwnd, body, true);
     }
+
+    [LibraryImport("user32.dll", EntryPoint = "SendMessageTimeoutW", StringMarshalling = StringMarshalling.Utf16)]
+    private static partial nint SendMessageTimeout(nint hwnd, uint msg, nint wParam, string lParam, uint flags, uint timeout, out nint result);
+
+    // Tells open programs (Explorer, new terminals) that the user's PATH changed.
+    internal static void EnvironmentChanged() => SendMessageTimeout(0xFFFF, 0x001A, 0, "Environment", 0x0002, 1000, out _);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct LastInput { public uint Size, Time; }
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool GetLastInputInfo(ref LastInput info);
+
+    // How long since the last key press or mouse move.
+    internal static TimeSpan Idle
+    {
+        get
+        {
+            var info = new LastInput { Size = (uint)Marshal.SizeOf<LastInput>() };
+            return GetLastInputInfo(ref info) ? TimeSpan.FromMilliseconds(unchecked((uint)Environment.TickCount - info.Time)) : TimeSpan.Zero;
+        }
+    }
 }
