@@ -96,19 +96,19 @@ public static class PrayerTimes
         return
         [
             new("Imsak", At(times[0], ihtiyat - 10.0 / 60), false),
-            new("Subuh", At(times[0], ihtiyat), true),
-            new("Terbit", At(times[1], -ihtiyat), false),
-            new("Dzuhur", At(times[2], ihtiyat), true),
-            new("Ashar", At(times[3], ihtiyat), true),
+            new("Fajr", At(times[0], ihtiyat), true),
+            new("Sunrise", At(times[1], -ihtiyat), false),
+            new("Dhuhr", At(times[2], ihtiyat), true),
+            new("Asr", At(times[3], ihtiyat), true),
             new("Maghrib", At(times[4], ihtiyat), true),
-            new("Isya", At(times[5], ihtiyat), true),
+            new("Isha", At(times[5], ihtiyat), true),
         ];
     }
 
-    // The next prayer after now, rolling over to tomorrow's Subuh after Isya.
+    // The next prayer after now, rolling over to tomorrow's Fajr after Isya.
     public static PrayerEntry Next(DateTimeOffset now, DateOnly today, Place place, PrayerMethod method, bool hanafi = false)
     {
         var upcoming = Compute(today, place, method, hanafi).FirstOrDefault(e => e.IsPrayer && e.Time > now);
-        return upcoming ?? Compute(today.AddDays(1), place, method, hanafi).First(e => e.Name == "Subuh");
+        return upcoming ?? Compute(today.AddDays(1), place, method, hanafi).First(e => e.Name == "Fajr");
     }
 }

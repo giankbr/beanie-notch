@@ -97,7 +97,7 @@ public sealed class PrayerPage(Model model) : PanelPage(model)
             var e = entries[i];
             var isNext = e.Time == next.Time;
             var past = e.Time < DateTimeOffset.Now;
-            var glyph = e.Name switch { "Imsak" or "Isya" => Glyphs.Moon, "Terbit" or "Maghrib" => "", _ => Glyphs.Sun };
+            var glyph = e.Name switch { "Imsak" or "Isha" => Glyphs.Moon, "Sunrise" or "Maghrib" => "\uE706", _ => Glyphs.Sun };
             var body = Rows(0, (Icon(glyph, 11, isNext ? Theme.Accent : Theme.Dim), null), (null, 1),
                             (Text(e.Name, 9.5, isNext ? Theme.Accent : Theme.Dim, FontWeights.Medium), null),
                             (Text(Model.Clock(e.Time), 15, past && !isNext ? Theme.Faint : Theme.Ink, FontWeights.SemiBold, display: true), null));

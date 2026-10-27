@@ -114,16 +114,16 @@ public sealed class Model
     public PrayerEntry NextPrayer =>
         PrayerTimes.Next(DateTimeOffset.Now, DateOnly.FromDateTime(DateTime.Now), Settings.Place, Settings.Method);
 
-    // The Hijri date in Indonesian month names, from .NET's Umm al-Qura calendar.
+    // The Hijri date with the months' common English spellings, from .NET's Umm al-Qura calendar, as on the Mac.
     public static string Hijri
     {
         get
         {
             var cal = new UmAlQuraCalendar();
             var now = DateTime.Now;
-            string[] months = ["Muharram", "Safar", "Rabiulawal", "Rabiulakhir", "Jumadilawal", "Jumadilakhir",
-                               "Rajab", "Syakban", "Ramadan", "Syawal", "Zulkaidah", "Zulhijah"];
-            return $"{cal.GetDayOfMonth(now)} {months[cal.GetMonth(now) - 1]} {cal.GetYear(now)} H";
+            string[] months = ["Muharram", "Safar", "Rabi al-Awwal", "Rabi al-Thani", "Jumada al-Ula", "Jumada al-Akhirah",
+                               "Rajab", "Shaban", "Ramadan", "Shawwal", "Dhu al-Qadah", "Dhu al-Hijjah"];
+            return $"{cal.GetDayOfMonth(now)} {months[cal.GetMonth(now) - 1]} {cal.GetYear(now)} AH";
         }
     }
 

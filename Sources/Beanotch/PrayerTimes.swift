@@ -127,21 +127,20 @@ final class PrayerTimes: ObservableObject {
     private let locator = Locator()
     private var timer: Timer?
 
-    static let hijriFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.calendar = Calendar(identifier: .islamicUmmAlQura)
-        f.locale = Locale(identifier: "id_ID")
-        f.dateFormat = "d MMMM y 'H'"
-        return f
-    }()
+    // The Hijri date with the months' common English spellings, the same on the Mac and Windows apps.
+    static let hijriMonths = ["Muharram", "Safar", "Rabi al-Awwal", "Rabi al-Thani", "Jumada al-Ula", "Jumada al-Akhirah",
+                              "Rajab", "Shaban", "Ramadan", "Shawwal", "Dhu al-Qadah", "Dhu al-Hijjah"]
 
-    var hijri: String { Self.hijriFormatter.string(from: Date()) }
+    var hijri: String {
+        let parts = Calendar(identifier: .islamicUmmAlQura).dateComponents([.day, .month, .year], from: Date())
+        return "\(parts.day ?? 1) \(Self.hijriMonths[max(0, (parts.month ?? 1) - 1)]) \(parts.year ?? 0) AH"
+    }
 
     var isRamadan: Bool { Calendar(identifier: .islamicUmmAlQura).component(.month, from: Date()) == 9 }
 
     // In Ramadan, Maghrib is when the fast breaks.
     func label(_ entry: Entry) -> String {
-        isRamadan && entry.name == "Maghrib" ? "Buka puasa" : entry.name
+        isRamadan && entry.name == "Maghrib" ? "Iftar" : entry.name
     }
 
     var next: Entry? {
@@ -201,7 +200,7 @@ final class PrayerTimes: ObservableObject {
         let now = Date()
         today = Self.compute(for: now, place: place, method: method, hanafi: hanafi)
         let tomorrow = Self.compute(for: now.addingTimeInterval(86_400), place: place, method: method, hanafi: hanafi)
-        tomorrowFajr = tomorrow.first { $0.name == "Subuh" }
+        tomorrowFajr = tomorrow.first { $0.name == "Fajr" }
         tomorrowImsak = tomorrow.first { $0.name == "Imsak" }
         schedule()
         updateSoon()
@@ -306,12 +305,12 @@ final class PrayerTimes: ObservableObject {
         }
         return [
             Entry(name: "Imsak", time: at(times[0], ihtiyat - 10.0 / 60), isPrayer: false),
-            Entry(name: "Subuh", time: at(times[0], ihtiyat), isPrayer: true),
-            Entry(name: "Terbit", time: at(times[1], -ihtiyat), isPrayer: false),
-            Entry(name: "Dzuhur", time: at(times[2], ihtiyat), isPrayer: true),
-            Entry(name: "Ashar", time: at(times[3], ihtiyat), isPrayer: true),
+            Entry(name: "Fajr", time: at(times[0], ihtiyat), isPrayer: true),
+            Entry(name: "Sunrise", time: at(times[1], -ihtiyat), isPrayer: false),
+            Entry(name: "Dhuhr", time: at(times[2], ihtiyat), isPrayer: true),
+            Entry(name: "Asr", time: at(times[3], ihtiyat), isPrayer: true),
             Entry(name: "Maghrib", time: at(times[4], ihtiyat), isPrayer: true),
-            Entry(name: "Isya", time: at(times[5], ihtiyat), isPrayer: true),
+            Entry(name: "Isha", time: at(times[5], ihtiyat), isPrayer: true),
         ]
     }
 }

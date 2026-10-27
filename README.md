@@ -38,7 +38,7 @@ Beanotch is written in Swift and SwiftUI with no third-party dependencies. The d
   - Calculated on the Mac from your location, using the Kemenag, MWL, Umm al-Qura, Egypt or ISNA method.
   - The Hijri date and a qibla compass.
   - A countdown before each prayer.
-  - A Ramadan mode with Imsak and the "Buka puasa" alert.
+  - A Ramadan mode with Imsak and an Iftar alert.
 - **Shelf:**
   - Drop files on the notch to keep them at hand, then drag them out later.
   - Drop on the right third to send by AirDrop.
