@@ -360,7 +360,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
   .watermark.idle span { opacity: 1; }
 }
 
-/* Windows preview */
+/* Windows beta */
 #windows { border-top: 1px solid var(--border); }
 .win { display: grid; grid-template-columns: 1fr 1.1fr; gap: 56px; align-items: center; margin-top: 8px; }
 .soon { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: .4px; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); padding: 5px 12px; border-radius: 999px; }
@@ -396,7 +396,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
 </head>
 <body>
 
-<div class="banner"><a href="#windows">✦ New: Beanotch for Windows, an early preview. <i data-lucide="arrow-right"></i></a></div>
+<div class="banner"><a href="#windows">✦ New: Beanotch for Windows is in beta. <i data-lucide="arrow-right"></i></a></div>
 
 <nav>
   <div class="wrap">
@@ -407,7 +407,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
     <div class="nav-right">
       <button class="icon-btn" id="themeBtn" aria-label="Switch light or dark"><i data-lucide="moon"></i></button>
       <a class="btn btn-ghost btn-sm" href="https://github.com/giankbr/beanie-notch"><i data-lucide="github"></i>Star on GitHub</a>
-      <a class="btn btn-primary btn-sm" href="https://github.com/giankbr/beanie-notch/releases/latest"><i data-lucide="apple"></i>Get Beanotch</a>
+      <a class="btn btn-primary btn-sm dl" data-label="Get Beanotch" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch.dmg"><i data-lucide="apple"></i>Get Beanotch</a>
     </div>
   </div>
 </nav>
@@ -418,7 +418,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
     <h1 id="headline">The notch,<br>finally earning its place.</h1>
     <p class="lead">Hover the notch or press ⌥ Space. System stats, your next meeting, prayer times, AI usage, a file shelf, clipboard history and synced lyrics — in a 3.6 MB native app that idles near 0% CPU.</p>
     <div class="cta-row">
-      <a class="btn btn-primary" href="https://github.com/giankbr/beanie-notch/releases/latest"><i data-lucide="apple"></i>Download for macOS</a>
+      <a class="btn btn-primary dl" data-label="Download for Windows" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch.dmg"><i data-lucide="apple"></i>Download for macOS</a>
       <a class="btn btn-ghost" href="https://github.com/giankbr/beanie-notch">View source <i data-lucide="arrow-right"></i></a>
     </div>
     <div class="meta">
@@ -552,7 +552,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
 <section id="windows">
   <div class="wrap win">
     <div>
-      <span class="soon">Windows preview</span>
+      <span class="soon">Windows beta</span>
       <h2>Beanotch for Windows.<em>Without a notch.</em></h2>
       <p class="sub">Windows laptops don't have a notch, so Beanotch becomes a small island at the top centre of the screen. Hover it to open the panels, built natively with WinUI 3 rather than ported.</p>
       <div class="plan">
@@ -567,14 +567,14 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
         <div class="later"><i data-lucide="minus"></i>AirDrop and Night Shift stay on Mac</div>
       </div>
       <div class="cta-row" style="justify-content:flex-start">
-        <a class="btn btn-primary" id="winDownload" href="https://github.com/giankbr/beanie-notch/releases/download/windows-v0.2.0/Beanotch-Setup-x64.exe"><i data-lucide="download"></i><span>Download for Windows</span></a>
-        <a class="btn btn-ghost" id="winOther" href="https://github.com/giankbr/beanie-notch/releases/download/windows-v0.2.0/Beanotch-Setup-arm64.exe"><i data-lucide="cpu"></i><span>Snapdragon (ARM)</span></a>
+        <a class="btn btn-primary" id="winDownload" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch-Setup-x64.exe"><i data-lucide="download"></i><span>Download for Windows</span></a>
+        <a class="btn btn-ghost" id="winOther" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch-Setup-arm64.exe"><i data-lucide="cpu"></i><span>Snapdragon (ARM)</span></a>
       </div>
-      <p class="win-note">Preview 0.2.0 · Windows 10 and 11 · 21 MB, .NET included. Most PCs (Intel or AMD) need the first button; Snapdragon PCs the ARM one. The installer isn't signed yet: if SmartScreen appears, choose More info › Run anyway. Found a bug? <a href="https://github.com/giankbr/beanie-notch/issues/new?title=Windows%3A%20" style="color:var(--accent)">Tell us</a>.</p>
+      <p class="win-note">Beta · Windows 10 and 11 · 21 MB, .NET included. Most PCs (Intel or AMD) need the first button; Snapdragon PCs the ARM one. The installer isn't signed yet: if SmartScreen appears, choose More info › Run anyway. Found a bug? <a href="https://github.com/giankbr/beanie-notch/issues/new?title=Windows%3A%20" style="color:var(--accent)">Tell us</a>.</p>
     </div>
     <div class="desk" aria-hidden="true">
       <div class="island"><span>Yang tak bisa terobati</span><span class="bars"><i></i><i></i><i></i><i></i></span></div>
-      <div class="label">Preview · Windows 11</div>
+      <div class="label">Beta · Windows 11</div>
       <div class="taskbar"><i></i><i></i><i></i><i></i><i></i></div>
     </div>
   </div>
@@ -588,7 +588,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
       <p class="sub">Beanotch is free, open and tiny. If something isn't covered here, <a href="https://github.com/giankbr/beanie-notch/issues" style="color:var(--accent)">open an issue on GitHub</a>.</p>
     </div>
     <div>
-      <details><summary>Is there a Windows version?<i data-lucide="chevron-down"></i></summary><p>Yes, as an early preview: a small island at the top centre of the screen with the same pages as on the Mac. <a href="#windows" style="color:var(--accent)">Download it here</a>. Most PCs need the regular (x64) installer; Snapdragon PCs get the ARM64 one, which the button picks for you.</p></details>
+      <details><summary>Is there a Windows version?<i data-lucide="chevron-down"></i></summary><p>Yes, in beta: a small island at the top centre of the screen with the same pages as on the Mac. <a href="#windows" style="color:var(--accent)">Download it here</a>. Most PCs need the regular (x64) installer; Snapdragon PCs get the ARM64 one, which the button picks for you.</p></details>
       <details><summary>Does it work on a Mac without a notch?<i data-lucide="chevron-down"></i></summary><p>Yes. On Macs without a notch, Beanotch draws a notch-like strip at the top centre of the screen. Pick the floating shape in Settings if you prefer it detached.</p></details>
       <details open><summary>Why does macOS say the app can't be opened?<i data-lucide="chevron-down"></i></summary><p>Beanotch is ad-hoc signed, not notarized. Right-click the app and choose Open once, or run <code>xattr -dr com.apple.quarantine /Applications/Beanotch.app</code>.</p></details>
       <details><summary>Is my location sent anywhere?<i data-lucide="chevron-down"></i></summary><p>Prayer times are worked out on your Mac. For the weather, only your place's coordinates go to Open-Meteo, with no account, no key and no tracking. Lyrics lookups send just the song title and artist.</p></details>
@@ -606,7 +606,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
         <h2>Give your notch<em>a job.</em></h2>
         <p class="sub">Free and open source. A 3.6 MB universal app for macOS 14 or later.</p>
         <div class="cta-row" style="justify-content:flex-start">
-          <a class="btn btn-primary" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch.dmg"><i data-lucide="apple"></i>Download Beanotch.dmg</a>
+          <a class="btn btn-primary dl" data-label="Download for Windows" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch.dmg"><i data-lucide="apple"></i>Download Beanotch.dmg</a>
           <a class="btn btn-ghost" href="https://github.com/giankbr/beanie-notch"><i data-lucide="github"></i>View on GitHub</a>
         </div>
         <div class="steps">
@@ -633,7 +633,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
       <div><h4>Beanotch</h4><p>The notch, finally earning its place.</p></div>
       <div class="cta-row">
         <a class="btn btn-ghost" href="https://github.com/giankbr/beanie-notch"><i data-lucide="github"></i>Star on GitHub</a>
-        <a class="btn btn-primary" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch.dmg"><i data-lucide="apple"></i>Download Beanotch.dmg</a>
+        <a class="btn btn-primary dl" data-label="Download for Windows" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch.dmg"><i data-lucide="apple"></i>Download Beanotch.dmg</a>
       </div>
     </div>
     <div class="cols">
@@ -876,6 +876,23 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
     other.href = other.href.replace("-arm64.exe", "-x64.exe");
     other.querySelector("span").textContent = "Intel / AMD (x64)";
   }).catch(function () {});
+})();
+
+// One download button for everyone: on a Windows PC the main buttons fetch the Windows installer instead of the
+// disk image (the ARM64 one on Snapdragon PCs, which Chromium browsers report).
+(function () {
+  var ua = navigator.userAgentData;
+  var windows = ua ? ua.platform === "Windows" : /Windows NT/.test(navigator.userAgent);
+  if (!windows) return;
+  function use(arch) {
+    document.querySelectorAll("a.dl").forEach(function (a) {
+      a.href = "https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch-Setup-" + arch + ".exe";
+      a.innerHTML = '<i data-lucide="download"></i>' + a.getAttribute("data-label");
+    });
+    if (window.lucide) lucide.createIcons();
+  }
+  use("x64");
+  if (ua && ua.getHighEntropyValues) ua.getHighEntropyValues(["architecture"]).then(function (v) { if (v.architecture === "arm") use("arm64"); }).catch(function () {});
 })();
 </script>
 </body>
