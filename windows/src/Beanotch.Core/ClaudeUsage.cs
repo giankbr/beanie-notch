@@ -4,9 +4,11 @@ namespace Beanotch.Core;
 
 public sealed record ModelUsage(string Model, long Tokens, double Cost);
 
-public sealed record UsageSummary(long TokensToday, double CostToday, int RequestsToday, double CostWeek, IReadOnlyList<ModelUsage> ModelsToday)
+// Days are oldest first and end with today.
+public sealed record UsageSummary(long TokensToday, double CostToday, int RequestsToday, long TokensLast5Hours, int RequestsLast5Hours,
+                                  double CostWeek, long TokensWeek, IReadOnlyList<double> DailyCost, IReadOnlyList<ModelUsage> ModelsToday)
 {
-    public static readonly UsageSummary Empty = new(0, 0, 0, 0, []);
+    public static readonly UsageSummary Empty = new(0, 0, 0, 0, 0, 0, 0, [0, 0, 0, 0, 0, 0, 0], []);
 }
 
 // Claude Code's own logs under %USERPROFILE%\.claude\projects, priced at API list rates: what the same tokens would
@@ -47,7 +49,7 @@ public static class ClaudeUsage
     public static UsageSummary Read(string root, DateTimeOffset now)
     {
         if (!Directory.Exists(root)) return UsageSummary.Empty;
-        var weekAgo = now.AddDays(-7);
+        var weekAgo = now.AddDays(-8);
         var records = new Dictionary<string, Record>();
         foreach (var file in Directory.EnumerateFiles(root, "*.jsonl", SearchOption.AllDirectories))
         {
@@ -63,11 +65,18 @@ public static class ClaudeUsage
         }
         var startOfDay = new DateTimeOffset(now.Date, now.Offset);
         var today = records.Values.Where(r => r.Date >= startOfDay).ToList();
+        var recent = records.Values.Where(r => r.Date >= now.AddHours(-5)).ToList();
+        var week = records.Values.Where(r => r.Date >= startOfDay.AddDays(-6)).ToList();
         var models = today.GroupBy(r => Short(r.Model))
             .Select(g => new ModelUsage(g.Key, g.Sum(r => r.Tokens), g.Sum(r => r.Cost)))
             .OrderByDescending(m => m.Cost).ToList();
-        return new UsageSummary(today.Sum(r => r.Tokens), today.Sum(r => r.Cost), today.Count,
-                                records.Values.Where(r => r.Date >= weekAgo).Sum(r => r.Cost), models);
+        var daily = Enumerable.Range(0, 7).Select(i =>
+        {
+            var from = startOfDay.AddDays(i - 6);
+            return week.Where(r => r.Date >= from && r.Date < from.AddDays(1)).Sum(r => r.Cost);
+        }).ToList();
+        return new UsageSummary(today.Sum(r => r.Tokens), today.Sum(r => r.Cost), today.Count, recent.Sum(r => r.Tokens), recent.Count,
+                                week.Sum(r => r.Cost), week.Sum(r => r.Tokens), daily, models);
     }
 
     // A response is logged once per content block; the message and request ids make it one request.

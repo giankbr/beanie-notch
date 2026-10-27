@@ -1,0 +1,89 @@
+using Beanotch.Services;
+using Beanotch.Ui;
+using Microsoft.UI.Text;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using static Beanotch.Ui.Ui;
+
+namespace Beanotch.Island;
+
+// What the closed island shows, most urgent first: a notice (volume, mic in use, Bluetooth, battery, Caps Lock,
+// screenshot), a download, the current lyric line or track, the coming prayer, and otherwise just the time.
+public sealed class ClosedView
+{
+    private readonly Model model;
+    private readonly FontIcon icon = Icon(Glyphs.Music, 10);
+    private readonly TextBlock left = Text("", 10.5, weight: FontWeights.SemiBold);
+    private readonly TextBlock right = Text("", 10.5, weight: FontWeights.SemiBold);
+    private readonly Border level = new();
+    private readonly Grid row;
+
+    public FrameworkElement View { get; }
+
+    public ClosedView(Model model)
+    {
+        this.model = model;
+        left.Foreground = Theme.Brush(Theme.Rgb(1, 1, 1));
+        level.Width = S(56);
+        row = Columns(8, (icon, null), (left, 1), (level, null), (right, null));
+        row.Padding = new Thickness(S(13), 0, S(13), 0);
+        row.VerticalAlignment = VerticalAlignment.Center;
+        View = row;
+    }
+
+    // Lays out the content and returns the width the island needs, in Mac points.
+    public double Update(Notice? notice)
+    {
+        var white = Theme.Rgb(1, 1, 1);
+        level.Visibility = Visibility.Collapsed;
+        right.Foreground = Theme.Brush(Theme.Rgb(1, 1, 1, 0.7));
+
+        if (notice is not null)
+        {
+            Show(notice.Glyph, notice.Color, notice.Left, notice.Right);
+            if (notice.Level is double value)
+            {
+                level.Child = Bar(value, notice.Color, 4);
+                level.Visibility = Visibility.Visible;
+            }
+            return 300;
+        }
+
+        if (model.Watchers.Downloading is { } download)
+        {
+            Show(Glyphs.Download, Theme.Good, download.Name, Format.Rate(download.Rate));
+            return 300;
+        }
+
+        var media = model.Media;
+        if (media.Playing && media.HasTrack)
+        {
+            var line = model.Settings.Lyrics ? media.CurrentLine?.Text : null;
+            Show(Glyphs.Music, Theme.Accent, string.IsNullOrEmpty(line) ? media.Title : line, "");
+            left.Foreground = Theme.Brush(string.IsNullOrEmpty(line) ? white : Theme.Accent);
+            return 340;
+        }
+
+        var next = model.NextPrayer;
+        var until = next.Time - DateTimeOffset.Now;
+        if (model.Settings.PrayerCountdown && until < TimeSpan.FromHours(1))
+        {
+            Show(Glyphs.Moon, Theme.Accent2, next.Name, "in " + Model.Countdown(until));
+            return 230;
+        }
+
+        Show(Glyphs.Clock, Theme.Rgb(1, 1, 1, 0.55), DateTime.Now.ToString("ddd d MMM"), DateTime.Now.ToString("HH.mm"));
+        right.Foreground = Theme.Brush(white);
+        return 190;
+    }
+
+    private void Show(string glyph, Windows.UI.Color color, string text, string trailing)
+    {
+        icon.Glyph = glyph;
+        icon.Foreground = Theme.Brush(color);
+        left.Text = text;
+        left.Foreground = Theme.Brush(Theme.Rgb(1, 1, 1));
+        right.Text = trailing;
+        right.Visibility = trailing.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
+    }
+}

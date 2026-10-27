@@ -4,7 +4,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Media.Control;
 using Windows.Storage.Streams;
 
-namespace Beanotch;
+namespace Beanotch.Services;
 
 // Whatever Windows shows in its media flyout (Spotify, browsers, the Media Player app), through the system media
 // transport controls, plus synced lyrics for it.
@@ -19,6 +19,8 @@ public sealed class MediaWatcher
 
     public string Title { get; private set; } = "";
     public string Artist { get; private set; } = "";
+    // "Spotify", "Chrome": the player, from its app id.
+    public string Source { get; private set; } = "";
     public bool Playing { get; private set; }
     public TimeSpan Duration { get; private set; }
     public BitmapImage? Art { get; private set; }
@@ -93,6 +95,7 @@ public sealed class MediaWatcher
             Duration = timeline.EndTime - timeline.StartTime;
             basePosition = timeline.Position;
             baseTime = timeline.LastUpdatedTime;
+            Source = AppName(session.SourceAppUserModelId);
             var title = props.Title ?? "";
             var artist = props.Artist ?? "";
             if (title != Title || artist != Artist)
@@ -132,6 +135,14 @@ public sealed class MediaWatcher
             return image;
         }
         catch (Exception) { return null; }
+    }
+
+    private static string AppName(string id)
+    {
+        var name = id.Split('!')[0].Split('\\').Last();
+        if (name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) name = name[..^4];
+        name = name.Split('_')[0].Split('.').Last();
+        return name.Length == 0 ? "" : char.ToUpperInvariant(name[0]) + name[1..];
     }
 
     public void TogglePlay() => _ = session?.TryTogglePlayPauseAsync();

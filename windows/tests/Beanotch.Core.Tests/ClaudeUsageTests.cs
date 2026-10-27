@@ -15,5 +15,8 @@ public class ClaudeUsageTests
         Assert.Equal(1_100_000, summary.TokensToday);
         Assert.Equal(6.0, summary.CostToday, 6);
         Assert.Equal("Opus 5.5", summary.ModelsToday.Single().Model);
+        Assert.Equal(7, summary.DailyCost.Count);
+        Assert.Equal(6.0, summary.DailyCost[^1], 6);
+        Assert.Equal(1, summary.RequestsLast5Hours);
     }
 }

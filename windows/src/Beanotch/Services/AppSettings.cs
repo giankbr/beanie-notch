@@ -1,14 +1,28 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Beanotch.Core;
+using Beanotch.Ui;
 
-namespace Beanotch;
+namespace Beanotch.Services;
 
 // A small JSON file in %LOCALAPPDATA%\Beanotch, since an unpackaged app has no ApplicationData.
 public sealed class AppSettings
 {
     public string City { get; set; } = "Jakarta";
     public PrayerMethod Method { get; set; } = PrayerMethod.Kemenag;
+    public ThemeMode Theme { get; set; } = ThemeMode.Dark;
+    public AccentChoice Accent { get; set; } = AccentChoice.Mint;
+    public bool ClipboardHistory { get; set; } = true;
+    public bool ScreenshotsToShelf { get; set; } = true;
+    public bool Lyrics { get; set; } = true;
+    public bool VolumeHud { get; set; } = true;
+    public bool DownloadsInIsland { get; set; } = true;
+    public bool PrivacyAlerts { get; set; } = true;
+    public bool DeviceAlerts { get; set; } = true;
+    public bool KeyboardAlerts { get; set; } = true;
+    public bool PrayerCountdown { get; set; } = true;
+    public List<string> Shelf { get; set; } = [];
+    public List<string> Pinned { get; set; } = [];
 
     static string FilePath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Beanotch", "settings.json");
 
@@ -33,4 +47,5 @@ public sealed class AppSettings
 }
 
 [JsonSerializable(typeof(AppSettings))]
+[JsonSourceGenerationOptions(UseStringEnumConverter = true, WriteIndented = true)]
 internal sealed partial class SettingsJson : JsonSerializerContext;
