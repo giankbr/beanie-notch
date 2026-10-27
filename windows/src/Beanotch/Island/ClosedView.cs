@@ -55,6 +55,27 @@ public sealed class ClosedView
             return 300;
         }
 
+        var meeting = model.NextEvent;
+        if (meeting is not null && model.Settings.MeetingAlerts && meeting.Start - DateTimeOffset.Now is var soon && soon <= TimeSpan.FromMinutes(10))
+        {
+            Show(Glyphs.Calendar, Theme.Accent2, meeting.Title, soon <= TimeSpan.Zero ? "now" : "in " + Model.Countdown(soon));
+            return 300;
+        }
+
+        if (model.Focus.Running)
+        {
+            Show(Glyphs.Clock, model.Focus.OnBreak ? Theme.Good : Theme.Accent, model.Focus.OnBreak ? "Break" : "Focus", Clock(model.Focus.Left));
+            level.Child = Bar(model.Focus.Progress, model.Focus.OnBreak ? Theme.Good : Theme.Accent, 4);
+            level.Visibility = Visibility.Visible;
+            return 250;
+        }
+
+        if (model.Timer.Running)
+        {
+            Show(Glyphs.Clock, Theme.Amber, "Timer", Clock(model.Timer.Left));
+            return 210;
+        }
+
         var media = model.Media;
         if (media.Playing && media.HasTrack)
         {
@@ -66,7 +87,7 @@ public sealed class ClosedView
 
         var next = model.NextPrayer;
         var until = next.Time - DateTimeOffset.Now;
-        if (model.Settings.PrayerCountdown && until < TimeSpan.FromHours(1))
+        if (model.Settings.PrayerCountdown && model.Visible(Tab.Prayer) && until < TimeSpan.FromHours(1))
         {
             Show(Glyphs.Moon, Theme.Accent2, next.Name, "in " + Model.Countdown(until));
             return 230;
@@ -76,6 +97,8 @@ public sealed class ClosedView
         right.Foreground = Theme.Brush(white);
         return 190;
     }
+
+    private static string Clock(TimeSpan t) => t.TotalHours >= 1 ? t.ToString(@"h\:mm\:ss") : t.ToString(@"mm\:ss");
 
     private void Show(string glyph, Windows.UI.Color color, string text, string trailing)
     {

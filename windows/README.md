@@ -6,23 +6,24 @@ Windows laptops don't have a notch, so Beanotch for Windows is a small island at
 
 ## What's in it
 
-| Panel | What it does |
+The same panels as the Mac app, in its Studio layout and palette:
+
+| Page | What it does |
 |---|---|
-| Now playing | Whatever Windows' media flyout shows (Spotify, browsers, Media Player): artwork, progress, play/pause/skip, and synced lyrics from LRCLIB. While music plays, the island shows the current lyric line. |
-| Clipboard | Text history, kept in memory. Click an item to copy it again. Items that password managers mark as private are skipped. |
-| Prayer | Times worked out on the PC for 38 cities (Kemenag, MWL, Umm al-Qura, Egypt, ISNA), the same calculation as the Mac app. When nothing plays, the island counts down to the next prayer. |
-| AI usage | Claude Code's tokens and estimated API cost for today and the week, read from `%USERPROFILE%\.claude\projects`. |
+| Overview | Health score, CPU, memory, network and disk; cleanup of temp files and browser caches; quick settings. |
+| Today | Weather (Open-Meteo), the next events from a calendar's iCal address with a Join button for 19 call services, tasks with reminders, a month view, a focus timer, a countdown timer and world clocks. |
+| Prayer | Times for 38 cities (Kemenag, MWL, Umm al-Qura, Egypt, ISNA), the Hijri date, the qibla, and a reminder before each prayer. |
+| Now playing | Whatever Windows' media flyout shows, with synced lyrics from LRCLIB and a volume slider. |
+| Shelf | Drop files on the island; drag them out into any app later. Screenshots land here too. |
+| Clipboard | Text and image history with search and pins. Items password managers mark as private are skipped. |
+| AI | Claude Code's tokens and estimated API cost for today, the last 5 hours and the week, with a 7-day chart. |
+| Controls | Dark mode, keep awake, mic mute, taskbar auto-hide, desktop icons, hidden files; brightness for the built-in screen and external monitors (DDC/CI); battery; lock, sleep, snip, empty the bin. |
+| Tools | An uninstaller that also finds leftover folders, a large-file finder, and the camera. |
+| Settings | Theme and accent, which pages show, what the island shows, calendar and clocks, prayer, open at sign-in and updates. |
 
-Next: the file shelf, timers and world clocks, a tray icon and a hotkey.
+**The closed island** shows volume, downloads, the current lyric line, the focus timer, meetings and prayers coming up, screenshots, and, in place of the Mac's AirPods card (Windows can't read AirPods' battery): an app starting to use the mic or camera, Bluetooth devices connecting, charging and low battery, and Caps Lock.
 
-## Layout
-
-```
-windows/
-  src/Beanotch.Core/        prayer times, lyrics, Claude Code usage; plain .NET, builds and tests on any OS
-  src/Beanotch/             the WinUI 3 app (unpackaged, self-contained)
-  tests/Beanotch.Core.Tests xUnit tests for the shared code
-```
+Windows doesn't let an unpackaged app read the system calendar, so Today reads a calendar's secret iCal address instead.
 
 ## Install
 

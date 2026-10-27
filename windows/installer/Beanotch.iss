@@ -44,10 +44,15 @@ Source: "..\..\out\Beanotch\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreve
 
 [Icons]
 Name: "{userprograms}\Beanotch"; Filename: "{app}\Beanotch.exe"
-Name: "{userstartup}\Beanotch"; Filename: "{app}\Beanotch.exe"; Tasks: startup
+
+; The same Run entry Settings › System › Open at sign-in turns on and off.
+[Registry]
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "Beanotch"; ValueData: """{app}\Beanotch.exe"""; Tasks: startup; Flags: uninsdeletevalue
 
 [Run]
 Filename: "{app}\Beanotch.exe"; Description: "Open Beanotch"; Flags: nowait postinstall skipifsilent
+; An update from inside the app runs this quietly; open the new version when it's done.
+Filename: "{app}\Beanotch.exe"; Flags: nowait; Check: WizardSilent
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{localappdata}\Beanotch"

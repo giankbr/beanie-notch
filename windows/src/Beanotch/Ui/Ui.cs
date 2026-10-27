@@ -240,6 +240,18 @@ public static class Ui
         HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
     };
 
+    // An element can only have one parent; take it out of the old one before placing it again.
+    public static T Detach<T>(T el) where T : FrameworkElement
+    {
+        switch (el.Parent)
+        {
+            case Panel panel: panel.Children.Remove(el); break;
+            case Border border: border.Child = null; break;
+            case ContentControl content: content.Content = null; break;
+        }
+        return el;
+    }
+
     public static Border Divider() => new() { Height = 1, Background = Theme.Brush(Theme.Stroke) };
 
     public static Color Blend(Color a, Color b, double t)

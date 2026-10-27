@@ -24,7 +24,7 @@ public sealed class IslandWindow : Window
     private readonly Grid root = new();
     private readonly ClosedView closed;
     private readonly Shell shell;
-    private readonly DispatcherQueueTimer collapseTimer, tick, statsTimer;
+    private readonly DispatcherQueueTimer collapseTimer, tick, statsTimer, dataTimer;
     private Notice? notice;
     private DateTime noticeUntil;
     private (int W, int H) placed;
@@ -67,7 +67,7 @@ public sealed class IslandWindow : Window
         collapseTimer.Tick += (_, _) => Collapse();
         tick = ui.CreateTimer();
         tick.Interval = TimeSpan.FromMilliseconds(400);
-        tick.Tick += (_, _) => Update();
+        tick.Tick += (_, _) => { model.Tick(); Update(); };
         tick.Start();
         statsTimer = ui.CreateTimer();
         statsTimer.Interval = TimeSpan.FromSeconds(2);
@@ -75,12 +75,26 @@ public sealed class IslandWindow : Window
         statsTimer.Start();
 
         model.Media.Changed += Update;
-        model.Watchers.Notice += n => { notice = n; noticeUntil = DateTime.UtcNow + n.Duration; Update(); };
+        model.Watchers.Notice += Show;
+        model.Notice += Show;
         model.Cleaner.Changed += () => shell.Update();
         _ = model.Media.StartAsync();
         model.Watchers.Start();
         model.Stats.Sample();
         _ = model.Cleaner.ScanAsync();
+        _ = model.RefreshDataAsync();
+        _ = model.Updater.CheckAsync();
+        dataTimer = ui.CreateTimer();
+        dataTimer.Interval = TimeSpan.FromMinutes(10);
+        dataTimer.Tick += (_, _) => _ = model.RefreshDataAsync();
+        dataTimer.Start();
+        Update();
+    }
+
+    private void Show(Notice n)
+    {
+        notice = n;
+        noticeUntil = DateTime.UtcNow + n.Duration;
         Update();
     }
 

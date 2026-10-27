@@ -15,9 +15,14 @@ public sealed partial class App : Application, IXamlMetadataProvider
     private readonly XamlControlsXamlMetaDataProvider controls = new();
     private IslandWindow? window;
 
+    private static Mutex? single;
+
     [STAThread]
     private static void Main()
     {
+        // One island at a time: a second launch (from the Run key and a shortcut, say) just leaves.
+        single = new Mutex(true, @"Local\Beanotch.Island", out var first);
+        if (!first) return;
         WinRT.ComWrappersSupport.InitializeComWrappers();
         Start(_ =>
         {

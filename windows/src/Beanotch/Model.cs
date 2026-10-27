@@ -1,11 +1,12 @@
 using System.Globalization;
 using Beanotch.Core;
 using Beanotch.Services;
+using Beanotch.Ui;
 using Microsoft.UI.Dispatching;
 
 namespace Beanotch;
 
-public enum Tab { Home, Prayer, Music, Shelf, Clipboard, Ai }
+public enum Tab { Home, Today, Prayer, Music, Shelf, Clipboard, Ai, Controls, Tools, Settings }
 
 // Everything the island shows, in one place, like AppModel on the Mac.
 public sealed class Model
@@ -17,6 +18,19 @@ public sealed class Model
     public ClipboardWatcher Clipboard { get; }
     public Shelf Shelf { get; }
     public Watchers Watchers { get; }
+    public FocusTimer Focus { get; } = new();
+    public CountdownTimer Timer { get; } = new();
+    public Updater Updater { get; } = new();
+    public WeatherReport? Weather { get; private set; }
+    public IReadOnlyList<CalendarEvent> Events { get; private set; } = [];
+    public bool CalendarFailed { get; private set; }
+
+    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(15) };
+    private DateTime weatherAt, calendarAt;
+    private readonly HashSet<string> announced = [];
+
+    // Reminders for the closed island: meetings, tasks, prayers, timers.
+    public event Action<Notice>? Notice;
 
     public Tab Tab { get; set; } = Tab.Home;
     public bool Expanded { get; set; }
@@ -28,11 +42,65 @@ public sealed class Model
         Shelf = new Shelf(Settings);
         Watchers = new Watchers(Settings, ui);
         Watchers.Screenshot += path => Shelf.Add([path]);
+        Focus.Choose(FocusPreset.All[Math.Clamp(Settings.FocusPreset, 0, FocusPreset.All.Length - 1)]);
+        Focus.Finished += text => Raise(Glyphs.Clock, Ui.Theme.Accent, text, Focus.OnBreak ? $"{Focus.Preset.Work} min" : $"{Focus.Preset.Rest} min", 5);
+        Timer.Finished += () => Raise(Glyphs.Clock, Ui.Theme.Amber, "Timer done", Timer.Length.TotalMinutes + " min", 6);
+    }
+
+    private void Raise(string glyph, Windows.UI.Color color, string left, string right, double seconds) =>
+        Notice?.Invoke(new Notice(glyph, color, left, right, TimeSpan.FromSeconds(seconds)));
+
+    public bool Visible(Tab tab) => tab is Tab.Home or Tab.Settings || !Settings.HiddenTabs.Contains(tab.ToString());
+
+    // Weather every half hour, the calendar every ten minutes; both only while there's something to show them for.
+    public async Task RefreshDataAsync(bool force = false)
+    {
+        if (force || DateTime.UtcNow - weatherAt > TimeSpan.FromMinutes(30))
+        {
+            weatherAt = DateTime.UtcNow;
+            Weather = await Core.Weather.FetchAsync(Http, Settings.Place.Lat, Settings.Place.Lng) ?? Weather;
+        }
+        if (Settings.CalendarUrl.Length > 0 && (force || DateTime.UtcNow - calendarAt > TimeSpan.FromMinutes(10)))
+        {
+            calendarAt = DateTime.UtcNow;
+            var now = DateTimeOffset.Now;
+            var events = await Core.Calendar.FetchAsync(Http, Settings.CalendarUrl, now.AddHours(-12), now.AddDays(32));
+            CalendarFailed = events.Count == 0 && Events.Count == 0;
+            if (events.Count > 0) Events = events;
+        }
+        else if (Settings.CalendarUrl.Length == 0) Events = [];
+    }
+
+    public CalendarEvent? NextEvent =>
+        Events.Where(e => !e.AllDay && e.End > DateTimeOffset.Now).OrderBy(e => e.Start).FirstOrDefault();
+
+    // Called a few times a second: timers, and reminders that come due.
+    public void Tick()
+    {
+        Focus.Tick();
+        Timer.Tick();
+        var now = DateTimeOffset.Now;
+        if (Settings.MeetingAlerts && NextEvent is { } meeting && meeting.Start - now is var until && until <= TimeSpan.FromMinutes(5) && until > TimeSpan.Zero
+            && announced.Add("meeting|" + meeting.Title + meeting.Start))
+            Raise(Glyphs.Calendar, Ui.Theme.Accent2, meeting.Title, "in " + Countdown(until), 8);
+        if (Settings.PrayerReminder > 0 && NextPrayer is var prayer && prayer.Time - now is var left
+            && left <= TimeSpan.FromMinutes(Settings.PrayerReminder) && left > TimeSpan.Zero && announced.Add("prayer|" + prayer.Time))
+            Raise(Glyphs.Moon, Ui.Theme.Accent2, prayer.Name, "in " + Countdown(left), 8);
+        foreach (var task in Settings.Tasks.Where(t => !t.Done && !t.Reminded && t.Remind is { } at && at <= now))
+        {
+            task.Reminded = true;
+            Settings.Save();
+            Raise(Glyphs.Done, Ui.Theme.Amber, task.Title, "now", 8);
+        }
     }
 
     public static string Title(Tab tab) => tab switch
     {
         Tab.Home => "Overview",
+        Tab.Today => "Today",
+        Tab.Controls => "Controls",
+        Tab.Tools => "Tools",
+        Tab.Settings => "Settings",
         Tab.Prayer => "Prayer Times",
         Tab.Music => "Now Playing",
         Tab.Shelf => "Shelf",

@@ -21,6 +21,13 @@ public sealed class AppSettings
     public bool DeviceAlerts { get; set; } = true;
     public bool KeyboardAlerts { get; set; } = true;
     public bool PrayerCountdown { get; set; } = true;
+    public bool MeetingAlerts { get; set; } = true;
+    public int PrayerReminder { get; set; } = 10;
+    public string CalendarUrl { get; set; } = "";
+    public List<TaskItem> Tasks { get; set; } = [];
+    public List<string> Clocks { get; set; } = ["Europe/London", "America/New_York", "Asia/Tokyo"];
+    public List<string> HiddenTabs { get; set; } = [];
+    public int FocusPreset { get; set; }
     public List<string> Shelf { get; set; } = [];
     public List<string> Pinned { get; set; } = [];
 

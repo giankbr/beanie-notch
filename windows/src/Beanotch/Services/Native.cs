@@ -16,6 +16,34 @@ static partial class Native
     [LibraryImport("kernel32.dll")]
     internal static partial uint SetThreadExecutionState(uint flags);
 
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct FileOperation
+    {
+        public nint Window;
+        public uint Function;
+        public string From;
+        public string? To;
+        public ushort Flags;
+        [MarshalAs(UnmanagedType.Bool)] public bool Aborted;
+        public nint NameMappings;
+        public string? Title;
+    }
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    private static extern int SHFileOperationW(ref FileOperation operation);
+
+    // Moves a file or folder to the Recycle Bin, so a mistake can be undone.
+    internal static void Recycle(string path)
+    {
+        var op = new FileOperation
+        {
+            Function = 3, // FO_DELETE
+            From = path + "\0\0",
+            Flags = 0x0040 | 0x0010 | 0x0004 | 0x0400, // FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_SILENT | FOF_NOERRORUI
+        };
+        SHFileOperationW(ref op);
+    }
+
     // Clips the window to a rounded rectangle, so the island can be a true pill. Windows owns the region afterwards.
     internal static void Round(nint hwnd, int width, int height, int radius)
     {
