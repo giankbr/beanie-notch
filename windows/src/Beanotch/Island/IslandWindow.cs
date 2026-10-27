@@ -44,6 +44,15 @@ public sealed partial class IslandWindow : Window
     private DateTime noticeUntil;
     private (int W, int H) placed;
     private bool hiddenForFullscreen;
+    private readonly DispatcherQueueTimer petStroke;
+
+    private bool OnPet(Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        if (model.Expanded || !model.Settings.NotchPet) return false;
+        var spot = closed.PetSpot;
+        var p = e.GetCurrentPoint(spot).Position;
+        return p.X >= -4 && p.Y >= -4 && p.X <= spot.ActualWidth + 4 && p.Y <= spot.ActualHeight + 4;
+    }
 
     // Out of the way while a game, a video or a slideshow fills the screen, and back when it doesn't.
     private void HideForFullscreen()
@@ -69,20 +78,35 @@ public sealed partial class IslandWindow : Window
         root.Children.Add(closed.View);
         root.Children.Add(shell.View);
         shell.View.Visibility = Visibility.Collapsed;
-        // A notice with a link waits for its click instead of opening the panel on hover.
-        root.PointerEntered += (_, _) =>
+        // A notice with a link waits for its click instead of opening the panel on hover. The pet's corner doesn't
+        // open it either: there the pointer pets it, a click taps it and a scroll sways it.
+        petStroke = ui.CreateTimer();
+        petStroke.Interval = TimeSpan.FromSeconds(1.2);
+        petStroke.IsRepeating = false;
+        petStroke.Tick += (_, _) => model.Pet.Stroke();
+        root.PointerEntered += (_, e) =>
         {
             collapseTimer?.Stop();
+            if (OnPet(e)) { petStroke.Start(); return; }
             if (model.Expanded || notice?.Open is null) Expand();
         };
-        root.PointerPressed += (_, _) =>
+        root.PointerMoved += (_, e) =>
         {
             if (model.Expanded) return;
+            if (OnPet(e)) { if (!petStroke.IsRunning) petStroke.Start(); return; }
+            petStroke.Stop();
+            if (notice?.Open is null) Expand();
+        };
+        root.PointerWheelChanged += (_, e) => { if (OnPet(e)) model.Pet.Sway(); };
+        root.PointerPressed += (_, e) =>
+        {
+            if (model.Expanded) return;
+            if (OnPet(e)) { model.Pet.Tap(); return; }
             if (notice?.Open == InstallUpdate) _ = model.Updater.InstallAsync();
             else if (notice?.Open is { } link) _ = Windows.System.Launcher.LaunchUriAsync(link);
             else Expand();
         };
-        root.PointerExited += (_, _) => collapseTimer?.Start();
+        root.PointerExited += (_, _) => { petStroke.Stop(); collapseTimer?.Start(); };
         root.AllowDrop = true;
         root.DragOver += OnDragOver;
         root.Drop += OnDrop;
@@ -106,7 +130,20 @@ public sealed partial class IslandWindow : Window
         collapseTimer.Tick += (_, _) => Collapse();
         tick = ui.CreateTimer();
         tick.Interval = TimeSpan.FromMilliseconds(400);
-        tick.Tick += (_, _) => { model.Tick(); Update(); HideForFullscreen(); };
+        tick.Tick += (_, _) =>
+        {
+            model.Tick();
+            model.Pet.Tick(notice is null && !model.Expanded && model.Watchers.CallSince is null && !model.Focus.Running && !model.Media.Playing);
+            Update();
+            HideForFullscreen();
+        };
+        model.Pet.LeveledUp += level =>
+        {
+            var unlocked = Enum.GetValues<PetAccessory>().FirstOrDefault(a => a != PetAccessory.None && Pet.LevelFor(a) == level);
+            Show(new Notice("\uE734", Theme.Amber, $"{model.Pet.Name} reached level {level}",
+                            unlocked == PetAccessory.None ? "Good company" : $"Unlocked: {unlocked}", TimeSpan.FromSeconds(6)));
+        };
+        model.Pet.Says += (left, right) => Show(new Notice("\uE7E7", Theme.Accent, left, right, TimeSpan.FromSeconds(8), Essential: true));
         tick.Start();
         statsTimer = ui.CreateTimer();
         statsTimer.Interval = TimeSpan.FromSeconds(2);
@@ -202,7 +239,7 @@ public sealed partial class IslandWindow : Window
         }
         notice = n;
         noticeUntil = DateTime.UtcNow + n.Duration;
-        if (n.Key != "volume") model.Surprise();
+        if (model.Settings.NotchPet) model.Pet.React(n);
         Update();
     }
 

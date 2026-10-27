@@ -18,15 +18,20 @@ public sealed class ClosedView
     private readonly Border level = new();
     private readonly Grid row;
     private readonly PetView pet;
+    private double width;
 
     public FrameworkElement View { get; }
+    // The pet, for the window to hand clicks, rests, scrolls and shakes to.
+    public FrameworkElement PetSpot => pet.View;
 
     public ClosedView(Model model, Func<(Windows.Foundation.Point At, double Scale)?> petAnchor)
     {
         this.model = model;
         left.Foreground = Theme.Brush(Theme.Rgb(1, 1, 1));
         level.Width = S(56);
-        pet = new PetView(() => model.Mood, () => model.Settings.PetKind, petAnchor);
+        pet = new PetView(() => model.Mood, () => model.Settings.PetKind, petAnchor, accessory: () => model.Settings.PetAccessory,
+                          praying: () => model.Pet.Praying, walkTo: () => model.Pet.Walk, walkDistance: () => S(width - 70));
+        pet.Shaken += model.Pet.Shake;
         row = Columns(8, (icon, null), (left, 1), (level, null), (right, null), (pet.View, null));
         row.Padding = new Thickness(S(13), 0, S(13), 0);
         row.VerticalAlignment = VerticalAlignment.Center;
@@ -36,7 +41,7 @@ public sealed class ClosedView
     // The pet keeps the right corner whatever shows, so the island grows by its room.
     public double Update(Notice? notice)
     {
-        var width = Content(notice);
+        width = Content(notice);
         pet.Show(model.Settings.NotchPet);
         if (!model.Settings.NotchPet) return width;
         row.Visibility = Visibility.Visible;
@@ -126,7 +131,10 @@ public sealed class ClosedView
             Show(Glyphs.Music, Theme.Accent, model.Mood switch
             {
                 Model.PetMood.Sleepy => "zzz", Model.PetMood.Panic => "hot!", Model.PetMood.Eating => "nom", Model.PetMood.Dancing => "♪",
-                Model.PetMood.Surprised => "!", Model.PetMood.Late => "bed?", _ => "",
+                Model.PetMood.Surprised => "!", Model.PetMood.Late => "bed?", Model.PetMood.Thirsty => "water?",
+                Model.PetMood.Love => "♥", Model.PetMood.Dizzy => "@_@", Model.PetMood.Sad => "aw…", Model.PetMood.Party => "yay!",
+                Model.PetMood.Focus => "focus", Model.PetMood.Coffee => "break", Model.PetMood.Tired => "low…", Model.PetMood.Charged => "zap!",
+                Model.PetMood.Hungry => $"{model.Pet.Name} is hungry · click", _ => "",
             }, "");
             icon.Visibility = Visibility.Collapsed;
             left.Foreground = Theme.Brush(Theme.Rgb(1, 1, 1, 0.6));

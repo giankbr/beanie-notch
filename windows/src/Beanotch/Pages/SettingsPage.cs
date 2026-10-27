@@ -238,13 +238,30 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
         var idle = new List<UIElement>
         {
             Toggle("Time when idle", "Otherwise the notch stays empty and black", S0.IdleClock, v => S0.IdleClock = v),
-            Toggle("Notch pet", "Lives in the island's corner, watches the pointer and reacts to the PC", S0.NotchPet, v => { S0.NotchPet = v; Refresh(); }),
+            Toggle("Notch pet", "Click it, rest the pointer on it, drop files on it; it reacts to the PC", S0.NotchPet, v => { S0.NotchPet = v; Refresh(); }),
         };
         if (S0.NotchPet)
             idle.Add(Picker("Pet", "Who lives in the island", Cells(Enum.GetValues<Island.PetKind>().Select(kind =>
                 Choice(kind.ToString(), S0.PetKind == kind,
                        new Grid { Background = Theme.Brush(Theme.Black), Children = { Center(new Island.PetView(() => Model.PetMood.Happy, () => kind, still: true).View) } },
                        () => { S0.PetKind = kind; Save(); Refresh(); })))));
+        if (S0.NotchPet)
+        {
+            var name = new TextBox { Text = S0.PetName, PlaceholderText = S0.PetKind.ToString(), FontSize = S(10), Width = S(140) };
+            name.LostFocus += (_, _) => { S0.PetName = name.Text.Trim(); Save(); };
+            idle.Add(Row(null, "Name", "Shown when it talks to you", name));
+            var pet = Model.Pet;
+            idle.Add(Picker("Wears", $"Level {pet.Level} · {S0.PetXp % 10}/10 to the next · focus, feed and pet it to level up",
+                Cells(Enum.GetValues<PetAccessory>().Select(item =>
+                {
+                    var open = pet.Level >= Pet.LevelFor(item);
+                    var preview = new Grid { Background = Theme.Brush(Theme.Black), Opacity = open ? 1 : 0.35,
+                        Children = { Center(new Island.PetView(() => Model.PetMood.Happy, () => S0.PetKind, still: true, accessory: () => item).View) } };
+                    return Choice(open ? (item == PetAccessory.None ? "Nothing" : item.ToString()) : $"Level {Pet.LevelFor(item)}",
+                                  S0.PetAccessory == item, preview, () => { if (open) { S0.PetAccessory = item; Save(); Refresh(); } });
+                }))));
+            idle.Add(Toggle("Cap for prayer", "Puts it on for ten minutes at each prayer time", S0.PetPrayerCap, v => S0.PetPrayerCap = v));
+        }
         return V(8, Group([.. idle]),
             Group(
             Toggle("Lyrics", "The line being sung, while music plays", S0.Lyrics, v => S0.Lyrics = v),

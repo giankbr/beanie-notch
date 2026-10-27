@@ -47,6 +47,14 @@ public sealed partial class IslandWindow
             await Shot($"03d-closed-pet-{kind.ToString().ToLowerInvariant()}", 700);
         }
         model.Settings.PetKind = PetKind.Bean;
+        model.Pet.Tap();
+        await Shot("03e-closed-pet-love", 400);
+        model.Pet.React(new Notice(Glyphs.Close, Theme.Red, "Failed · exit 1", "npm test", TimeSpan.Zero));
+        await Shot("03f-closed-pet-sad", 700);
+        model.Pet.React(new Notice(Glyphs.Done, Theme.Good, "Done · 12s", "npm test", TimeSpan.Zero));
+        model.Settings.PetAccessory = PetAccessory.Crown;
+        await Shot("03g-closed-pet-party-crown", 700);
+        model.Settings.PetAccessory = PetAccessory.None;
         model.Settings.NotchPet = false;
         Update();
 

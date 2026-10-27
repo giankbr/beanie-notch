@@ -1,0 +1,135 @@
+using Windows.System.Power;
+
+namespace Beanotch.Services;
+
+// Things to wear, unlocked by level; the cap for prayer and the focus headband come on by themselves.
+public enum PetAccessory { None, Scarf, Glasses, Cap, Crown }
+
+// The island's pet, as on the Mac: it reacts to what's done to it and to the PC, gets hungry once a day, earns points
+// for focus sessions, meals, petting and days kept company, and every ten points is a level that unlocks something
+// to wear. Now and then, with nothing else going on, it strolls across the island and back.
+public sealed class Pet(Model model)
+{
+    public static int LevelFor(PetAccessory a) => a switch
+    {
+        PetAccessory.Scarf => 2,
+        PetAccessory.Glasses => 3,
+        PetAccessory.Cap => 4,
+        PetAccessory.Crown => 6,
+        _ => 1,
+    };
+
+    private AppSettings S => model.Settings;
+    private (Model.PetMood Mood, DateTimeOffset Until)? reaction;
+    private readonly List<DateTimeOffset> taps = [];
+    private DateTimeOffset walkUntil, nextReminder = DateTimeOffset.Now.AddMinutes(45);
+    private static string Today => DateTime.Now.ToString("yyyy-MM-dd");
+
+    public int Level => Math.Min(S.PetXp / 10 + 1, 9);
+    public string Name => string.IsNullOrWhiteSpace(S.PetName) ? S.PetKind.ToString() : S.PetName.Trim();
+    // 1 while it's off at the far end of the island, 0 at home; the view walks between them.
+    public double Walk => DateTimeOffset.Now < walkUntil ? 1 : 0;
+    public event Action<int>? LeveledUp;
+    public event Action<string, string>? Says;
+
+    // For ten minutes after each prayer time, it wears its cap.
+    public bool Praying => S.PetPrayerCap && model.PrayersToday.Any(e => e.IsPrayer && DateTimeOffset.Now - e.Time is var t && t >= TimeSpan.Zero && t < TimeSpan.FromMinutes(10));
+
+    public Model.PetMood Mood
+    {
+        get
+        {
+            var now = DateTimeOffset.Now;
+            if (reaction is { } r && now < r.Until) return r.Mood;
+            var lowBattery = PowerManager.BatteryStatus != BatteryStatus.NotPresent && PowerManager.RemainingChargePercent < 20
+                             && PowerManager.PowerSupplyStatus == PowerSupplyStatus.NotPresent;
+            var mood = model.Stats.Cpu > 0.85 ? Model.PetMood.Panic
+                : lowBattery ? Model.PetMood.Tired
+                : model.Focus.Running && !model.Focus.OnBreak ? Model.PetMood.Focus
+                : model.Focus.Running ? Model.PetMood.Coffee
+                : Native.Idle > TimeSpan.FromMinutes(3) ? Model.PetMood.Sleepy
+                : model.Media.Playing ? Model.PetMood.Dancing
+                : DateTime.Now.Hour >= 10 && S.PetFedDay != Today ? Model.PetMood.Hungry
+                : DateTime.Now.Hour < 4 ? Model.PetMood.Late
+                : Model.PetMood.Happy;
+            return mood == Model.PetMood.Happy && Walk > 0 ? Model.PetMood.Walking : mood;
+        }
+    }
+
+    // Once a second or so: a point for each day kept company, its reminders, and the odd stroll.
+    public void Tick(bool islandFree)
+    {
+        if (!S.NotchPet) return;
+        if (S.PetSeenDay != Today) { S.PetSeenDay = Today; Gain(1); }
+        var now = DateTimeOffset.Now;
+        // Windows has no drink or stretch reminders of its own: the pet gives them, every 45 minutes at the PC.
+        if (now >= nextReminder)
+        {
+            nextReminder = now.AddMinutes(45);
+            if (Native.Idle < TimeSpan.FromMinutes(5))
+            {
+                var water = now.Minute % 2 == 0;
+                if (water) React(Model.PetMood.Thirsty, 60);
+                Says?.Invoke($"{Name}: " + (water ? "Drink water" : "Stand up"), water ? "A glass now" : "Stretch for a minute");
+            }
+        }
+        if (islandFree && Walk == 0 && Mood == Model.PetMood.Happy && Native.Idle < TimeSpan.FromMinutes(1) && Random.Shared.Next(180) == 0)
+            walkUntil = now.AddSeconds(6);
+    }
+
+    // A click: it hops and shows a heart, takes its meal if it was hungry, and gets dizzy from five in a row.
+    public void Tap()
+    {
+        var now = DateTimeOffset.Now;
+        taps.RemoveAll(t => now - t > TimeSpan.FromSeconds(1.5));
+        taps.Add(now);
+        if (taps.Count >= 5) { taps.Clear(); React(Model.PetMood.Dizzy, 3); }
+        else if (Mood == Model.PetMood.Hungry) { S.PetFedDay = Today; Gain(1); React(Model.PetMood.Eating, 3); }
+        else React(Model.PetMood.Love, 1.6);
+    }
+
+    // The pointer resting on it for a moment; a point for it once an hour.
+    public void Stroke()
+    {
+        React(Model.PetMood.Love, 2.5);
+        var hour = (int)(DateTimeOffset.Now.ToUnixTimeSeconds() / 3600);
+        if (S.PetStrokedHour != hour) { S.PetStrokedHour = hour; Gain(1); }
+    }
+
+    public void Sway() => React(Model.PetMood.Sway, 1.5);
+    public void Shake() => React(Model.PetMood.Dizzy, 3);
+
+    // A file dropped on the island, which lands on the Shelf.
+    public void Feed()
+    {
+        if (S.PetFedDay != Today) { S.PetFedDay = Today; Gain(1); }
+        React(Model.PetMood.Eating, 4);
+    }
+
+    // What a notice means to it: a failed command makes it sad, a finished one or a finished focus session is a
+    // party, a quake shakes it, a charger gives it a jolt. Anything else but the volume startles it.
+    public void React(Notice n)
+    {
+        if (n.Key == "volume") return;
+        if (n.Left.StartsWith("Failed")) React(Model.PetMood.Sad, 6);
+        else if (n.Left.StartsWith("Done")) { React(Model.PetMood.Party, 4); Gain(1); }
+        else if (n.Left == "Time for a break") { React(Model.PetMood.Party, 4); Gain(2); }
+        else if (n.Left.StartsWith("Earthquake") || n.Left.StartsWith("Tsunami")) React(Model.PetMood.Panic, 8);
+        else if (n.Left == "Charging") React(Model.PetMood.Charged, 4);
+        else React(Model.PetMood.Surprised, 2.5);
+    }
+
+    private void React(Model.PetMood mood, double seconds)
+    {
+        if (!S.NotchPet) return;
+        reaction = (mood, DateTimeOffset.Now.AddSeconds(seconds));
+    }
+
+    private void Gain(int points)
+    {
+        var before = Level;
+        S.PetXp += points;
+        S.Save();
+        if (Level > before) LeveledUp?.Invoke(Level);
+    }
+}

@@ -33,6 +33,14 @@ public sealed class AppSettings
     public string QuakeSeen { get; set; } = "";
     public bool NotchPet { get; set; }
     public Island.PetKind PetKind { get; set; } = Island.PetKind.Bean;
+    // Empty for the kind's own name ("Bean").
+    public string PetName { get; set; } = "";
+    public PetAccessory PetAccessory { get; set; }
+    public bool PetPrayerCap { get; set; } = true;
+    public int PetXp { get; set; }
+    public string PetFedDay { get; set; } = "";
+    public string PetSeenDay { get; set; } = "";
+    public int PetStrokedHour { get; set; }
     // The newest version announced in the island, so each one is announced once.
     public string AnnouncedVersion { get; set; } = "";
     // The sound while a focus stretch runs; empty for none.
