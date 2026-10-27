@@ -96,10 +96,9 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
     {
         if (Model.Settings.CalendarUrl.Length == 0)
         {
-            var connect = Card(Columns(12, (Icon(Glyphs.Calendar, 18, Theme.Accent), null),
-                (V(2, Text("Connect your calendar", 12, weight: FontWeights.SemiBold),
-                      Text("Paste its secret iCal address (Google or Outlook) in Settings › Calendar", 9.5, Theme.Dim, wrap: true)), 1),
-                (PillButton("Connect", Theme.Accent, () => open(Tab.Settings)), null)), 12, 10);
+            var connect = Card(V(8, Columns(10, (Icon(Glyphs.Calendar, 16, Theme.Accent), null), (Text("Connect your calendar", 12, weight: FontWeights.SemiBold), 1)),
+                Text("Paste its secret iCal address from Google Calendar or Outlook in Settings.", 9.5, Theme.Dim, wrap: true),
+                PillButton("Connect", Theme.Accent, () => open(Tab.Settings))), 12, 10);
             return connect;
         }
         var now = DateTimeOffset.Now;

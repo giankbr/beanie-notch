@@ -191,13 +191,33 @@ public static class Ui
         };
     }
 
-    public static ToggleSwitch Switch(bool on, Action<bool> changed)
+    // The Mac's switch: a small accent pill with a white knob. WinUI's ToggleSwitch keeps room for a label, which
+    // pushed it past the edge of narrow cards.
+    public static FrameworkElement Switch(bool on, Action<bool> changed)
     {
-        var t = new ToggleSwitch { IsOn = on, OnContent = "", OffContent = "", MinWidth = 0, Margin = new Thickness(0, 0, -S(52), 0) };
-        foreach (var key in new[] { "ToggleSwitchFillOn", "ToggleSwitchFillOnPointerOver", "ToggleSwitchFillOnPressed" })
-            t.Resources[key] = Theme.Brush(Theme.Accent);
-        t.Toggled += (_, _) => changed(t.IsOn);
-        return t;
+        var knob = new Border
+        {
+            Width = S(13), Height = S(13), CornerRadius = new CornerRadius(S(6.5)),
+            Background = Theme.Brush(Theme.Rgb(1, 1, 1)),
+            HorizontalAlignment = on ? HorizontalAlignment.Right : HorizontalAlignment.Left,
+            Margin = new Thickness(S(2)),
+        };
+        var track = new Grid
+        {
+            Width = S(30), Height = S(17), CornerRadius = new CornerRadius(S(8.5)),
+            Background = Theme.Brush(on ? Theme.Accent : Theme.WithAlpha(Theme.Ink, 0.18)),
+            Children = { knob },
+        };
+        var state = on;
+        var button = Plain(track, () =>
+        {
+            state = !state;
+            knob.HorizontalAlignment = state ? HorizontalAlignment.Right : HorizontalAlignment.Left;
+            track.Background = Theme.Brush(state ? Theme.Accent : Theme.WithAlpha(Theme.Ink, 0.18));
+            changed(state);
+        }, radius: 8.5);
+        button.HorizontalAlignment = HorizontalAlignment.Right;
+        return button;
     }
 
     // A settings or quick-settings row: icon, title over caption, and a control on the right.

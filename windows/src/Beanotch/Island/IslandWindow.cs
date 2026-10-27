@@ -17,7 +17,7 @@ namespace Beanotch.Island;
 public sealed partial class IslandWindow : Window
 {
     // Mac points; scaled by Ui.K and then by the monitor's DPI.
-    private const double ClosedHeight = 30, OpenWidth = 680, OpenHeight = 300, TopGap = 6, OpenRadius = 22;
+    private const double ClosedHeight = 30, OpenWidth = 680, OpenHeight = 336, TopGap = 6, OpenRadius = 22;
 
     private readonly Model model;
     private readonly nint hwnd;

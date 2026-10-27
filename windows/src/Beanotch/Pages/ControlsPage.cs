@@ -12,7 +12,7 @@ namespace Beanotch.Pages;
 // Shortcuts app, so these stand in for the Mac's Shortcuts card).
 public sealed class ControlsPage(Model model) : PanelPage(model)
 {
-    private readonly Grid tiles = new() { ColumnSpacing = S(8) };
+    private readonly Grid tiles = new() { ColumnSpacing = S(6) };
     private readonly StackPanel brightness = V(6);
     private readonly StackPanel battery = V(4);
     private readonly Grid actions = new() { RowSpacing = S(6), ColumnSpacing = S(6) };
@@ -65,9 +65,10 @@ public sealed class ControlsPage(Model model) : PanelPage(model)
             var (glyph, title, get, set) = items[i];
             bool on;
             try { on = get(); } catch (Exception) { on = false; }
-            var body = V(6, Icon(glyph, 13, on ? Theme.Accent : Theme.Dim), Text(title, 11, weight: FontWeights.SemiBold),
-                         Text(on ? "On" : "Off", 9, on ? Theme.Accent : Theme.Faint));
-            body.Padding = new Thickness(S(10));
+            var label = Text(title, 10, weight: FontWeights.SemiBold, wrap: true);
+            label.MaxLines = 2;
+            var body = V(4, Icon(glyph, 12, on ? Theme.Accent : Theme.Dim), label, Text(on ? "On" : "Off", 8.5, on ? Theme.Accent : Theme.Faint));
+            body.Padding = new Thickness(S(8));
             var tile = Plain(body, () =>
             {
                 try { set(!on); } catch (Exception) { }

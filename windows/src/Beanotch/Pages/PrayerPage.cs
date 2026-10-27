@@ -25,7 +25,7 @@ public sealed class PrayerPage(Model model) : PanelPage(model)
 
     protected override FrameworkElement Build()
     {
-        var left = V(6, Text("NEXT PRAYER", 8.5, Theme.Faint, FontWeights.SemiBold), Columns(8, (H(8, nextName, nextTime), 1), (countdown, null)),
+        var left = V(6, Text("NEXT PRAYER", 8.5, Theme.Faint, FontWeights.SemiBold), Columns(8, (H(8, nextName, nextTime), null), (null, 1), (countdown, null)),
                      progress, method);
         left.Children[0].SetValue(TextBlock.CharacterSpacingProperty, 120);
 

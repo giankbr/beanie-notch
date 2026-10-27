@@ -135,7 +135,7 @@ public sealed class Shell
     {
         var label = Text(name, 8, Theme.Faint, FontWeights.SemiBold);
         label.CharacterSpacing = 120;
-        label.Margin = new Thickness(S(8), S(6), 0, S(2));
+        label.Margin = new Thickness(S(8), S(5), 0, S(1));
         sidebar.Children.Add(label);
     }
 
@@ -148,7 +148,7 @@ public sealed class Shell
         var row = Columns(7, (Icon(glyph, 10, active ? Theme.Accent : Theme.Dim), null),
                           (Text(name, 10.5, active ? Theme.Ink : Theme.WithAlpha(Theme.Ink, 0.75), active ? FontWeights.SemiBold : FontWeights.Normal), 1),
                           (badgeText, null));
-        row.Height = S(22);
+        row.Height = S(20);
         row.Padding = new Thickness(S(8), 0, S(8), 0);
         var button = Plain(row, () => Open(tab), active ? Theme.WithAlpha(Theme.Ink, 0.08) : Colors.Transparent, 7);
         button.HorizontalAlignment = HorizontalAlignment.Stretch;
