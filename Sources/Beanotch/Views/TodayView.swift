@@ -10,14 +10,16 @@ struct TodayView: View {
             TodayStrip()
             HStack(alignment: .top, spacing: 10) {
                 VStack(alignment: .leading, spacing: 8) {
-                    CardHeader(title: ["Up next", "Tasks", "Month"][page],
-                               subtitle: ["Calendar · next 24 hours", "End with a time for a reminder", "Dots mark days with events"][page]) {
-                        Segmented(options: ["Agenda", "Tasks", "Month"], selection: $page).fixedSize()
+                    CardHeader(title: ["Up next", "Tasks", "Month", "Rates"][page],
+                               subtitle: ["Calendar · next 24 hours", "End with a time for a reminder", "Dots mark days with events",
+                                          "In \(Rates.local)"][page]) {
+                        Segmented(options: ["Agenda", "Tasks", "Month", "Rates"], selection: $page).fixedSize()
                     }
                     switch page {
                     case 0: CalendarPanel()
                     case 1: TasksPanel()
-                    default: MonthView()
+                    case 2: MonthView()
+                    default: RatesPanel()
                     }
                 }
                 .padding(12)
@@ -27,6 +29,48 @@ struct TodayView: View {
             }
             .frame(maxHeight: .infinity)
         }
+    }
+}
+
+// Exchange rates and gold, in the local currency, three to a row.
+private struct RatesPanel: View {
+    @EnvironmentObject var rates: Rates
+
+    var body: some View {
+        Group {
+            if rates.perDollar.isEmpty {
+                LoadingView(text: "Getting today's rates…")
+            } else {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 3), spacing: 6) {
+                    ForEach(Rates.watched, id: \.self) { code in
+                        cell(code, value: rates.value(of: code), change: rates.change(code, now: rates.value(of: code)))
+                    }
+                    cell("Gold", value: rates.goldGram, change: rates.change("gold", now: rates.goldGram), unit: " / g")
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .task { await rates.refresh() }
+    }
+
+    private func cell(_ code: String, value: Double?, change: Double?, unit: String = "") -> some View {
+        let tint = code == "Gold" ? Theme.amber : Theme.accent
+        return VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 4) {
+                Text(code + unit).font(.app(size: 8.5, weight: .bold)).foregroundStyle(tint)
+                Spacer(minLength: 2)
+                if let change {
+                    Text((change >= 0 ? "▲" : "▼") + abs(change * 100).formatted(.number.precision(.fractionLength(1))) + "%")
+                        .font(.app(size: 8, weight: .semibold)).foregroundStyle(change >= 0 ? Theme.good : Theme.red)
+                }
+            }
+            Text(value.map { Rates.format($0, Rates.local) } ?? "–")
+                .font(.app(size: 11.5, weight: .semibold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
+        }
+        .padding(.horizontal, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: 40)
+        .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(tint.opacity(0.06)))
     }
 }
 
