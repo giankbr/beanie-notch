@@ -213,20 +213,20 @@ code { font-family: var(--mono); font-size: .9em; background: var(--surface-2); 
 
 /* Footer */
 footer { padding: 40px 0 0; overflow: hidden; }
-.foot { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 28px; width: min(1392px, calc(100% - 32px)); margin: 0 auto; }
+.foot { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 28px; width: min(1152px, calc(100% - 48px)); margin: 0 auto; }
 .running { position: absolute; top: 0; left: 50%; transform: translateX(-50%); background: #000; color: #fff; font-size: 13px; padding: 9px 20px; border-radius: 0 0 18px 18px; display: flex; gap: 10px; align-items: center; white-space: nowrap; }
 .running::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #4ADE80; }
-.foot-top { display: flex; align-items: center; gap: 24px; padding: 80px 72px 48px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.foot-top { display: flex; align-items: center; gap: 24px; padding: 80px 56px 48px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
 .foot-top img { width: 88px; height: 88px; border-radius: 22px; box-shadow: 0 16px 30px -12px rgba(59,139,255,.6); }
 .foot-top h4 { margin: 0; font-size: 40px; font-weight: 700; letter-spacing: -1.2px; }
 .foot-top p { margin: 4px 0 0; color: var(--text-2); font-size: 17px; }
 .foot-top .cta-row { margin: 0 0 0 auto; }
-.cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding: 44px 72px; }
+.cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding: 44px 56px; }
 .cols h5 { margin: 0 0 16px; font-size: 12px; letter-spacing: 1.6px; color: var(--text-3); font-weight: 600; }
 .cols a, .cols span { display: flex; gap: 8px; align-items: center; font-size: 15px; padding: 7px 0; color: var(--text-1); }
 .cols a:hover { color: var(--accent); }
 .cols .new { display: inline-block; padding: 2px 7px; line-height: 1.3; font-size: 11px; color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); padding: 2px 7px; border-radius: 999px; }
-.credits { display: grid; grid-template-columns: 1fr 1.7fr; gap: 40px; margin: 0 72px; padding: 44px 0; border-top: 1px solid var(--border); }
+.credits { display: grid; grid-template-columns: 1fr 1.7fr; gap: 40px; margin: 0 56px; padding: 44px 0; border-top: 1px solid var(--border); }
 .credits h4 { margin: 18px 0 14px; font-size: 22px; font-weight: 600; }
 .credits p { margin: 0; color: var(--text-3); font-size: 14px; line-height: 1.6; max-width: 300px; }
 .chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; align-content: flex-start; }
@@ -234,9 +234,9 @@ footer { padding: 40px 0 0; overflow: hidden; }
 .chips a svg { color: var(--text-3); }
 .chips a:hover { border-color: var(--border-strong); }
 .font-note { grid-column: 2; text-align: right; font-size: 12.5px; color: var(--text-3); display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
-.bottom { display: flex; justify-content: space-between; padding: 22px 72px; background: var(--inner); border-top: 1px solid var(--border); border-radius: 0 0 28px 28px; font-size: 13.5px; color: var(--text-3); flex-wrap: wrap; gap: 8px; }
+.bottom { display: flex; justify-content: space-between; padding: 22px 56px; background: var(--inner); border-top: 1px solid var(--border); border-radius: 0 0 28px 28px; font-size: 13.5px; color: var(--text-3); flex-wrap: wrap; gap: 8px; }
 /* The watermark: letters rise in once the footer shows, lift under the pointer, and an accent spotlight follows it. */
-.watermark { font-size: clamp(72px, 25vw, 400px); font-weight: 800; letter-spacing: -.035em; line-height: .78; text-align: center; margin-top: 30px; user-select: none; cursor: default; white-space: nowrap; padding-top: .06em; }
+.watermark { font-size: clamp(72px, 25vw, 360px); font-weight: 800; letter-spacing: -.035em; line-height: .78; text-align: center; margin-top: 30px; user-select: none; cursor: default; white-space: nowrap; padding-top: .06em; }
 .watermark span { display: inline-block; color: transparent; -webkit-background-clip: text; background-clip: text;
   background-image: radial-gradient(circle at var(--mx, -999px) var(--my, -999px), color-mix(in srgb, var(--accent) 85%, transparent) 0, transparent 0.9em), linear-gradient(180deg, var(--ui-3), transparent 92%);
   transform: translateY(var(--lift, 0)) scale(var(--grow, 1)); transform-origin: 50% 100%;
