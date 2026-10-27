@@ -99,28 +99,19 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
         var themes = Cells(Enum.GetValues<ThemeMode>().Select(mode =>
             Choice(mode.ToString(), S0.Theme == mode, ThemeSwatch(mode), () => { S0.Theme = mode; Save(rebuild: true); })));
 
-        UIElement tint;
-        if (S0.Theme == ThemeMode.Retro)
+        var swatches = H(4);
+        foreach (var accent in Enum.GetValues<AccentChoice>())
         {
-            tint = Picker("Phosphor", "The screen's glow in the Retro theme; it stands in for the accent",
-                          Segmented(["Green", "Amber"], (int)S0.Phosphor, i => { S0.Phosphor = (Phosphor)i; Save(rebuild: true); }));
-        }
-        else
-        {
-            var swatches = H(4);
-            foreach (var accent in Enum.GetValues<AccentChoice>())
+            var on = S0.Accent == accent;
+            var dot = new Border
             {
-                var on = S0.Accent == accent;
-                var dot = new Border
-                {
-                    Width = S(14), Height = S(14), CornerRadius = new CornerRadius(S(7)), Background = Theme.Brush(Theme.Primary(accent)),
-                    BorderBrush = Theme.Brush(on ? Theme.Ink : Ui.Ui.Transparent), BorderThickness = new Thickness(on ? 2 : 0),
-                };
-                swatches.Children.Add(Plain(new Grid { Width = S(22), Height = S(22), Children = { Center(dot) } },
-                                            () => { S0.Accent = accent; Save(rebuild: true); }, radius: 11, tip: accent.ToString()));
-            }
-            tint = Picker("Accent", "Buttons, highlights and the mini player", swatches);
+                Width = S(14), Height = S(14), CornerRadius = new CornerRadius(S(7)), Background = Theme.Brush(Theme.Primary(accent)),
+                BorderBrush = Theme.Brush(on ? Theme.Ink : Ui.Ui.Transparent), BorderThickness = new Thickness(on ? 2 : 0),
+            };
+            swatches.Children.Add(Plain(new Grid { Width = S(22), Height = S(22), Children = { Center(dot) } },
+                                        () => { S0.Accent = accent; Save(rebuild: true); }, radius: 11, tip: accent.ToString()));
         }
+        var tint = Picker("Accent", "Buttons, highlights and the mini player", swatches);
 
         var size = Segmented(["Compact", "Regular", "Large"], (int)S0.Size, i => { S0.Size = (PanelSize)i; Save(rebuild: true); });
         string[] fontNames = ["Segoe UI", "Be Vietnam", "Inter", "Jakarta"];
@@ -168,7 +159,7 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
     // The theme in miniature: its background, with the accent bar and two lines of text on top.
     private static Grid ThemeSwatch(ThemeMode mode)
     {
-        Color dark = Theme.Rgb(0.07, 0.07, 0.08), light = Theme.Rgb(0.95, 0.95, 0.94), green = Theme.Glow(Phosphor.Green);
+        Color dark = Theme.Rgb(0.07, 0.07, 0.08), light = Theme.Rgb(0.95, 0.95, 0.94);
         var g = new Grid();
         if (mode == ThemeMode.System)
         {
@@ -180,26 +171,26 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
             g.Children.Add(left);
             g.Children.Add(right);
         }
-        else g.Background = Theme.Brush(mode switch { ThemeMode.Light => light, ThemeMode.Retro => Theme.Rgb(0.02, 0.045, 0.03), _ => dark });
+        else if (mode == ThemeMode.Glass)
+        {
+            g.Background = new Microsoft.UI.Xaml.Media.LinearGradientBrush
+            {
+                StartPoint = new Windows.Foundation.Point(0, 0),
+                EndPoint = new Windows.Foundation.Point(1, 1),
+                GradientStops = { new() { Color = Theme.Rgb(0.4, 0.48, 0.75), Offset = 0 }, new() { Color = Theme.Rgb(0.65, 0.43, 0.6), Offset = 1 } },
+            };
+        }
+        else g.Background = Theme.Brush(mode switch { ThemeMode.Light => light, ThemeMode.Midnight => Theme.Black, _ => dark });
 
-        var retro = mode == ThemeMode.Retro;
         Border Line(double width, double height, Color color) => new()
         {
             Width = S(width), Height = S(height), CornerRadius = new CornerRadius(S(height / 2)), Background = Theme.Brush(color),
             HorizontalAlignment = HorizontalAlignment.Left,
         };
-        var lines = V(3, Line(22, 4, retro ? green : Theme.Accent),
-                      Line(34, 3, retro ? Theme.WithAlpha(green, 0.5) : Theme.Rgb(0.5, 0.5, 0.5, 0.5)),
-                      Line(28, 3, retro ? Theme.WithAlpha(green, 0.35) : Theme.Rgb(0.5, 0.5, 0.5, 0.35)));
+        var lines = V(3, Line(22, 4, Theme.Accent), Line(34, 3, Theme.Rgb(0.5, 0.5, 0.5, 0.5)), Line(28, 3, Theme.Rgb(0.5, 0.5, 0.5, 0.35)));
         lines.Margin = new Thickness(S(7), S(7), 0, 0);
         Grid.SetColumnSpan(lines, 2);
         g.Children.Add(lines);
-        if (retro)
-        {
-            var crt = Scanlines(20);
-            Grid.SetColumnSpan(crt, 2);
-            g.Children.Add(crt);
-        }
         return g;
     }
 

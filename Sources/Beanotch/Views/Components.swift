@@ -10,14 +10,28 @@ enum Theme {
     static let amber = Color(red: 0.98, green: 0.68, blue: 0.22)
     static let red = Color(red: 1.0, green: 0.4, blue: 0.4)
 
-    // Set in the Retro theme. The panel is drawn in the dark palette and then tinted as a whole (see RetroScreen), so
-    // every colour, icon and emoji turns into a shade of the phosphor.
-    nonisolated(unsafe) static var retro: Phosphor?
+    nonisolated(unsafe) static var mode = ThemeMode.dark
 
+    // Midnight is true black, flush with the notch; Glass lets the desktop show through, blurred (see PanelGlass).
     static var ink: Color { baseInk }
-    static var background: Color { retro?.background ?? baseBackground }
-    static var surface: Color { baseSurface }
-    static var stroke: Color { baseStroke }
+    static var background: Color {
+        switch mode {
+        case .midnight: .black
+        case .glass: Color(white: 0.09)
+        default: baseBackground
+        }
+    }
+    // The open panel's fill: the background, or a dark wash over the blur in Glass. Anything drawn over the page
+    // (popovers, buttons' text) keeps the solid background.
+    static var panel: Color { mode == .glass ? .black.opacity(0.3) : background }
+    static var surface: Color {
+        switch mode {
+        case .midnight: .white.opacity(0.035)
+        case .glass: .white.opacity(0.07)
+        default: baseSurface
+        }
+    }
+    static var stroke: Color { mode == .glass ? .white.opacity(0.1) : baseStroke }
     static var thumb: Color { baseThumb }
     static var dim: Color { ink.opacity(0.55) }
     static var faint: Color { ink.opacity(0.4) }
@@ -419,15 +433,10 @@ extension Font {
 
     // Figures, sizes and times, the way a dashboard sets them apart from labels.
     static func mono(size: CGFloat, weight: Font.Weight = .medium) -> Font {
-        if Theme.retro != nil { return retroFace(size) }
-        return .system(size: size, weight: weight, design: .monospaced)
+        .system(size: size, weight: weight, design: .monospaced)
     }
 
-    // VT323 is a terminal font with a small body, so it's set a size up to read like the others.
-    private static func retroFace(_ size: CGFloat) -> Font { .custom("VT323-Regular", size: size * 1.32) }
-
     static func app(size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        if Theme.retro != nil { return retroFace(size) }
         guard let prefix = Theme.font.prefix else { return .system(size: size, weight: weight) }
         let face = switch weight {
         case .bold, .heavy, .black: "Bold"
@@ -439,42 +448,17 @@ extension Font {
     }
 }
 
-// The Retro theme's CRT glass: a faint dark line every few points, and a soft darkening towards the edges. Drawn, so
-// it costs nothing to ship, and it lets every click through.
-// The Retro theme's screen: one colour of phosphor, a soft glow around everything lit, and scanlines over it.
-struct RetroScreen: ViewModifier {
-    let phosphor: Phosphor?
-
-    func body(content: Content) -> some View {
-        if let phosphor {
-            content
-                .saturation(0)
-                .colorMultiply(phosphor.color)
-                .compositingGroup()
-                .shadow(color: phosphor.color.opacity(0.55), radius: 3)
-                .overlay { Scanlines() }
-        } else {
-            content
-        }
+// The Glass theme's backdrop: whatever is behind the panel, blurred, under a dark wash (Theme.panel).
+struct PanelGlass: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = .hudWindow
+        view.blendingMode = .behindWindow
+        view.state = .active
+        return view
     }
-}
 
-struct Scanlines: View {
-    var body: some View {
-        Canvas { context, size in
-            var y: CGFloat = 0
-            while y < size.height {
-                context.fill(Path(CGRect(x: 0, y: y, width: size.width, height: 1)), with: .color(.black.opacity(0.22)))
-                y += 3
-            }
-            context.fill(Path(CGRect(origin: .zero, size: size)),
-                         with: .radialGradient(Gradient(colors: [.clear, .black.opacity(0.28)]),
-                                               center: CGPoint(x: size.width / 2, y: size.height / 2),
-                                               startRadius: min(size.width, size.height) * 0.35,
-                                               endRadius: max(size.width, size.height) * 0.75))
-        }
-        .allowsHitTesting(false)
-    }
+    func updateNSView(_ view: NSVisualEffectView, context: Context) {}
 }
 
 struct SearchField: View {

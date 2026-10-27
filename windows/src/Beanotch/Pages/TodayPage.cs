@@ -240,7 +240,7 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
             {
                 StartPoint = new Windows.Foundation.Point(0, 0),
                 EndPoint = new Windows.Foundation.Point(1, 1),
-                GradientStops = { new() { Color = Theme.Shown(from), Offset = 0 }, new() { Color = Theme.Shown(to), Offset = 1 } },
+                GradientStops = { new() { Color = from, Offset = 0 }, new() { Color = to, Offset = 1 } },
             },
         };
         var track = new Microsoft.UI.Xaml.Shapes.Ellipse { Stroke = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.1)), StrokeThickness = S(RingStroke) };

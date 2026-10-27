@@ -3,10 +3,7 @@ using Windows.UI;
 
 namespace Beanotch.Ui;
 
-public enum ThemeMode { System, Light, Dark, Retro }
-
-// The Retro theme's screen: green or amber phosphor on black, as on an old terminal.
-public enum Phosphor { Green, Amber }
+public enum ThemeMode { System, Light, Dark, Midnight, Glass }
 
 // Segoe UI is Windows' own; the others ship with the app, as on the Mac (all under the SIL Open Font License).
 public enum AppFont { System, BeVietnam, Inter, Jakarta }
@@ -23,19 +20,15 @@ public static class Theme
     public static Color AccentColor { get; private set; } = Primary(AccentChoice.Mint);
     public static Color Accent2Color { get; private set; } = Secondary(AccentChoice.Mint);
 
-    public static Phosphor? Retro { get; private set; }
+    public static ThemeMode Mode { get; private set; } = ThemeMode.Dark;
 
-    public static void Apply(ThemeMode mode, AccentChoice accent, Phosphor phosphor, bool systemIsDark)
+    public static void Apply(ThemeMode mode, AccentChoice accent, bool systemIsDark)
     {
-        Dark = mode switch { ThemeMode.Light => false, ThemeMode.Dark or ThemeMode.Retro => true, _ => systemIsDark };
-        Retro = mode == ThemeMode.Retro ? phosphor : null;
-        // Every brush is tinted to the phosphor in Retro (see Brush), so only brightness shows: a mid grey accent keeps
-        // switch knobs visible on it.
-        AccentColor = Retro is null ? Primary(accent) : Rgb(0.62, 0.62, 0.62);
-        Accent2Color = Retro is null ? Secondary(accent) : Rgb(0.5, 0.5, 0.5);
+        Mode = mode;
+        Dark = mode switch { ThemeMode.Light => false, ThemeMode.System => systemIsDark, _ => true };
+        AccentColor = Primary(accent);
+        Accent2Color = Secondary(accent);
     }
-
-    public static Color Glow(Phosphor p) => p == Phosphor.Amber ? Rgb(1, 0.72, 0.2) : Rgb(0.36, 1, 0.5);
 
     public static Color Rgb(double r, double g, double b, double a = 1) =>
         Color.FromArgb((byte)Math.Round(a * 255), (byte)Math.Round(r * 255), (byte)Math.Round(g * 255), (byte)Math.Round(b * 255));
@@ -76,9 +69,23 @@ public static class Theme
     // White on the dark panel, near-black on the light one.
     public static Color Ink => Dark ? Rgb(1, 1, 1) : Rgb(0.08, 0.08, 0.08);
     // Charcoal with lighter cards in the dark; a warm off-white with white cards in the light.
-    public static Color Background => Dark ? Rgb(0.055, 0.055, 0.063) : Rgb(0.953, 0.953, 0.945);
-    public static Color Surface => Dark ? Rgb(1, 1, 1, 0.045) : Rgb(1, 1, 1);
-    public static Color Stroke => Dark ? Rgb(1, 1, 1, 0.07) : Rgb(0, 0, 0, 0.07);
+    // Midnight is true black, flush with the notch; Glass shows the desktop through, blurred (the window's acrylic).
+    public static Color Background => Mode switch
+    {
+        ThemeMode.Midnight => Black,
+        ThemeMode.Glass => Rgb(0.09, 0.09, 0.09),
+        _ => Dark ? Rgb(0.055, 0.055, 0.063) : Rgb(0.953, 0.953, 0.945),
+    };
+    // The open panel's fill: the background, or a dark wash over the acrylic in Glass. Anything drawn over the page
+    // (flyouts, buttons' text) keeps the solid background.
+    public static Color Panel => Mode == ThemeMode.Glass ? Rgb(0, 0, 0, 0.3) : Background;
+    public static Color Surface => Mode switch
+    {
+        ThemeMode.Midnight => Rgb(1, 1, 1, 0.035),
+        ThemeMode.Glass => Rgb(1, 1, 1, 0.07),
+        _ => Dark ? Rgb(1, 1, 1, 0.045) : Rgb(1, 1, 1),
+    };
+    public static Color Stroke => Mode == ThemeMode.Glass ? Rgb(1, 1, 1, 0.1) : Dark ? Rgb(1, 1, 1, 0.07) : Rgb(0, 0, 0, 0.07);
     public static Color Thumb => Dark ? Rgb(1, 1, 1, 0.14) : Rgb(1, 1, 1);
     public static Color Dim => WithAlpha(Ink, 0.55);
     public static Color Faint => WithAlpha(Ink, 0.4);
@@ -89,16 +96,5 @@ public static class Theme
 
     public static Color Level(double value) => value < 0.7 ? Good : value < 0.9 ? Amber : Red;
 
-    public static SolidColorBrush Brush(Color c) => new(Shown(c));
-
-    // A colour as it appears on screen: unchanged, or in phosphor in the Retro theme.
-    public static Color Shown(Color c) => Retro is { } p ? Tint(c, p) : c;
-
-    // One colour of phosphor at the brightness of the original, as on a monochrome screen.
-    private static Color Tint(Color c, Phosphor p)
-    {
-        var glow = Glow(p);
-        var light = (0.2126 * c.R + 0.7152 * c.G + 0.0722 * c.B) / 255;
-        return Color.FromArgb(c.A, (byte)(glow.R * light), (byte)(glow.G * light), (byte)(glow.B * light));
-    }
+    public static SolidColorBrush Brush(Color c) => new(c);
 }

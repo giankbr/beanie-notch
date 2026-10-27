@@ -29,7 +29,8 @@ struct NotchRootView: View {
         let open = model.openSize
         ZStack(alignment: .top) {
             ZStack(alignment: .top) {
-                Rectangle().fill(model.expanded ? Theme.background : .black)
+                if settings.theme == .glass { PanelGlass() }
+                Rectangle().fill(model.expanded ? Theme.panel : .black)
                 // The neck stays black to blend with the hardware notch.
                 Color.black.frame(height: model.closedSize.height)
             }
@@ -267,7 +268,6 @@ struct ExpandedView: View {
         .font(.app(size: 11))
         .foregroundStyle(Theme.ink)
         .symbolRenderingMode(.monochrome)
-        .modifier(RetroScreen(phosphor: settings.theme == .retro ? settings.phosphor : nil))
     }
 
     // Mini: the tabs sit in the menu bar row either side of the notch, and the page gets everything below.

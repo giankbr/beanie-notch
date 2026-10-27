@@ -134,24 +134,18 @@ struct SettingsView: View {
                         }
                     }
                 }
-                if settings.theme == .retro {
-                    pickerRow("Phosphor", "The screen's glow in the Retro theme; it stands in for the accent") {
-                        Segmented(options: ["Green", "Amber"], selection: index($settings.phosphor, Phosphor.allCases)).fixedSize()
-                    }
-                } else {
-                    pickerRow("Accent", "Buttons, highlights and the mini player") {
-                        HStack(spacing: 4) {
-                            ForEach(AccentChoice.allCases, id: \.self) { option in
-                                Button { settings.accent = option } label: {
-                                    Circle().fill(option.primary).frame(width: 14, height: 14)
-                                        .overlay(Circle().strokeBorder(Theme.background, lineWidth: settings.accent == option ? 2 : 0))
-                                        .overlay(Circle().strokeBorder(option.primary, lineWidth: settings.accent == option ? 1 : 0).padding(-2))
-                                        .padding(4)
-                                        .contentShape(Circle())
-                                }
-                                .buttonStyle(.plain)
-                                .help(option.rawValue.capitalized)
+                pickerRow("Accent", "Buttons, highlights and the mini player") {
+                    HStack(spacing: 4) {
+                        ForEach(AccentChoice.allCases, id: \.self) { option in
+                            Button { settings.accent = option } label: {
+                                Circle().fill(option.primary).frame(width: 14, height: 14)
+                                    .overlay(Circle().strokeBorder(Theme.background, lineWidth: settings.accent == option ? 2 : 0))
+                                    .overlay(Circle().strokeBorder(option.primary, lineWidth: settings.accent == option ? 1 : 0).padding(-2))
+                                    .padding(4)
+                                    .contentShape(Circle())
                             }
+                            .buttonStyle(.plain)
+                            .help(option.rawValue.capitalized)
                         }
                     }
                 }
@@ -474,25 +468,28 @@ struct SettingsView: View {
     }
 }
 
-// A tiny light, dark or half-and-half panel.
+// A tiny panel in each theme: light, dark, half-and-half, true black, or frosted.
 private struct ThemeSwatch: View {
     let mode: ThemeMode
 
     var body: some View {
         let dark = Color(red: 0.07, green: 0.07, blue: 0.08), light = Color(red: 0.95, green: 0.95, blue: 0.94)
-        let green = Phosphor.green
         GeometryReader { geo in
             ZStack {
                 switch mode {
                 case .dark: dark
                 case .light: light
-                case .retro: ZStack { green.background; Scanlines() }
+                case .midnight: Color.black
+                case .glass:
+                    LinearGradient(colors: [Color(red: 0.45, green: 0.55, blue: 0.85), Color(red: 0.75, green: 0.5, blue: 0.7)],
+                                   startPoint: .topLeading, endPoint: .bottomTrailing)
+                        .overlay(Color.black.opacity(0.15))
                 default: HStack(spacing: 0) { light; dark }
                 }
                 VStack(alignment: .leading, spacing: 3) {
-                    Capsule().fill(mode == .retro ? green.color : Theme.accent).frame(width: geo.size.width * 0.35, height: 4)
-                    Capsule().fill(mode == .retro ? green.color.opacity(0.5) : Color.gray.opacity(0.5)).frame(width: geo.size.width * 0.55, height: 3)
-                    Capsule().fill(mode == .retro ? green.color.opacity(0.35) : Color.gray.opacity(0.35)).frame(width: geo.size.width * 0.45, height: 3)
+                    Capsule().fill(Theme.accent).frame(width: geo.size.width * 0.35, height: 4)
+                    Capsule().fill(Color.gray.opacity(0.5)).frame(width: geo.size.width * 0.55, height: 3)
+                    Capsule().fill(Color.gray.opacity(0.35)).frame(width: geo.size.width * 0.45, height: 3)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .padding(7)

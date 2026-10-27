@@ -33,7 +33,6 @@ public sealed partial class IslandWindow : Window
     private readonly Model model;
     private readonly nint hwnd;
     private readonly Grid root = new();
-    private readonly FrameworkElement scanlines = Ui.Ui.Scanlines();
     private readonly ClosedView closed;
     private readonly Shell shell;
     private readonly DispatcherQueueTimer collapseTimer, tick, statsTimer, dataTimer;
@@ -54,7 +53,6 @@ public sealed partial class IslandWindow : Window
         shell = new Shell(model, ApplyTheme);
         root.Children.Add(closed.View);
         root.Children.Add(shell.View);
-        root.Children.Add(scanlines);
         shell.View.Visibility = Visibility.Collapsed;
         root.PointerEntered += (_, _) => { collapseTimer?.Stop(); Expand(); };
         root.PointerExited += (_, _) => collapseTimer?.Start();
@@ -126,18 +124,14 @@ public sealed partial class IslandWindow : Window
     private void ApplyTheme()
     {
         var systemDark = new UISettings().GetColorValue(UIColorType.Background).R < 128;
-        Theme.Apply(model.Settings.Theme, model.Settings.Accent, model.Settings.Phosphor, systemDark);
+        Theme.Apply(model.Settings.Theme, model.Settings.Accent, systemDark);
         Ui.Ui.AppFont = model.Settings.Font;
         root.RequestedTheme = Theme.Dark ? ElementTheme.Dark : ElementTheme.Light;
-        root.Background = Theme.Brush(model.Expanded ? Theme.Background : Theme.Black);
-        ShowScanlines();
+        // Glass: the desktop behind the window, blurred, under the panel's dark wash.
+        SystemBackdrop = Theme.Mode == ThemeMode.Glass ? new DesktopAcrylicBackdrop() : null;
+        root.Background = Theme.Brush(model.Expanded ? Theme.Panel : Theme.Black);
         if (model.Expanded) Place(Open.Width, Open.Height, OpenRadius, OpenEar);
     }
-
-    // The Retro theme's CRT lines: a dark rule every third pixel over the open panel, never in the way of the pointer.
-
-    private void ShowScanlines() =>
-        scanlines.Visibility = model.Expanded && Theme.Retro is not null ? Visibility.Visible : Visibility.Collapsed;
 
     private void Update()
     {
@@ -157,8 +151,7 @@ public sealed partial class IslandWindow : Window
         model.Stats.Sample();
         closed.View.Visibility = Visibility.Collapsed;
         shell.View.Visibility = Visibility.Visible;
-        root.Background = Theme.Brush(Theme.Background);
-        ShowScanlines();
+        root.Background = Theme.Brush(Theme.Panel);
         shell.Shown();
         Place(Open.Width, Open.Height, OpenRadius, OpenEar);
         FadeIn(shell.View);
@@ -176,7 +169,6 @@ public sealed partial class IslandWindow : Window
         shell.View.Visibility = Visibility.Collapsed;
         closed.View.Visibility = Visibility.Visible;
         root.Background = Theme.Brush(Theme.Black);
-        ShowScanlines();
         Update();
         FadeIn(closed.View, 3);
     }

@@ -12,7 +12,6 @@ public sealed class AppSettings
     public PrayerMethod Method { get; set; } = PrayerMethod.Kemenag;
     public ThemeMode Theme { get; set; } = ThemeMode.Dark;
     public AccentChoice Accent { get; set; } = AccentChoice.Mint;
-    public Phosphor Phosphor { get; set; } = Phosphor.Green;
     public AppFont Font { get; set; } = AppFont.System;
     public PanelSize Size { get; set; } = PanelSize.Regular;
     public bool ClipboardHistory { get; set; } = true;
@@ -43,7 +42,8 @@ public sealed class AppSettings
 
     public static AppSettings Load()
     {
-        try { return JsonSerializer.Deserialize(File.ReadAllText(FilePath), SettingsJson.Default.AppSettings) ?? new(); }
+        // Retro, dropped in 1.9.6, reads as Dark; an unknown theme name would otherwise fail the whole file.
+        try { return JsonSerializer.Deserialize(File.ReadAllText(FilePath).Replace("\"Retro\"", "\"Dark\""), SettingsJson.Default.AppSettings) ?? new(); }
         catch (Exception e) when (e is IOException or JsonException or UnauthorizedAccessException) { return new(); }
     }
 

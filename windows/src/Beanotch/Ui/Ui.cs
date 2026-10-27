@@ -28,7 +28,6 @@ public static class Ui
     // their weight in it ("Inter SemiBold"), which is how Windows tells them apart.
     public static FontFamily FontFor(FontWeight weight, bool display = false, AppFont? only = null)
     {
-        if (only is null && Theme.Retro is not null) return Pixel;
         var (file, family) = (only ?? AppFont) switch
         {
             AppFont.BeVietnam => ("BeVietnamPro", "Be Vietnam Pro"),
@@ -50,9 +49,6 @@ public static class Ui
         return font;
     }
     public static readonly FontFamily Mono = new("Cascadia Mono, Consolas");
-    // VT323 is a terminal font with a small body, so it's set a size up to read like the others (as on the Mac).
-    private static readonly FontFamily Pixel = new("ms-appx:///Assets/Fonts/VT323-Regular.ttf#VT323");
-    private const double PixelScale = 1.32;
     public static readonly FontFamily Icons = new("Segoe Fluent Icons, Segoe MDL2 Assets");
 
     public static TextBlock Text(string text, double size, Color? color = null, FontWeight? weight = null, bool mono = false,
@@ -61,8 +57,8 @@ public static class Ui
         var t = new TextBlock
         {
             Text = text,
-            FontSize = S(Theme.Retro is null ? size : size * PixelScale),
-            FontFamily = mono && Theme.Retro is null ? Mono : FontFor(weight ?? FontWeights.Normal, display),
+            FontSize = S(size),
+            FontFamily = mono ? Mono : FontFor(weight ?? FontWeights.Normal, display),
             FontWeight = weight ?? FontWeights.Normal,
             Foreground = Theme.Brush(color ?? Theme.Ink),
             TextTrimming = TextTrimming.CharacterEllipsis,
@@ -327,16 +323,6 @@ public static class Ui
         move.Duration = TimeSpan.FromMilliseconds(260);
         visual.StartAnimation("Opacity", fade);
         visual.StartAnimation("Translation", move);
-    }
-
-    // CRT lines for the Retro theme: a dark rule every third pixel, drawn as real lines since a repeating gradient
-    // isn't something WinUI's brushes do. Taller than needed; the parent clips the rest.
-    public static FrameworkElement Scanlines(int lines = 220)
-    {
-        var stack = new StackPanel { IsHitTestVisible = false, VerticalAlignment = VerticalAlignment.Top };
-        var line = Theme.Brush(Theme.Rgb(0, 0, 0, 0.22));
-        for (var i = 0; i < lines; i++) stack.Children.Add(new Border { Height = 1, Margin = new Thickness(0, 0, 0, 2), Background = line });
-        return new Grid { IsHitTestVisible = false, Children = { stack } };
     }
 
     public static Border Divider() => new() { Height = 1, Background = Theme.Brush(Theme.Stroke) };

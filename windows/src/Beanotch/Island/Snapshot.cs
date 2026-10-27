@@ -56,7 +56,7 @@ public sealed partial class IslandWindow
         model.Settings.Theme = ThemeMode.Light;
         model.Settings.Accent = AccentChoice.Ocean;
         shell.Rebuild();
-        root.Background = Theme.Brush(Theme.Background);
+        root.Background = Theme.Brush(Theme.Panel);
         foreach (var tab in new[] { Tab.Home, Tab.Today, Tab.Prayer, Tab.Settings })
         {
             shell.Open(tab);
@@ -68,7 +68,7 @@ public sealed partial class IslandWindow
         {
             model.Settings.Font = font;
             shell.Rebuild();
-            root.Background = Theme.Brush(Theme.Background);
+            root.Background = Theme.Brush(Theme.Panel);
             shell.Open(Tab.Home);
             await Shot($"{index++:00}-font-{font.ToString().ToLowerInvariant()}");
         }
@@ -82,13 +82,15 @@ public sealed partial class IslandWindow
             await Shot($"{index++:00}-size-{size.ToString().ToLowerInvariant()}");
         }
         model.Settings.Size = PanelSize.Regular;
-        model.Settings.Theme = ThemeMode.Retro;
-        foreach (var (phosphor, tab) in new[] { (Phosphor.Green, Tab.Home), (Phosphor.Green, Tab.Settings), (Phosphor.Amber, Tab.Today), (Phosphor.Amber, Tab.Prayer) })
+        foreach (var (theme, tab) in new[] { (ThemeMode.Midnight, Tab.Home), (ThemeMode.Midnight, Tab.Today), (ThemeMode.Glass, Tab.Home), (ThemeMode.Glass, Tab.Settings) })
         {
-            model.Settings.Phosphor = phosphor;
+            model.Settings.Theme = theme;
+            ApplyTheme();
             shell.Rebuild();
             shell.Open(tab);
-            await Shot($"{index++:00}-retro-{phosphor.ToString().ToLowerInvariant()}-{tab.ToString().ToLowerInvariant()}");
+            // The acrylic only shows on screen, not in these renders: tell CI to photograph the desktop now.
+            if (theme == ThemeMode.Glass && tab == Tab.Home) File.WriteAllText(Path.Combine(dir, "glass.ready"), "");
+            await Shot($"{index++:00}-{theme.ToString().ToLowerInvariant()}-{tab.ToString().ToLowerInvariant()}", theme == ThemeMode.Glass ? 5000 : 1500);
         }
 
         File.WriteAllLines(Path.Combine(dir, "snapshot.log"), log);
