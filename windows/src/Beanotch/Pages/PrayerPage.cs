@@ -25,8 +25,8 @@ public sealed class PrayerPage(Model model) : PanelPage(model)
 
     protected override FrameworkElement Build()
     {
-        var left = V(6, Text("NEXT PRAYER", 8.5, Theme.Faint, FontWeights.SemiBold), Columns(8, (H(8, nextName, nextTime), null), (null, 1), (countdown, null)),
-                     progress, method);
+        var left = V(6, Text("NEXT PRAYER", 8.5, Theme.Faint, FontWeights.SemiBold), H(8, nextName, nextTime),
+                     progress, Columns(8, (method, 1), (countdown, null)));
         left.Children[0].SetValue(TextBlock.CharacterSpacingProperty, 120);
 
         var arrow = Icon("\uE74A", 15, Theme.Accent);
