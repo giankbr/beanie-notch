@@ -250,9 +250,10 @@ footer { padding: 0; overflow: hidden; }
 .foot-top { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 24px; padding: 80px 56px 48px; border-bottom: 1px solid var(--border); }
 .foot-top img { width: 88px; height: 88px; border-radius: 22px; box-shadow: 0 16px 30px -12px rgba(59,139,255,.6); }
 .foot-top h4 { margin: 0; font-size: 40px; font-weight: 700; letter-spacing: -1.2px; }
-.foot-top p { margin: 4px 0 0; color: var(--text-2); font-size: 17px; }
-.foot-top .cta-row { margin: 0; flex-wrap: nowrap; }
-@media (max-width: 1100px) { .foot-top { grid-template-columns: auto 1fr; } .foot-top .cta-row { grid-column: 1 / -1; justify-content: flex-start; } }
+.foot-top p { margin: 4px 0 0; color: var(--text-2); font-size: 17px; white-space: nowrap; }
+.foot-top .cta-row { margin: 0; flex-wrap: nowrap; gap: 10px; }
+.foot-top .cta-row .btn { height: 46px; padding: 0 18px; font-size: 15px; border-radius: 14px; }
+@media (max-width: 1240px) { .foot-top { grid-template-columns: auto 1fr; } .foot-top .cta-row { grid-column: 1 / -1; justify-content: flex-start; } }
 .cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding: 44px 56px; }
 .cols h5 { margin: 0 0 16px; font-size: 12px; letter-spacing: 1.6px; color: var(--text-3); font-weight: 600; }
 .cols a, .cols span { display: flex; gap: 8px; align-items: center; font-size: 15px; padding: 7px 0; color: var(--text-1); }
@@ -407,7 +408,9 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
 svg.winlogo { width: 1.1em; height: 1.1em; }
 .platform-stage .cap svg.winlogo, .plat-card .title svg.winlogo, .get .title svg.winlogo { width: 1em; height: 1em; }
 /* Windows' island hangs from the top edge, like the notch: real renders from the app */
-.platform-stage .desk .panel, .desk .panel { position: absolute; top: 0; left: 0; right: 0; margin: 0 auto; transform: none !important; width: 92%; max-width: 560px; height: auto; filter: drop-shadow(0 18px 30px rgba(0,0,0,.45)); }
+.platform-stage .mac .panel, .platform-stage .desk .panel, .desk .panel { position: absolute; top: 0; left: 0; right: 0; margin: 0 auto; transform: none !important; width: 92%; max-width: 560px; height: auto; filter: drop-shadow(0 18px 30px rgba(0,0,0,.45)); }
+.platform-stage .shot.mac { position: relative; display: block; }
+.platform-stage .mac .panel { max-width: 600px; filter: drop-shadow(0 18px 30px rgba(10,40,90,.35)); }
 .plat-card .vis.win img { width: min(400px, 88%); display: block; filter: drop-shadow(0 12px 24px rgba(0,0,0,.4)); }
 .desk .island { top: 0 !important; border-radius: 0 0 18px 18px !important; }
 
@@ -455,6 +458,7 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
 @media (max-width: 560px) {
   .hero .pill { font-size: 11.5px; white-space: nowrap; gap: 6px; }
   .platform-stage .shot { height: 220px; }
+  .platform-stage .shot.mac { height: auto; aspect-ratio: 2 / 1; }
   .both .chips { grid-template-columns: 1fr; }
   .plat-card .body, .both, .get { padding: 24px; }
   .plat-card .title { flex-wrap: wrap; }
@@ -499,7 +503,7 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
   <div class="stage"><div class="hero-shot platform-stage">
     <div>
       <div class="cap"><b><i data-lucide="apple"></i>macOS</b><span>Hover the notch · ⌥ Space</span></div>
-      <div class="shot"><img src="landing-page-assets/overview.png" alt="Beanotch's Overview panel open under the MacBook notch: health, CPU, memory, network, disk, cleanup and quick settings"></div>
+      <div class="shot mac"><img class="panel" src="landing-page-assets/mac-today.png" alt="Beanotch's Today panel open under the MacBook notch: weather, the next event, tasks and the focus timer"></div>
     </div>
     <div>
       <div class="cap"><b><svg class="lucide winlogo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 5.1 10.4 4v7.2H3zm8.4-1.2L21 2.5v8.7h-9.6zM3 12.6h7.4v7.3L3 18.8zm8.4 0H21v8.9l-9.6-1.4z"/></svg>Windows</b><span>Hover the island · Beta</span></div>
