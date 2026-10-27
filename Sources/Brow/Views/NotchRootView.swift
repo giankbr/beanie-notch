@@ -19,7 +19,9 @@ struct NotchRootView: View {
     // out again frame by frame, and it stays built between openings instead of being rebuilt on each one.
     var body: some View {
         // Mini opens across the menu bar either side of the notch, so its top row is as wide as the panel.
-        let neck = model.expanded ? (settings.size == .mini ? model.openSize.width : model.closedSize.width) : model.closedWidth
+        // Seamless keeps its curved corners outside that row.
+        let miniNeck = model.openSize.width - (settings.notchStyle == .seamless ? NotchStyle.ear * 2 : 0)
+        let neck = model.expanded ? (settings.size == .mini ? miniNeck : model.closedSize.width) : model.closedWidth
         let shape = NotchShape(style: settings.notchStyle, neckWidth: neck,
                               neckHeight: model.closedSize.height,
                               radius: model.expanded ? 24 : 10)

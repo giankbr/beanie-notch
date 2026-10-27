@@ -131,10 +131,15 @@ struct SettingsView: View {
                 }
             }
             card {
-                pickerRow("Layout", settings.layout.caption) {
+                pickerRow("Layout", settings.size == .mini ? "Mini keeps the tabs beside the notch; pick Compact or bigger to use a layout"
+                                                           : settings.layout.caption) {
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 6), spacing: 6) {
                         ForEach(LayoutStyle.allCases, id: \.self) { layout in
-                            choice(layout.title, selected: settings.layout == layout) { settings.layout = layout } preview: { LayoutSketch(layout: layout) }
+                            choice(layout.title, selected: settings.layout == layout && settings.size != .mini) {
+                                settings.layout = layout
+                                // Picking a layout while Mini is on moves up to a size that has one.
+                                if settings.size == .mini { settings.size = .compact }
+                            } preview: { LayoutSketch(layout: layout) }
                         }
                     }
                 }
