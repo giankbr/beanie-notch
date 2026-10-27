@@ -166,6 +166,7 @@ final class Settings: ObservableObject {
     @Published var messageAlerts: Bool { didSet { save(messageAlerts, "messageAlerts") } }
     @Published var messageAllApps: Bool { didSet { save(messageAllApps, "messageAllApps") } }
     @Published var downloadsInNotch: Bool { didSet { save(downloadsInNotch, "downloadsInNotch") } }
+    @Published var meetingMode: Bool { didSet { save(meetingMode, "meetingMode") } }
     @Published var waterEvery: Int { didSet { save(waterEvery, "waterEvery") } }
     @Published var eyeBreaks: Bool { didSet { save(eyeBreaks, "eyeBreaks") } }
     @Published var stretchEvery: Int { didSet { save(stretchEvery, "stretchEvery") } }
@@ -206,6 +207,7 @@ final class Settings: ObservableObject {
         messageAlerts = d.object(forKey: "messageAlerts") as? Bool ?? true
         messageAllApps = d.bool(forKey: "messageAllApps")
         downloadsInNotch = d.object(forKey: "downloadsInNotch") as? Bool ?? true
+        meetingMode = d.object(forKey: "meetingMode") as? Bool ?? true
         waterEvery = d.object(forKey: "waterEvery") as? Int ?? 0
         eyeBreaks = d.bool(forKey: "eyeBreaks")
         stretchEvery = d.object(forKey: "stretchEvery") as? Int ?? 0

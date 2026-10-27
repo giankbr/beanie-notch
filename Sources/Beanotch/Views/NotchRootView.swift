@@ -12,6 +12,7 @@ struct NotchRootView: View {
     @EnvironmentObject var countdown: CountdownTimer
     @EnvironmentObject var claude: ClaudeBridge
     @EnvironmentObject var devRuns: DevRuns
+    @EnvironmentObject var meeting: MeetingWatcher
 
     private var size: CGSize {
         model.expanded ? model.openSize : CGSize(width: model.closedWidth, height: model.closedHeight)
@@ -94,6 +95,25 @@ struct NotchRootView: View {
                 Text(notice.right).font(.app(size: 10, weight: .semibold)).lineLimit(1).foregroundStyle(.white)
             }
             .id(notice.id)
+            .transition(.emerge)
+        } else if let since = meeting.since {
+            Ears {
+                HStack(spacing: 5) {
+                    Circle().fill(Theme.red).frame(width: 6, height: 6)
+                    Image(systemName: meeting.camera ? "video.fill" : "phone.fill").font(.system(size: 9, weight: .semibold))
+                    Text("In a call").font(.app(size: 10.5, weight: .semibold))
+                }
+                .foregroundStyle(Theme.red)
+            } right: {
+                HStack(spacing: 6) {
+                    Image(systemName: meeting.micMuted ? "mic.slash.fill" : "mic.fill").font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(meeting.micMuted ? Theme.red : .white.opacity(0.7))
+                    TimelineView(.periodic(from: .now, by: 1)) { context in
+                        Text(formatClock(context.date.timeIntervalSince(since)))
+                            .font(.app(size: 11, weight: .semibold)).monospacedDigit().foregroundStyle(.white)
+                    }
+                }
+            }
             .transition(.emerge)
         } else if focus.isRunning {
             Ears {
@@ -402,6 +422,7 @@ private struct Header: View {
     @EnvironmentObject var calendar: CalendarFeed
     @EnvironmentObject var cleaner: Cleaner
     @EnvironmentObject var prayer: PrayerTimes
+    @EnvironmentObject var meeting: MeetingWatcher
     var showsTitle: Bool
 
     private func dateLine(_ text: String) -> some View {
@@ -426,7 +447,14 @@ private struct Header: View {
                 IconButton(icon: "eyedropper") { model.pickColor() }.help("Pick a color from the screen; its hex code is copied")
             }
             .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 4 }
-            if let meeting = calendar.meeting {
+            if meeting.inCall {
+                Button { meeting.toggleMute() } label: {
+                    Pill(text: meeting.micMuted ? "Muted · unmute" : "In a call · mute", color: Theme.red,
+                         icon: meeting.micMuted ? "mic.slash.fill" : "mic.fill")
+                }
+                .buttonStyle(PressStyle())
+                .help("The microphone, for every app")
+            } else if let meeting = calendar.meeting {
                 Button { calendar.join(meeting) } label: {
                     Pill(text: "Join · \(meeting.title)", color: Theme.accent2, icon: "video.fill")
                 }

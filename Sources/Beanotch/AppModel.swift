@@ -122,6 +122,7 @@ final class AppModel: ObservableObject {
     let messages = MessageBadges()
     let claude = ClaudeBridge()
     let devRuns = DevRuns()
+    let meeting = MeetingWatcher()
     // Set by the controller: opens the panel and keeps it open (a permission request is waiting).
     var openPanel: (() -> Void)?
     private let volumeWatcher = VolumeWatcher()
@@ -201,6 +202,21 @@ final class AppModel: ObservableObject {
             self?.show(Notice(icon: "arrow.down.circle.fill", color: Theme.accent, left: "Downloaded", right: url.lastPathComponent))
         }
         settings.$downloadsInNotch.sink { [weak self] on in self?.downloads.setEnabled(on) }.store(in: &sinks)
+        settings.$meetingMode.sink { [weak self] on in self?.meeting.setEnabled(on) }.store(in: &sinks)
+        meeting.onEnd = { [weak self] length in
+            guard let self else { return }
+            let held = self.held
+            self.held = []
+            show(Notice(icon: "phone.down.fill", color: Theme.accent, left: "Call ended · \(DevRuns.duration(length))",
+                        right: held.isEmpty ? "Nothing missed" : held.count == 1 ? "1 alert held" : "\(held.count) alerts held",
+                        essential: true))
+            // Then the last few that waited, one after another.
+            for (i, n) in held.suffix(3).enumerated() {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 4.5 * Double(i + 1)) { [weak self] in
+                    MainActor.assumeIsolated { self?.show(n) }
+                }
+            }
+        }
         settings.$hiddenTabs.sink { [weak self] hidden in
             guard let self, hidden.contains(tab.rawValue), tab != .settings else { return }
             tab = .home
@@ -236,8 +252,15 @@ final class AppModel: ObservableObject {
     private var settingsSink: AnyCancellable?
     private var lyricsSink: AnyCancellable?
 
+    // Alerts that can wait, held while a call is on.
+    private var held: [Notice] = []
+
     func show(_ n: Notice) {
         guard n.essential || settings.notchAlerts else { return }
+        if meeting.inCall, !n.essential {
+            held.append(n)
+            return
+        }
         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { notice = n }
         DispatchQueue.main.asyncAfter(deadline: .now() + n.duration) { [weak self] in
             MainActor.assumeIsolated {
@@ -305,7 +328,7 @@ final class AppModel: ObservableObject {
     var showsNotchLyrics: Bool { showsMiniPlayer && settings.lyricsInNotch && media.lyrics.state == .synced }
 
     var closedWidth: CGFloat {
-        let extra: CGFloat = volume != nil ? 190 : notice.map(noticeWidth) ?? (focus.isRunning ? 110
+        let extra: CGFloat = volume != nil ? 190 : notice.map(noticeWidth) ?? (meeting.inCall ? 200 : focus.isRunning ? 110
             : countdown.isRunning ? 110 : downloads.current != nil ? 240 : claude.working != nil ? 220 : devRuns.current != nil ? 240 : calendar.meeting != nil ? 240 : showsPrayerCountdown ? 170
             : showsNotchLyrics ? 340 : showsMiniPlayer ? 64 : 0)
         return closedSize.width + extra
@@ -362,6 +385,7 @@ extension View {
             .environmentObject(m.messages)
             .environmentObject(m.claude)
             .environmentObject(m.devRuns)
+            .environmentObject(m.meeting)
     }
 }
 

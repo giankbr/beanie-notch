@@ -301,6 +301,9 @@ struct SettingsView: View {
                 row("capslock", "Keyboard", "Caps Lock and keyboard language changes") {
                     Toggle("", isOn: $settings.keyboardAlerts)
                 }
+                row("video", "Calls", "While the mic or camera is on: call time and mute in the notch, other alerts wait") {
+                    Toggle("", isOn: $settings.meetingMode)
+                }
             }
             card {
                 row("music.note", "Mini player", "Artwork and bars beside the notch while music plays") {
