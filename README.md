@@ -1,3 +1,5 @@
+<img src="docs/landing-page-assets/beanie-icon.png" width="96" alt="">
+
 # Beanie
 
 A small, native macOS app that turns the MacBook notch into a dashboard. Hover over the notch (or press ⌥ Space) to open it.
