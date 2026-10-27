@@ -67,7 +67,7 @@ final class Uninstaller: ObservableObject {
                 targets.filter { (try? FileManager.default.trashItem(at: $0, resultingItemURL: nil)) == nil }
             }.value
             if failed.contains(app.url) {
-                message = "Couldn't move \(app.name): allow Beanie in Privacy › App Management"
+                message = "Couldn't move \(app.name): allow Beanotch in Privacy › App Management"
             } else {
                 let skipped = failed.count + adminOnly
                 message = skipped == 0 ? "\(app.name) moved to Trash"

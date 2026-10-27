@@ -1,5 +1,5 @@
 // Loaded by /usr/bin/perl, which macOS still lets read the system's Now Playing (MediaRemote).
-// beanie_stream prints one JSON line per change; beanie_send runs the command in BEANIE_CMD and returns.
+// beanotch_stream prints one JSON line per change; beanotch_send runs the command in BEANOTCH_CMD and returns.
 #import <AppKit/AppKit.h>
 #import <Foundation/Foundation.h>
 #include <dlfcn.h>
@@ -61,7 +61,7 @@ static void emit(void) {
     });
 }
 
-void beanie_stream(void *perl, void *cv) {
+void beanotch_stream(void *perl, void *cv) {
     RegisterFn reg = mr("MRMediaRemoteRegisterForNowPlayingNotifications");
     if (!reg) return;
     reg(dispatch_get_main_queue());
@@ -71,7 +71,7 @@ void beanie_stream(void *perl, void *cv) {
         [NSNotificationCenter.defaultCenter addObserverForName:name object:nil queue:nil usingBlock:^(NSNotification *n) { emit(); }];
     }
     emit();
-    // Exits with the app: stdin closes when Beanie quits.
+    // Exits with the app: stdin closes when Beanotch quits.
     dispatch_source_t src = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, STDIN_FILENO, 0, dispatch_get_main_queue());
     dispatch_source_set_event_handler(src, ^{
         char buf[64];
@@ -82,8 +82,8 @@ void beanie_stream(void *perl, void *cv) {
     CFRunLoopRun();
 }
 
-void beanie_send(void *perl, void *cv) {
-    const char *cmd = getenv("BEANIE_CMD");
+void beanotch_send(void *perl, void *cv) {
+    const char *cmd = getenv("BEANOTCH_CMD");
     if (!cmd) return;
     if (strncmp(cmd, "seek:", 5) == 0) {
         SetTimeFn setTime = mr("MRMediaRemoteSetElapsedTime");

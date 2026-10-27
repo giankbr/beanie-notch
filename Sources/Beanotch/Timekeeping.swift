@@ -106,7 +106,7 @@ final class Notes: ObservableObject {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
         let folder = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Beanie/Notes")
+            .appendingPathComponent("Beanotch/Notes")
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let firstLine = trimmed.split(separator: "\n").first.map(String.init) ?? "Note"
         let name = String(firstLine.filter { !"/:\\".contains($0) }.prefix(40)).trimmingCharacters(in: .whitespaces)
@@ -118,7 +118,7 @@ final class Notes: ObservableObject {
 // Looks for a newer release on GitHub. The repository has to be public for this to get an answer.
 @MainActor
 final class Updater: ObservableObject {
-    static let repository = "giankbr/beanie"
+    static let repository = "giankbr/beanotch"
 
     @Published private(set) var latest: String?
     @Published private(set) var page: URL?

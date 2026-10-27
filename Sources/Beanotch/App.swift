@@ -18,11 +18,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var controller: NotchController!
     private var statusItem: NSStatusItem!
 
-    // Settings saved under the app's earlier bundle id come along once.
+    // Settings saved under the app's earlier bundle ids come along once, the newest first.
     private static func carryOverSettings() {
         let defaults = UserDefaults.standard
         guard let id = Bundle.main.bundleIdentifier, defaults.persistentDomain(forName: id)?.isEmpty ?? true,
-              let old = defaults.persistentDomain(forName: "id.morfotech.brow"), !old.isEmpty else { return }
+              let old = ["id.morfotech.beanie", "id.morfotech.brow"].lazy
+                  .compactMap({ defaults.persistentDomain(forName: $0) }).first(where: { !$0.isEmpty }) else { return }
         defaults.setPersistentDomain(old, forName: id)
     }
 
@@ -33,9 +34,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         controller = NotchController(model: model)
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        statusItem.button?.image = NSImage(systemSymbolName: "rectangle.topthird.inset.filled", accessibilityDescription: "Beanie")
+        statusItem.button?.image = NSImage(systemSymbolName: "rectangle.topthird.inset.filled", accessibilityDescription: "Beanotch")
         let menu = NSMenu()
-        let open = NSMenuItem(title: "Open Beanie", action: #selector(openNotch), keyEquivalent: "")
+        let open = NSMenuItem(title: "Open Beanotch", action: #selector(openNotch), keyEquivalent: "")
         open.target = self
         menu.addItem(open)
         let clean = NSMenuItem(title: "Full System Clean", action: #selector(fullClean), keyEquivalent: "")
@@ -45,7 +46,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         color.target = self
         menu.addItem(color)
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Quit Beanie", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        menu.addItem(withTitle: "Quit Beanotch", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         statusItem.menu = menu
     }
 

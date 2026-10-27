@@ -35,7 +35,7 @@ static void connect(void) {
     services = IOHIDEventSystemClientCopyServices(client);
 }
 
-double beanie_cpu_temperature(void) {
+double beanotch_cpu_temperature(void) {
     if (!client) connect();
     if (!services) return -1;
     double dies = 0, all = 0;

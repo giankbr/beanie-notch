@@ -75,7 +75,7 @@ private struct UninstallerView: View {
                     detail(app)
                 } else {
                     Placeholder(icon: "shippingbox", title: "Pick an app",
-                                caption: "Beanie finds the caches, preferences and support files it leaves behind")
+                                caption: "Beanotch finds the caches, preferences and support files it leaves behind")
                 }
             }
         }

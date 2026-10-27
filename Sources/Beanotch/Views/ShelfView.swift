@@ -207,7 +207,7 @@ private struct PhoneDropPanel: View {
                     Text(problem).font(.app(size: 10)).foregroundStyle(Theme.amber)
                 }
                 Spacer(minLength: 0)
-                Text(drop.received == 0 ? "Waiting for files…" : "\(drop.received) received · in Downloads/Beanie")
+                Text(drop.received == 0 ? "Waiting for files…" : "\(drop.received) received · in Downloads/Beanotch")
                     .font(.app(size: 10, weight: .medium)).foregroundStyle(Theme.accent)
                 Text("The link stops working when you leave this page.").font(.app(size: 8.5)).foregroundStyle(Theme.faint)
             }

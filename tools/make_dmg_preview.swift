@@ -1,12 +1,12 @@
 import AppKit
 
-// A picture of the DMG window as Finder shows it in dark mode, for the README: the real background, Beanie's
+// A picture of the DMG window as Finder shows it in dark mode, for the README: the real background, Beanotch's
 // icon and the Applications folder at the spots tools/dmg_settings.py gives them.
-// Usage: swift tools/make_dmg_preview.swift <background.png> <Beanie.app> <out.png>
+// Usage: swift tools/make_dmg_preview.swift <background.png> <Beanotch.app> <out.png>
 let args = CommandLine.arguments
 let background = NSImage(contentsOfFile: args[1])!
 // Straight from the bundle's icns: Launch Services may not know a freshly built app yet.
-let appIcon = NSImage(contentsOfFile: args[2] + "/Contents/Resources/Beanie.icns") ?? NSWorkspace.shared.icon(forFile: args[2])
+let appIcon = NSImage(contentsOfFile: args[2] + "/Contents/Resources/Beanotch.icns") ?? NSWorkspace.shared.icon(forFile: args[2])
 let version = Bundle(path: args[2])?.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
 let folderIcon = NSWorkspace.shared.icon(forFile: "/Applications")
 
@@ -62,7 +62,7 @@ func place(_ image: NSImage, _ name: String, x: CGFloat) {
     NSAttributedString(string: name, attributes: [.font: NSFont.systemFont(ofSize: 13), .foregroundColor: NSColor.white, .paragraphStyle: style])
         .draw(in: NSRect(x: center.x - 80, y: center.y - size / 2 - 22, width: 160, height: 18))
 }
-place(appIcon, "Beanie", x: 170)
+place(appIcon, "Beanotch", x: 170)
 place(folderIcon, "Applications", x: 470)
 NSGraphicsContext.restoreGraphicsState()
 

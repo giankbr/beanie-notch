@@ -1,4 +1,4 @@
-# dmgbuild settings: Beanie and an Applications link over the drawn background (tools/make_dmg_background.swift).
+# dmgbuild settings: Beanotch and an Applications link over the drawn background (tools/make_dmg_background.swift).
 import os
 
 app = defines['app']

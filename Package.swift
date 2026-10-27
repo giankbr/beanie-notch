@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "Beanie",
+    name: "Beanotch",
     platforms: [.macOS(.v14)],
     targets: [
         .target(name: "CSensors", path: "Sources/CSensors", linkerSettings: [.linkedFramework("IOKit")]),
-        // FoundationModels exists from macOS 26: weakly linked, so Beanie still starts on 14 and 15.
-        .executableTarget(name: "Beanie", dependencies: ["CSensors"], path: "Sources/Beanie",
+        // FoundationModels exists from macOS 26: weakly linked, so Beanotch still starts on 14 and 15.
+        .executableTarget(name: "Beanotch", dependencies: ["CSensors"], path: "Sources/Beanotch",
                           linkerSettings: [.unsafeFlags(["-Xlinker", "-weak_framework", "-Xlinker", "FoundationModels"])]),
     ]
 )

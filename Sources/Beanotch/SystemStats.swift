@@ -51,7 +51,7 @@ final class SystemStats: ObservableObject {
         let used = Self.memoryUsed()
         if used / 10_000_000 != ramUsed / 10_000_000 { ramUsed = used }
 
-        let celsius = beanie_cpu_temperature()
+        let celsius = beanotch_cpu_temperature()
         let temp = celsius > 0 ? Int(celsius.rounded()) : nil
         if temp != temperature { temperature = temp }
 

@@ -335,7 +335,7 @@ private final class Locator: NSObject, CLLocationManagerDelegate {
         completion = done
         switch manager.authorizationStatus {
         case .notDetermined: manager.requestWhenInUseAuthorization()
-        case .denied, .restricted: fail("Location is off for Beanie. Allow it in System Settings, or pick a city.")
+        case .denied, .restricted: fail("Location is off for Beanotch. Allow it in System Settings, or pick a city.")
         default: manager.requestLocation()
         }
     }
@@ -349,7 +349,7 @@ private final class Locator: NSObject, CLLocationManagerDelegate {
         guard completion != nil else { return }
         switch manager.authorizationStatus {
         case .notDetermined: break
-        case .denied, .restricted: fail("Location is off for Beanie. Allow it in System Settings, or pick a city.")
+        case .denied, .restricted: fail("Location is off for Beanotch. Allow it in System Settings, or pick a city.")
         default: manager.requestLocation()
         }
     }
