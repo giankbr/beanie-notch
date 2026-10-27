@@ -13,6 +13,7 @@ struct NotchRootView: View {
     @EnvironmentObject var claude: ClaudeBridge
     @EnvironmentObject var devRuns: DevRuns
     @EnvironmentObject var meeting: MeetingWatcher
+    @EnvironmentObject var pet: NotchPet
 
     private var size: CGSize {
         model.expanded ? model.openSize : CGSize(width: model.closedWidth, height: model.closedHeight)
@@ -211,6 +212,27 @@ struct NotchRootView: View {
             NotchLyrics().transition(.emerge)
         } else if model.showsMiniPlayer {
             MiniPlayer().transition(.emerge)
+        } else if settings.notchPet {
+            Ears {
+                PetView(mood: pet.mood)
+            } right: {
+                Text(petLine).font(.app(size: 9.5, weight: .semibold)).foregroundStyle(.white.opacity(0.6)).lineLimit(1)
+            }
+            .transition(.emerge)
+        }
+    }
+}
+
+extension NotchRootView {
+    // A word from the pet, beside the camera.
+    fileprivate var petLine: String {
+        switch pet.mood {
+        case .happy: ""
+        case .sleepy: "zzz"
+        case .panic: "hot!"
+        case .eating: "nom"
+        case .thirsty: "water?"
+        case .dancing: "♪"
         }
     }
 }

@@ -306,6 +306,9 @@ struct SettingsView: View {
                 }
             }
             card {
+                row("face.smiling", "Notch pet", "A coffee bean beside the camera: it naps, sweats, eats, gets thirsty and dances") {
+                    Toggle("", isOn: $settings.notchPet)
+                }
                 row("music.note", "Mini player", "Artwork and bars beside the notch while music plays") {
                     Toggle("", isOn: $settings.miniPlayer)
                 }

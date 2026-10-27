@@ -131,6 +131,7 @@ final class AppModel: ObservableObject {
     let ambient = Ambient()
     let rates = Rates()
     let quakes = Quakes()
+    let pet = NotchPet()
     lazy var smartCopy = SmartCopy(rates: rates)
     // Set by the controller: opens the panel and keeps it open (a permission request is waiting).
     var openPanel: (() -> Void)?
@@ -149,7 +150,10 @@ final class AppModel: ObservableObject {
         prayer.onNotice = { [weak self] n in if self?.prayerOn == true { self?.show(n) } }
         tasks.onNotice = notify
         keyboard.onNotice = notify
-        health.onNotice = notify
+        health.onNotice = { [weak self] n in
+            self?.show(n)
+            if n.icon == "drop.fill" { self?.pet.thirst() }
+        }
         phoneDrop.onFile = { [weak self] url in
             self?.shelf.add([url])
             self?.show(Notice(icon: "iphone", color: Theme.accent, left: "From phone", right: url.lastPathComponent))
@@ -222,6 +226,15 @@ final class AppModel: ObservableObject {
         quakes.onNotice = notify
         quakes.place = { [weak self] in self?.prayer.place }
         settings.$quakeAlerts.sink { [weak self] on in self?.quakes.setEnabled(on) }.store(in: &sinks)
+        pet.stats = stats
+        pet.playing = { [weak self] in self?.media.now?.playing == true }
+        settings.$notchPet.sink { [weak self] on in self?.pet.setEnabled(on) }.store(in: &sinks)
+        // Files put on the Shelf feed the pet.
+        var shelfCount = shelf.items.count
+        shelf.$items.dropFirst().sink { [weak self] items in
+            if items.count > shelfCount { self?.pet.feed() }
+            shelfCount = items.count
+        }.store(in: &sinks)
         settings.$meetingMode.sink { [weak self] on in self?.meeting.setEnabled(on) }.store(in: &sinks)
         meeting.onEnd = { [weak self] length in
             guard let self else { return }
@@ -359,7 +372,7 @@ final class AppModel: ObservableObject {
     var closedWidth: CGFloat {
         let extra: CGFloat = volume != nil ? 190 : notice.map(noticeWidth) ?? (meeting.inCall ? 200 : focus.isRunning ? 110
             : countdown.isRunning ? 110 : downloads.current != nil ? 240 : claude.working != nil ? 220 : devRuns.current != nil ? 240 : calendar.meeting != nil ? 240 : showsPrayerCountdown ? 170
-            : showsNotchLyrics ? 340 : showsMiniPlayer ? 64 : 0)
+            : showsNotchLyrics ? 340 : showsMiniPlayer ? 64 : settings.notchPet ? 76 : 0)
         return closedSize.width + extra
     }
 
@@ -416,6 +429,7 @@ extension View {
             .environmentObject(m.devRuns)
             .environmentObject(m.meeting)
             .environmentObject(m.rates)
+            .environmentObject(m.pet)
     }
 }
 
