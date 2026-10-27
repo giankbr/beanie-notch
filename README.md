@@ -143,7 +143,7 @@ macOS asks for access only when a feature needs it:
 
 ### Windows (preview)
 
-An early preview for Windows 10 and 11 lives in [`windows/`](windows): a small island at the top centre of the screen with now playing and lyrics, clipboard history, prayer times and AI usage. Download `Beanotch-Setup-x64.exe` (or `-arm64`) from the [Windows preview release](../../releases/tag/windows-v0.1.0).
+An early preview for Windows 10 and 11 lives in [`windows/`](windows): a small island at the top centre of the screen with now playing and lyrics, clipboard history, prayer times and AI usage. Download `Beanotch-Setup-x64.exe` (or `-arm64`) from the [Windows preview release](../../releases/tag/windows-v0.2.0).
 
 ## Build
 

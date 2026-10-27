@@ -387,7 +387,8 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
 .desk .taskbar i:first-child { background: linear-gradient(135deg, #4cc2ff, #0a6cff); }
 .desk .label { position: absolute; left: 16px; bottom: 58px; font-size: 12px; color: rgba(255,255,255,.75); background: rgba(0,0,0,.35); padding: 6px 12px; border-radius: 999px; }
 @media (max-width: 960px) { .win { grid-template-columns: 1fr; gap: 36px; } }
-@media (max-width: 400px) { .brand { font-size: 17px; gap: 8px; } .brand img { width: 26px; height: 26px; } nav .btn-sm { padding: 0 12px; } }
+@media (max-width: 560px) { nav .btn { height: 36px; padding: 0 14px; font-size: 13.5px; border-radius: 11px; gap: 7px; } nav .btn svg.lucide { width: 14px; height: 14px; } }
+@media (max-width: 400px) { .brand { font-size: 17px; gap: 8px; } .brand img { width: 26px; height: 26px; } nav .btn { padding: 0 12px; } }
 @media (max-width: 560px) { .plan { grid-template-columns: 1fr; } .desk .island { width: 78%; } }
 @media (prefers-reduced-motion: reduce) { .soon::before, .desk .bars i { animation: none; } }
 </style>
@@ -554,19 +555,21 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
       <h2>Beanotch for Windows.<em>Without a notch.</em></h2>
       <p class="sub">Windows laptops don't have a notch, so Beanotch becomes a small island at the top centre of the screen. Hover it to open the panels, built natively with WinUI 3 rather than ported.</p>
       <div class="plan">
-        <div><i data-lucide="check"></i>Now playing &amp; synced lyrics</div>
-        <div><i data-lucide="check"></i>Clipboard history</div>
-        <div><i data-lucide="check"></i>Prayer times</div>
+        <div><i data-lucide="check"></i>Overview &amp; cleanup</div>
+        <div><i data-lucide="check"></i>Today, calendar &amp; focus</div>
+        <div><i data-lucide="check"></i>Prayer times &amp; qibla</div>
+        <div><i data-lucide="check"></i>Now playing &amp; lyrics</div>
+        <div><i data-lucide="check"></i>Shelf &amp; clipboard</div>
         <div><i data-lucide="check"></i>AI usage</div>
-        <div class="next"><i data-lucide="clock"></i>File shelf, next</div>
-        <div class="next"><i data-lucide="clock"></i>Timers &amp; world clocks, next</div>
+        <div><i data-lucide="check"></i>Controls &amp; brightness</div>
+        <div><i data-lucide="check"></i>Uninstaller &amp; large files</div>
         <div class="later"><i data-lucide="minus"></i>AirDrop and Night Shift stay on Mac</div>
       </div>
-      <div class="cta-row" style="justify-content:flex-start">
-        <a class="btn btn-primary" href="https://github.com/giankbr/beanie-notch/releases/download/windows-v0.1.0/Beanotch-Setup-x64.exe"><i data-lucide="download"></i>Download for Windows</a>
-        <a class="btn btn-ghost" href="https://github.com/giankbr/beanie-notch/releases/download/windows-v0.1.0/Beanotch-Setup-arm64.exe"><i data-lucide="cpu"></i>ARM64</a>
       </div>
-      <p class="win-note">Preview 0.1.0 · Windows 10 and 11 · 20 MB, .NET included. The installer isn't signed yet: if SmartScreen appears, choose More info › Run anyway. Found a bug? <a href="https://github.com/giankbr/beanie-notch/issues/new?title=Windows%3A%20" style="color:var(--accent)">Tell us</a>.</p>
+      <div class="cta-row" style="justify-content:flex-start">
+        <a class="btn btn-primary" id="winDownload" href="https://github.com/giankbr/beanie-notch/releases/download/windows-v0.2.0/Beanotch-Setup-x64.exe"><i data-lucide="download"></i><span>Download for Windows</span></a>
+      </div>
+      <p class="win-note">Preview 0.2.0 · Windows 10 and 11 · 21 MB, .NET included. <span id="winOther">Snapdragon PC? Get the <a href="https://github.com/giankbr/beanie-notch/releases/download/windows-v0.2.0/Beanotch-Setup-arm64.exe" style="color:var(--accent)">ARM64 version</a>.</span> The installer isn't signed yet: if SmartScreen appears, choose More info › Run anyway. Found a bug? <a href="https://github.com/giankbr/beanie-notch/issues/new?title=Windows%3A%20" style="color:var(--accent)">Tell us</a>.</p>
     </div>
     <div class="desk" aria-hidden="true">
       <div class="island"><span>Yang tak bisa terobati</span><span class="bars"><i></i><i></i><i></i><i></i></span></div>
@@ -584,7 +587,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
       <p class="sub">Beanotch is free, open and tiny. If something isn't covered here, <a href="https://github.com/giankbr/beanie-notch/issues" style="color:var(--accent)">open an issue on GitHub</a>.</p>
     </div>
     <div>
-      <details><summary>Is there a Windows version?<i data-lucide="chevron-down"></i></summary><p>Yes, as an early preview: a small island at the top centre of the screen with now playing and lyrics, clipboard history, prayer times and AI usage. <a href="#windows" style="color:var(--accent)">Download it here</a>. The file shelf and timers come next.</p></details>
+      <details><summary>Is there a Windows version?<i data-lucide="chevron-down"></i></summary><p>Yes, as an early preview: a small island at the top centre of the screen with the same pages as on the Mac. <a href="#windows" style="color:var(--accent)">Download it here</a>. Most PCs need the regular (x64) installer; Snapdragon PCs get the ARM64 one, which the button picks for you.</p></details>
       <details><summary>Does it work on a Mac without a notch?<i data-lucide="chevron-down"></i></summary><p>Yes. On Macs without a notch, Beanotch draws a notch-like strip at the top centre of the screen. Pick the floating shape in Settings if you prefer it detached.</p></details>
       <details open><summary>Why does macOS say the app can't be opened?<i data-lucide="chevron-down"></i></summary><p>Beanotch is ad-hoc signed, not notarized. Right-click the app and choose Open once, or run <code>xattr -dr com.apple.quarantine /Applications/Beanotch.app</code>.</p></details>
       <details><summary>Is my location sent anywhere?<i data-lucide="chevron-down"></i></summary><p>Prayer times are worked out on your Mac. For the weather, only your place's coordinates go to Open-Meteo, with no account, no key and no tracking. Lyrics lookups send just the song title and artist.</p></details>
@@ -858,6 +861,19 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
     lenis.scrollTo(target, { offset: target === 0 ? 0 : -((nav ? nav.offsetHeight : 0) + 12) });
     if (id !== "#") history.replaceState(null, "", id);
   });
+})();
+
+// On a Snapdragon PC, the main Windows button downloads the ARM64 build instead (Chromium reports the architecture).
+(function () {
+  var data = navigator.userAgentData;
+  if (!data || !data.getHighEntropyValues) return;
+  data.getHighEntropyValues(["architecture", "platform"]).then(function (v) {
+    if (v.platform !== "Windows" || v.architecture !== "arm") return;
+    var main = document.getElementById("winDownload");
+    main.href = main.href.replace("-x64.exe", "-arm64.exe");
+    main.querySelector("span").textContent = "Download for Windows on ARM";
+    document.getElementById("winOther").innerHTML = 'Intel or AMD PC? Get the <a href="' + main.href.replace("-arm64.exe", "-x64.exe") + '" style="color:var(--accent)">x64 version</a>.';
+  }).catch(function () {});
 })();
 </script>
 </body>
