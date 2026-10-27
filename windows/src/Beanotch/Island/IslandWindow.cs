@@ -43,6 +43,17 @@ public sealed partial class IslandWindow : Window
     private readonly List<Notice> held = [];
     private DateTime noticeUntil;
     private (int W, int H) placed;
+    private bool hiddenForFullscreen;
+
+    // Out of the way while a game, a video or a slideshow fills the screen, and back when it doesn't.
+    private void HideForFullscreen()
+    {
+        var hide = model.Settings.HideInFullscreen && !model.Expanded && Native.FullscreenAppOpen(hwnd);
+        if (hide == hiddenForFullscreen) return;
+        hiddenForFullscreen = hide;
+        if (hide) AppWindow.Hide();
+        else AppWindow.Show(false);
+    }
 
     public IslandWindow()
     {
@@ -95,7 +106,7 @@ public sealed partial class IslandWindow : Window
         collapseTimer.Tick += (_, _) => Collapse();
         tick = ui.CreateTimer();
         tick.Interval = TimeSpan.FromMilliseconds(400);
-        tick.Tick += (_, _) => { model.Tick(); Update(); };
+        tick.Tick += (_, _) => { model.Tick(); Update(); HideForFullscreen(); };
         tick.Start();
         statsTimer = ui.CreateTimer();
         statsTimer.Interval = TimeSpan.FromSeconds(2);

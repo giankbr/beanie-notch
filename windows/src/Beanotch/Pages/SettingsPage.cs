@@ -251,6 +251,7 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
             Toggle("Volume", "Level when it changes", S0.VolumeHud, v => S0.VolumeHud = v),
             Toggle("Downloads", "Progress from Chrome, Edge and Firefox", S0.DownloadsInIsland, v => S0.DownloadsInIsland = v),
             Toggle("Mic and camera", "When an app starts using them", S0.PrivacyAlerts, v => S0.PrivacyAlerts = v),
+            Toggle("Hide in full screen", "Games, videos and slideshows that fill the screen keep it to themselves", S0.HideInFullscreen, v => S0.HideInFullscreen = v),
             Toggle("Calls", "While the mic or camera is on: call time in the island, other alerts wait", S0.CallMode, v => S0.CallMode = v),
             Toggle("Smart copy", "Codes from messages, prices in your currency, addresses and parcels", S0.SmartCopy, v => S0.SmartCopy = v),
             Toggle("Bluetooth and battery", "Devices connecting, charging, battery low", S0.DeviceAlerts, v => S0.DeviceAlerts = v),

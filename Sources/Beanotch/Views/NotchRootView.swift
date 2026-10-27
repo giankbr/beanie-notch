@@ -649,8 +649,8 @@ private struct StudioSidebar: View {
             .padding(.horizontal, 8)
             // Ten rows have to fit every panel size.
             .frame(height: settings.size == .large ? 23 : settings.size == .regular ? 21 : 19)
-            .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(active ? Theme.ink.opacity(0.09) : .clear))
-            .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(active ? Theme.stroke : .clear))
+            .background(SelectedFace(active: active, radius: 7, color: Theme.ink.opacity(0.09)))
+            .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(active && !Theme.keycap && !Theme.pixel ? Theme.stroke : .clear))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -710,7 +710,7 @@ private struct TopTabs: View {
                     .foregroundStyle(active ? Theme.accent : Theme.dim)
                     .padding(.horizontal, 8)
                     .frame(height: 26)
-                    .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(active ? Theme.accent.opacity(0.14) : .clear))
+                    .background(SelectedFace(active: active, radius: 8, color: Theme.accent.opacity(0.14)))
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -885,7 +885,7 @@ private struct EarTabs: View {
                     TabIcon(name: tab.icon, size: 10.5, weight: .semibold)
                         .foregroundStyle(active ? Theme.accent : Color.white.opacity(0.55))
                         .frame(width: 26, height: 22)
-                        .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(active ? Theme.accent.opacity(0.18) : .clear))
+                        .background(SelectedFace(active: active, radius: 7, color: Theme.accent.opacity(0.18)))
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)

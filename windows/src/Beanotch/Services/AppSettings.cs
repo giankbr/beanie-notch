@@ -27,6 +27,7 @@ public sealed class AppSettings
     public bool IdleClock { get; set; }
     public bool MeetingAlerts { get; set; } = true;
     public bool CallMode { get; set; } = true;
+    public bool HideInFullscreen { get; set; } = true;
     public bool SmartCopy { get; set; } = true;
     public bool QuakeAlerts { get; set; } = true;
     public string QuakeSeen { get; set; } = "";

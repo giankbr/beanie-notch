@@ -876,3 +876,22 @@ struct PixelWell: View {
         }
     }
 }
+
+// The chosen row in a menu: a soft fill, a key in Keycap, a pixel button in Pixel.
+struct SelectedFace: View {
+    var active: Bool
+    var radius: CGFloat
+    var color: Color
+
+    var body: some View {
+        if !active {
+            Color.clear
+        } else if Theme.keycap {
+            KeyFace(shape: RoundedRectangle(cornerRadius: radius, style: .continuous), tint: color)
+        } else if Theme.pixel {
+            PixelFace(tint: color)
+        } else {
+            RoundedRectangle(cornerRadius: radius, style: .continuous).fill(color)
+        }
+    }
+}

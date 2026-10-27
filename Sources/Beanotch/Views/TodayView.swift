@@ -343,7 +343,7 @@ private struct FocusPage: View {
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(Theme.ink)
                     .frame(width: 24, height: 24)
-                    .overlay(Circle().strokeBorder(Theme.ink.opacity(0.18)))
+                    .buttonFace(Circle(), Theme.ink.opacity(0.06))
                     .contentShape(Circle())
             }
             .menuStyle(.button)
@@ -357,7 +357,7 @@ private struct FocusPage: View {
                     .foregroundStyle(Theme.ink)
                     .padding(.horizontal, 12)
                     .frame(height: 24)
-                    .background(Capsule().fill(Theme.ink.opacity(0.1)))
+                    .buttonFace(Capsule(), Theme.ink.opacity(0.1))
                     .contentShape(Capsule())
             }
             .buttonStyle(PressStyle())
@@ -418,7 +418,7 @@ private struct TimerPage: View {
             .foregroundStyle(Theme.ink)
             .padding(.horizontal, 12)
             .frame(height: 24)
-            .background(Capsule().fill(Theme.ink.opacity(0.1)))
+            .buttonFace(Capsule(), Theme.ink.opacity(0.1))
             .contentShape(Capsule())
         }
         .menuStyle(.button)
@@ -451,7 +451,7 @@ private struct TimerRing: View {
                     .font(.system(size: 16, weight: .heavy))
                     .foregroundStyle(Theme.ink)
                     .frame(width: 44, height: 44)
-                    .background(Circle().fill(Theme.ink.opacity(0.08)))
+                    .buttonFace(Circle(), Theme.ink.opacity(0.08))
                     .contentShape(Circle())
             }
             .buttonStyle(PressStyle())
