@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Everything that doesn't touch the Windows UI, so it builds and tests on any OS. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Beanotch.Core</RootNamespace>
+  </PropertyGroup>
+</Project>

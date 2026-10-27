@@ -1,0 +1,32 @@
+name: Windows
+
+on:
+  push:
+    paths: ["windows/**", ".github/workflows/windows.yml"]
+  pull_request:
+    paths: ["windows/**"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Test the shared code
+        if: matrix.arch == 'x64'
+        run: dotnet test windows/tests/Beanotch.Core.Tests
+      - name: Publish
+        run: dotnet publish windows/src/Beanotch/Beanotch.csproj -c Release -r win-${{ matrix.arch }} -p:Platform=${{ matrix.arch }} -o out/Beanotch
+      - name: Zip
+        shell: pwsh
+        run: Compress-Archive -Path out/Beanotch/* -DestinationPath Beanotch-Windows-${{ matrix.arch }}.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Beanotch-Windows-${{ matrix.arch }}
+          path: Beanotch-Windows-${{ matrix.arch }}.zip
