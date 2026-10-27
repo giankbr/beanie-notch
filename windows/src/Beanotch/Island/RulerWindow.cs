@@ -55,10 +55,21 @@ public sealed partial class RulerWindow : Window
         label.Foreground = Ui.Theme.Brush(Ui.Theme.Rgb(1, 1, 1));
         tag.Background = Ui.Theme.Brush(Ui.Theme.Rgb(0, 0, 0, 0.8));
         tag.Child = label;
-        label.Text = "Drag to measure · Esc to close";
+        tag.Visibility = Visibility.Collapsed;
         overlay.Children.Add(tag);
+        var hint = new Border
+        {
+            Child = new TextBlock { Text = "Drag to measure · Esc to close", FontSize = 13, Foreground = Ui.Theme.Brush(Ui.Theme.Rgb(1, 1, 1)) },
+            Background = Ui.Theme.Brush(Ui.Theme.Rgb(0, 0, 0, 0.8)),
+            CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(12, 6, 12, 6),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(0, 48, 0, 0),
+            IsHitTestVisible = false,
+        };
 
-        var root = new Grid { Children = { new Image { Source = image, Stretch = Microsoft.UI.Xaml.Media.Stretch.Fill }, overlay } };
+        var root = new Grid { Children = { new Image { Source = image, Stretch = Microsoft.UI.Xaml.Media.Stretch.Fill }, overlay, hint } };
         root.PointerMoved += Moved;
         root.PointerPressed += Pressed;
         root.PointerReleased += Released;
@@ -77,6 +88,7 @@ public sealed partial class RulerWindow : Window
     private void Moved(object sender, PointerRoutedEventArgs e)
     {
         var p = e.GetCurrentPoint(overlay).Position;
+        tag.Visibility = Visibility.Visible;
         across.X1 = 0; across.X2 = overlay.ActualWidth; across.Y1 = across.Y2 = Math.Round(p.Y) + 0.5;
         down.Y1 = 0; down.Y2 = overlay.ActualHeight; down.X1 = down.X2 = Math.Round(p.X) + 0.5;
         if (start is { } s)
