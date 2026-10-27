@@ -267,7 +267,7 @@ struct ExpandedView: View {
         .font(.app(size: 11))
         .foregroundStyle(Theme.ink)
         .symbolRenderingMode(.monochrome)
-        .overlay { if settings.theme == .retro { Scanlines() } }
+        .modifier(RetroScreen(phosphor: settings.theme == .retro ? settings.phosphor : nil))
     }
 
     // Mini: the tabs sit in the menu bar row either side of the notch, and the page gets everything below.

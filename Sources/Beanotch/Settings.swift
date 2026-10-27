@@ -252,8 +252,9 @@ final class Settings: ObservableObject {
     // In the Retro theme everything glows in the phosphor's colour, accents included.
     private func applyAccent() {
         Theme.retro = theme == .retro ? phosphor : nil
-        Theme.accent = Theme.retro?.color ?? accent.primary
-        Theme.accent2 = Theme.retro.map { $0.color.opacity(0.7) } ?? accent.secondary
+        // Under the phosphor tint only brightness shows, so the accent is a mid grey: switch knobs stay visible on it.
+        Theme.accent = Theme.retro == nil ? accent.primary : Color(white: 0.62)
+        Theme.accent2 = Theme.retro == nil ? accent.secondary : Color(white: 0.5)
     }
 
     private func save(_ value: Any, _ key: String) {

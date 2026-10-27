@@ -10,14 +10,15 @@ enum Theme {
     static let amber = Color(red: 0.98, green: 0.68, blue: 0.22)
     static let red = Color(red: 1.0, green: 0.4, blue: 0.4)
 
-    // Set in the Retro theme: the colours below then come from its phosphor instead.
+    // Set in the Retro theme. The panel is drawn in the dark palette and then tinted as a whole (see RetroScreen), so
+    // every colour, icon and emoji turns into a shade of the phosphor.
     nonisolated(unsafe) static var retro: Phosphor?
 
-    static var ink: Color { retro?.color ?? baseInk }
+    static var ink: Color { baseInk }
     static var background: Color { retro?.background ?? baseBackground }
-    static var surface: Color { retro.map { $0.color.opacity(0.05) } ?? baseSurface }
-    static var stroke: Color { retro.map { $0.color.opacity(0.16) } ?? baseStroke }
-    static var thumb: Color { retro.map { $0.color.opacity(0.2) } ?? baseThumb }
+    static var surface: Color { baseSurface }
+    static var stroke: Color { baseStroke }
+    static var thumb: Color { baseThumb }
     static var dim: Color { ink.opacity(0.55) }
     static var faint: Color { ink.opacity(0.4) }
 
@@ -440,6 +441,24 @@ extension Font {
 
 // The Retro theme's CRT glass: a faint dark line every few points, and a soft darkening towards the edges. Drawn, so
 // it costs nothing to ship, and it lets every click through.
+// The Retro theme's screen: one colour of phosphor, a soft glow around everything lit, and scanlines over it.
+struct RetroScreen: ViewModifier {
+    let phosphor: Phosphor?
+
+    func body(content: Content) -> some View {
+        if let phosphor {
+            content
+                .saturation(0)
+                .colorMultiply(phosphor.color)
+                .compositingGroup()
+                .shadow(color: phosphor.color.opacity(0.55), radius: 3)
+                .overlay { Scanlines() }
+        } else {
+            content
+        }
+    }
+}
+
 struct Scanlines: View {
     var body: some View {
         Canvas { context, size in

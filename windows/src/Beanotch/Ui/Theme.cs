@@ -29,12 +29,13 @@ public static class Theme
     {
         Dark = mode switch { ThemeMode.Light => false, ThemeMode.Dark or ThemeMode.Retro => true, _ => systemIsDark };
         Retro = mode == ThemeMode.Retro ? phosphor : null;
-        AccentColor = Retro is { } p ? Glow(p) : Primary(accent);
-        Accent2Color = Retro is { } q ? WithAlpha(Glow(q), 0.7) : Secondary(accent);
+        // Every brush is tinted to the phosphor in Retro (see Brush), so only brightness shows: a mid grey accent keeps
+        // switch knobs visible on it.
+        AccentColor = Retro is null ? Primary(accent) : Rgb(0.62, 0.62, 0.62);
+        Accent2Color = Retro is null ? Secondary(accent) : Rgb(0.5, 0.5, 0.5);
     }
 
     public static Color Glow(Phosphor p) => p == Phosphor.Amber ? Rgb(1, 0.72, 0.2) : Rgb(0.36, 1, 0.5);
-    private static Color Screen(Phosphor p) => p == Phosphor.Amber ? Rgb(0.05, 0.035, 0.015) : Rgb(0.02, 0.045, 0.03);
 
     public static Color Rgb(double r, double g, double b, double a = 1) =>
         Color.FromArgb((byte)Math.Round(a * 255), (byte)Math.Round(r * 255), (byte)Math.Round(g * 255), (byte)Math.Round(b * 255));
@@ -73,12 +74,12 @@ public static class Theme
     public static readonly Color Black = Rgb(0, 0, 0);
 
     // White on the dark panel, near-black on the light one.
-    public static Color Ink => Retro is { } p ? Glow(p) : Dark ? Rgb(1, 1, 1) : Rgb(0.08, 0.08, 0.08);
+    public static Color Ink => Dark ? Rgb(1, 1, 1) : Rgb(0.08, 0.08, 0.08);
     // Charcoal with lighter cards in the dark; a warm off-white with white cards in the light.
-    public static Color Background => Retro is { } p ? Screen(p) : Dark ? Rgb(0.055, 0.055, 0.063) : Rgb(0.953, 0.953, 0.945);
-    public static Color Surface => Retro is { } p ? WithAlpha(Glow(p), 0.05) : Dark ? Rgb(1, 1, 1, 0.045) : Rgb(1, 1, 1);
-    public static Color Stroke => Retro is { } p ? WithAlpha(Glow(p), 0.16) : Dark ? Rgb(1, 1, 1, 0.07) : Rgb(0, 0, 0, 0.07);
-    public static Color Thumb => Retro is { } p ? WithAlpha(Glow(p), 0.2) : Dark ? Rgb(1, 1, 1, 0.14) : Rgb(1, 1, 1);
+    public static Color Background => Dark ? Rgb(0.055, 0.055, 0.063) : Rgb(0.953, 0.953, 0.945);
+    public static Color Surface => Dark ? Rgb(1, 1, 1, 0.045) : Rgb(1, 1, 1);
+    public static Color Stroke => Dark ? Rgb(1, 1, 1, 0.07) : Rgb(0, 0, 0, 0.07);
+    public static Color Thumb => Dark ? Rgb(1, 1, 1, 0.14) : Rgb(1, 1, 1);
     public static Color Dim => WithAlpha(Ink, 0.55);
     public static Color Faint => WithAlpha(Ink, 0.4);
     public static Color Accent => AccentColor;
@@ -88,5 +89,16 @@ public static class Theme
 
     public static Color Level(double value) => value < 0.7 ? Good : value < 0.9 ? Amber : Red;
 
-    public static SolidColorBrush Brush(Color c) => new(c);
+    public static SolidColorBrush Brush(Color c) => new(Shown(c));
+
+    // A colour as it appears on screen: unchanged, or in phosphor in the Retro theme.
+    public static Color Shown(Color c) => Retro is { } p ? Tint(c, p) : c;
+
+    // One colour of phosphor at the brightness of the original, as on a monochrome screen.
+    private static Color Tint(Color c, Phosphor p)
+    {
+        var glow = Glow(p);
+        var light = (0.2126 * c.R + 0.7152 * c.G + 0.0722 * c.B) / 255;
+        return Color.FromArgb(c.A, (byte)(glow.R * light), (byte)(glow.G * light), (byte)(glow.B * light));
+    }
 }

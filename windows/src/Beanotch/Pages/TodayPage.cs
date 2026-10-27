@@ -221,6 +221,8 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
             Text = resting ? "☕" : "🍅",
             FontSize = S(10),
             FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe UI Emoji"),
+            // Colour emoji can't take the phosphor tint, so the Retro screen leaves them out.
+            Visibility = Theme.Retro is null ? Visibility.Visible : Visibility.Collapsed,
             HorizontalAlignment = HorizontalAlignment.Center,
         };
         var play = IconButton(focus.Running ? Glyphs.Pause : Glyphs.Play, () => { focus.Toggle(); Right(); }, 10, Theme.Ink,
@@ -239,7 +241,7 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
             {
                 StartPoint = new Windows.Foundation.Point(0, 0),
                 EndPoint = new Windows.Foundation.Point(1, 1),
-                GradientStops = { new() { Color = from, Offset = 0 }, new() { Color = to, Offset = 1 } },
+                GradientStops = { new() { Color = Theme.Shown(from), Offset = 0 }, new() { Color = Theme.Shown(to), Offset = 1 } },
             },
         };
         var track = new Microsoft.UI.Xaml.Shapes.Ellipse { Stroke = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.1)), StrokeThickness = S(RingStroke) };
