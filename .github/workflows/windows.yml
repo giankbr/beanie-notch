@@ -23,6 +23,32 @@ jobs:
         run: dotnet test windows/tests/Beanotch.Core.Tests
       - name: Publish
         run: dotnet publish windows/src/Beanotch/Beanotch.csproj -c Release -r win-${{ matrix.arch }} -p:Platform=${{ matrix.arch }} -o out/Beanotch
+      # Runs the app on the build machine in its snapshot mode: it photographs the island and every page, then quits.
+      - name: Snapshots
+        if: matrix.arch == 'x64'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $dir = Join-Path $env:RUNNER_TEMP "snapshots"
+          New-Item -ItemType Directory -Force $dir | Out-Null
+          $env:BEANOTCH_SNAPSHOT = $dir
+          $app = Start-Process out/Beanotch/Beanotch.exe -PassThru
+          Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+          foreach ($at in 5, 9) {
+            Start-Sleep -Seconds ($at - ($at -eq 9 ? 5 : 0))
+            $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+            $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
+            [System.Drawing.Graphics]::FromImage($bmp).CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+            $bmp.Save((Join-Path $dir "00-desktop-$at`s.png"))
+          }
+          if (-not $app.WaitForExit(240000)) { Stop-Process $app -Force; "timed out" | Out-File (Join-Path $dir "timeout.txt") }
+          "exit code: $($app.ExitCode)" | Out-File (Join-Path $dir "exit.txt")
+          Get-ChildItem $dir | Format-Table Name, Length
+      - uses: actions/upload-artifact@v4
+        if: always() && matrix.arch == 'x64'
+        with:
+          name: Beanotch-Snapshots
+          path: ${{ runner.temp }}/snapshots
       - name: Installer
         shell: pwsh
         run: |

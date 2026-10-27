@@ -31,7 +31,30 @@ public sealed partial class App : Application, IXamlMetadataProvider
         });
     }
 
-    public App() => XamlControlsXamlMetaDataProvider.Initialize();
+    public App()
+    {
+        XamlControlsXamlMetaDataProvider.Initialize();
+        UnhandledException += (_, e) => { Log(e.Exception); e.Handled = true; };
+        AppDomain.CurrentDomain.UnhandledException += (_, e) => Log(e.ExceptionObject as Exception);
+        TaskScheduler.UnobservedTaskException += (_, e) => { Log(e.Exception); e.SetObserved(); };
+    }
+
+    // Errors are written to %LOCALAPPDATA%\Beanotch\crash.log (and next to snapshots), so a report can include them.
+    public static void Log(Exception? error)
+    {
+        if (error is null) return;
+        var line = $"{DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss} {error}{Environment.NewLine}{Environment.NewLine}";
+        foreach (var folder in new[] { Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Beanotch"), IslandWindow.SnapshotFolder })
+        {
+            if (folder is null) continue;
+            try
+            {
+                Directory.CreateDirectory(folder);
+                File.AppendAllText(Path.Combine(folder, "crash.log"), line);
+            }
+            catch (Exception) { }
+        }
+    }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {

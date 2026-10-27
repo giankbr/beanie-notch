@@ -14,7 +14,7 @@ namespace Beanotch.Island;
 
 // The island: a black pill at the top centre of the screen that grows into the panel on hover, standing in for the
 // Mac's notch. Files dropped on it go to the Shelf.
-public sealed class IslandWindow : Window
+public sealed partial class IslandWindow : Window
 {
     // Mac points; scaled by Ui.K and then by the monitor's DPI.
     private const double ClosedHeight = 30, OpenWidth = 680, OpenHeight = 300, TopGap = 6, OpenRadius = 22;
@@ -89,6 +89,17 @@ public sealed class IslandWindow : Window
         dataTimer.Tick += (_, _) => _ = model.RefreshDataAsync();
         dataTimer.Start();
         Update();
+
+        if (SnapshotFolder is { } dir)
+        {
+            var started = false;
+            Activated += (_, _) =>
+            {
+                if (started) return;
+                started = true;
+                _ = SnapshotAsync(dir);
+            };
+        }
     }
 
     private void Show(Notice n)
