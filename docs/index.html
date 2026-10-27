@@ -359,7 +359,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
   .watermark.idle span { opacity: 1; }
 }
 
-/* Windows, coming soon */
+/* Windows preview */
 #windows { border-top: 1px solid var(--border); }
 .win { display: grid; grid-template-columns: 1fr 1.1fr; gap: 56px; align-items: center; margin-top: 8px; }
 .soon { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: .4px; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); padding: 5px 12px; border-radius: 999px; }
@@ -370,6 +370,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
 .plan svg { color: var(--live); }
 .plan .later svg { color: var(--text-3); }
 .plan .later { color: var(--text-3); grid-column: 1 / -1; }
+.plan .next, .plan .next svg { color: var(--text-3); }
 .win-note { font-size: 13.5px; color: var(--text-3); margin-top: 14px; }
 .desk { position: relative; aspect-ratio: 16 / 10; border-radius: 22px; overflow: hidden; border: 1px solid var(--border);
   background: radial-gradient(120% 90% at 20% 0%, #3d6fd8 0%, transparent 60%), radial-gradient(90% 80% at 100% 100%, #7a4fd6 0%, transparent 60%), #1b2a52; }
@@ -393,7 +394,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
 </head>
 <body>
 
-<div class="banner"><a href="#customize">✦ New: a Mini size that opens just like the notch apps you know. <i data-lucide="arrow-right"></i></a></div>
+<div class="banner"><a href="#windows">✦ New: Beanotch for Windows, an early preview. <i data-lucide="arrow-right"></i></a></div>
 
 <nav>
   <div class="wrap">
@@ -549,27 +550,27 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
 <section id="windows">
   <div class="wrap win">
     <div>
-      <span class="soon">Coming to Windows</span>
+      <span class="soon">Windows preview</span>
       <h2>Beanotch for Windows.<em>Without a notch.</em></h2>
-      <p class="sub">Windows laptops don't have a notch, so Beanotch becomes a small island at the top centre of the screen: the same panels, built natively for Windows 11 rather than ported.</p>
+      <p class="sub">Windows laptops don't have a notch, so Beanotch becomes a small island at the top centre of the screen. Hover it to open the panels, built natively with WinUI 3 rather than ported.</p>
       <div class="plan">
         <div><i data-lucide="check"></i>Now playing &amp; synced lyrics</div>
         <div><i data-lucide="check"></i>Clipboard history</div>
-        <div><i data-lucide="check"></i>File shelf</div>
         <div><i data-lucide="check"></i>Prayer times</div>
         <div><i data-lucide="check"></i>AI usage</div>
-        <div><i data-lucide="check"></i>Timers &amp; world clocks</div>
+        <div class="next"><i data-lucide="clock"></i>File shelf, next</div>
+        <div class="next"><i data-lucide="clock"></i>Timers &amp; world clocks, next</div>
         <div class="later"><i data-lucide="minus"></i>AirDrop and Night Shift stay on Mac</div>
       </div>
       <div class="cta-row" style="justify-content:flex-start">
-        <a class="btn btn-primary" href="https://github.com/giankbr/beanie-notch/subscription"><i data-lucide="bell"></i>Watch for the release</a>
-        <a class="btn btn-ghost" href="https://github.com/giankbr/beanie-notch/issues/new?title=Windows%3A%20"><i data-lucide="message-square"></i>Ask for a feature</a>
+        <a class="btn btn-primary" href="https://github.com/giankbr/beanie-notch/releases/download/windows-v0.1.0/Beanotch-Setup-x64.exe"><i data-lucide="download"></i>Download for Windows</a>
+        <a class="btn btn-ghost" href="https://github.com/giankbr/beanie-notch/releases/download/windows-v0.1.0/Beanotch-Setup-arm64.exe"><i data-lucide="cpu"></i>ARM64</a>
       </div>
-      <p class="win-note">On GitHub, choose Watch › Custom › Releases to get an email when it ships.</p>
+      <p class="win-note">Preview 0.1.0 · Windows 10 and 11 · 20 MB, .NET included. The installer isn't signed yet: if SmartScreen appears, choose More info › Run anyway. Found a bug? <a href="https://github.com/giankbr/beanie-notch/issues/new?title=Windows%3A%20" style="color:var(--accent)">Tell us</a>.</p>
     </div>
     <div class="desk" aria-hidden="true">
       <div class="island"><span>Yang tak bisa terobati</span><span class="bars"><i></i><i></i><i></i><i></i></span></div>
-      <div class="label">Concept · Windows 11</div>
+      <div class="label">Preview · Windows 11</div>
       <div class="taskbar"><i></i><i></i><i></i><i></i><i></i></div>
     </div>
   </div>
@@ -583,6 +584,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
       <p class="sub">Beanotch is free, open and tiny. If something isn't covered here, <a href="https://github.com/giankbr/beanie-notch/issues" style="color:var(--accent)">open an issue on GitHub</a>.</p>
     </div>
     <div>
+      <details><summary>Is there a Windows version?<i data-lucide="chevron-down"></i></summary><p>Yes, as an early preview: a small island at the top centre of the screen with now playing and lyrics, clipboard history, prayer times and AI usage. <a href="#windows" style="color:var(--accent)">Download it here</a>. The file shelf and timers come next.</p></details>
       <details><summary>Does it work on a Mac without a notch?<i data-lucide="chevron-down"></i></summary><p>Yes. On Macs without a notch, Beanotch draws a notch-like strip at the top centre of the screen. Pick the floating shape in Settings if you prefer it detached.</p></details>
       <details open><summary>Why does macOS say the app can't be opened?<i data-lucide="chevron-down"></i></summary><p>Beanotch is ad-hoc signed, not notarized. Right-click the app and choose Open once, or run <code>xattr -dr com.apple.quarantine /Applications/Beanotch.app</code>.</p></details>
       <details><summary>Is my location sent anywhere?<i data-lucide="chevron-down"></i></summary><p>Prayer times are worked out on your Mac. For the weather, only your place's coordinates go to Open-Meteo, with no account, no key and no tracking. Lyrics lookups send just the song title and artist.</p></details>

@@ -140,6 +140,11 @@ macOS asks for access only when a feature needs it:
 | Accessibility | Reading the unread badges on Dock icons (only the numbers, never the messages) |
 | Local network | Phone drop |
 
+
+### Windows (preview)
+
+An early preview for Windows 10 and 11 lives in [`windows/`](windows): a small island at the top centre of the screen with now playing and lyrics, clipboard history, prayer times and AI usage. Download `Beanotch-Setup-x64.exe` (or `-arm64`) from the [Windows preview release](../../releases/tag/windows-v0.1.0).
+
 ## Build
 
 The build needs Xcode, which provides the macOS SDK for the Now Playing helper.
