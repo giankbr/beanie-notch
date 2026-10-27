@@ -234,6 +234,20 @@ final class AppModel: ObservableObject {
         settings.$quakeAlerts.sink { [weak self] on in self?.quakes.setEnabled(on) }.store(in: &sinks)
         pet.stats = stats
         pet.playing = { [weak self] in self?.media.now?.playing == true }
+        pet.focusPhase = { [weak self] in self?.focus.isRunning == true ? self?.focus.phase : nil }
+        pet.battery = { [weak self] in
+            guard let power = self?.power, power.present else { return nil }
+            return (power.percent, power.plugged)
+        }
+        pet.notchIsFree = { [weak self] in
+            guard let self else { return false }
+            return notice == nil && volume == nil && !meeting.inCall && !focus.isRunning && media.now?.playing != true && !expanded
+        }
+        pet.onLevelUp = { [weak self] level in
+            guard let self else { return }
+            show(Notice(icon: "star.fill", color: Theme.amber, left: "\(settings.petTitle) reached level \(level)",
+                        right: PetAccessory.allCases.first { $0.level == level }.map { "Unlocked: \($0.title)" } ?? "Good company"))
+        }
         settings.$notchPet.sink { [weak self] on in self?.pet.setEnabled(on) }.store(in: &sinks)
         // Files put on the Shelf feed the pet.
         var shelfCount = shelf.items.count
@@ -297,14 +311,17 @@ final class AppModel: ObservableObject {
     // Alerts that can wait, held while a call is on.
     private var held: [Notice] = []
 
-    func show(_ n: Notice) {
+    func show(_ given: Notice) {
+        var n = given
+        // With the pet on, it's the one reminding you to drink, rest your eyes or stand.
+        if settings.notchPet, ["eye", "drop.fill", "figure.walk"].contains(n.icon) { n.left = "\(settings.petTitle): \(n.left)" }
         guard n.essential || settings.notchAlerts else { return }
         if meeting.inCall, !n.essential {
             held.append(n)
             return
         }
         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { notice = n }
-        if n.icon != "music.note" { pet.surprise() }
+        if settings.notchPet { pet.react(to: n, prayerCap: settings.petPrayerCap) }
         DispatchQueue.main.asyncAfter(deadline: .now() + n.duration) { [weak self] in
             MainActor.assumeIsolated {
                 guard let self, self.notice?.id == n.id else { return }

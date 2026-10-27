@@ -57,7 +57,11 @@ struct NotchRootView: View {
                 .frame(width: model.closedWidth, height: model.closedHeight)
                 .overlay(alignment: .trailing) {
                     if settings.notchPet {
-                        PetView(mood: pet.mood, kind: settings.petKind, offset: model.closedWidth / 2 - 8 - 17)
+                        PetView(mood: pet.mood, kind: settings.petKind, accessory: settings.petAccessory, praying: pet.praying,
+                                offset: model.closedWidth / 2 - 8 - 17 - pet.walk * (model.closedWidth - NotchPet.slot - 16))
+                            .scaleEffect(x: pet.mood == .walking && pet.walk == 0 ? -1 : 1, y: 1)
+                            .offset(x: -pet.walk * (model.closedWidth - NotchPet.slot - 16))
+                            .animation(.linear(duration: 5.5), value: pet.walk)
                             .padding(.trailing, 8).allowsHitTesting(false)
                     }
                 }
@@ -242,6 +246,16 @@ extension NotchRootView {
         case .dancing: "♪"
         case .surprised: "!"
         case .late: "bed?"
+        case .love: "♥"
+        case .dizzy: "@_@"
+        case .sad: "aw…"
+        case .party: "yay!"
+        case .focus: "focus"
+        case .coffee: "break"
+        case .tired: "low…"
+        case .charged: "zap!"
+        case .hungry: "\(settings.petTitle) is hungry · click"
+        case .sway, .walking: ""
         }
     }
 }

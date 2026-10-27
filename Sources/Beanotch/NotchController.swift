@@ -117,11 +117,69 @@ final class NotchHostingView: NSHostingView<AnyView> {
     }
 }
 
+// Over the pet in its corner of the closed notch: a click, a resting pointer, a scroll and a dropped file go to the
+// pet instead of opening the panel.
+final class PetZoneView: NSView {
+    var onTap: () -> Void = {}
+    var onStroke: () -> Void = {}
+    var onScroll: () -> Void = {}
+    var onDrop: ([URL]) -> Void = { _ in }
+    private var strokeTimer: Timer?
+    private var lastScroll = Date.distantPast
+
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        registerForDraggedTypes([.fileURL])
+    }
+
+    required init?(coder: NSCoder) { nil }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        trackingAreas.forEach(removeTrackingArea)
+        addTrackingArea(NSTrackingArea(rect: bounds, options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+                                       owner: self, userInfo: nil))
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        strokeTimer?.invalidate()
+        strokeTimer = Timer.scheduledTimer(withTimeInterval: 1.2, repeats: false) { [weak self] _ in
+            MainActor.assumeIsolated { self?.onStroke() }
+        }
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        strokeTimer?.invalidate()
+        strokeTimer = nil
+    }
+
+    override func mouseDown(with event: NSEvent) { onTap() }
+
+    override func scrollWheel(with event: NSEvent) {
+        guard Date().timeIntervalSince(lastScroll) > 0.5 else { return }
+        lastScroll = Date()
+        onScroll()
+    }
+
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation { .copy }
+
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        let urls = droppedURLs(sender)
+        onDrop(urls)
+        return !urls.isEmpty
+    }
+}
+
 @MainActor
 final class NotchController {
     private let model: AppModel
     private let panel = NotchPanel()
     private let dropZone = NotchPanel()
+    private let petZone = NotchPanel()
+    // Recent turns of the pointer near the notch, to tell a shake.
+    private var turns: [Date] = []
+    private var lastX: CGFloat = 0
+    private var heading: CGFloat = 0
     private var monitors: [Any] = []
     private var sinks: Set<AnyCancellable> = []
     private var watchTimer: Timer?
@@ -174,6 +232,15 @@ final class NotchController {
         zone.drops = drops
         host.drops = drops
         dropZone.contentView = zone
+        let petView = PetZoneView()
+        petView.onTap = { [weak self] in self?.model.pet.tap() }
+        petView.onStroke = { [weak self] in self?.model.pet.stroke() }
+        petView.onScroll = { [weak self] in self?.model.pet.sway() }
+        // Files fed to the pet go on the Shelf, which feeds it.
+        petView.onDrop = { [weak self] urls in self?.model.shelf.add(urls) }
+        petZone.contentView = petView
+        petZone.level = NSWindow.Level(rawValue: NSWindow.Level.mainMenu.rawValue + 5)
+        petZone.ignoresMouseEvents = false
         dropZone.level = NSWindow.Level(rawValue: NSWindow.Level.mainMenu.rawValue + 4)
         dropZone.ignoresMouseEvents = false
 
@@ -204,6 +271,9 @@ final class NotchController {
             DispatchQueue.main.async { self?.layout() }
         }.store(in: &sinks)
         settings.$theme.sink { [weak self] theme in self?.panel.appearance = theme.appearance }.store(in: &sinks)
+        settings.$notchPet.dropFirst().sink { [weak self] _ in
+            DispatchQueue.main.async { self?.placePet() }
+        }.store(in: &sinks)
         fullScreen.onChange = { [weak self] _ in self?.applyFullScreen() }
         settings.$hideInFullScreen.dropFirst().sink { [weak self] _ in
             DispatchQueue.main.async { self?.applyFullScreen() }
@@ -251,9 +321,11 @@ final class NotchController {
             collapse()
             panel.orderOut(nil)
             dropZone.orderOut(nil)
+            petZone.orderOut(nil)
         } else {
             panel.orderFrontRegardless()
             dropZone.orderFrontRegardless()
+            placePet()
         }
     }
 
@@ -278,6 +350,41 @@ final class NotchController {
         panel.setFrame(NSRect(x: screenFrame.midX - size.width / 2, y: screenFrame.maxY - size.height,
                               width: size.width, height: size.height), display: true)
         if !model.dropTargeted { dropZone.setFrame(notchFrame, display: true) }
+        placePet()
+    }
+
+    // The pet's corner at the right end of the closed notch, which moves as the notch grows and shrinks.
+    private var petRect: NSRect {
+        NSRect(x: screenFrame.midX + model.closedWidth / 2 - NotchPet.slot - 6, y: screenFrame.maxY - model.closedHeight,
+               width: NotchPet.slot + 2, height: model.closedHeight)
+    }
+
+    private func placePet() {
+        let shown = model.settings.notchPet && !model.expanded && panel.isVisible && model.pet.walk == 0
+        if shown {
+            if petZone.frame != petRect { petZone.setFrame(petRect, display: false) }
+            if !petZone.isVisible { petZone.orderFrontRegardless() }
+        } else if petZone.isVisible {
+            petZone.orderOut(nil)
+        }
+    }
+
+    // Shaking the pointer near the notch makes the pet dizzy: six quick turns within a second.
+    private func watchShake(_ p: NSPoint) {
+        guard model.settings.notchPet, !model.expanded,
+              abs(p.x - screenFrame.midX) < 400, screenFrame.maxY - p.y < 200 else { return }
+        let dx = p.x - lastX
+        lastX = p.x
+        guard abs(dx) > 4 else { return }
+        if heading != 0, (dx > 0) != (heading > 0) {
+            let now = Date()
+            turns = turns.filter { now.timeIntervalSince($0) < 1 } + [now]
+            if turns.count >= 6 {
+                turns = []
+                model.pet.shake()
+            }
+        }
+        heading = dx
     }
 
     private var notchFrame: NSRect {
@@ -348,6 +455,10 @@ final class NotchController {
         case .leftMouseDown:
             if !local, model.expanded, !isInsideOpen(NSEvent.mouseLocation) { collapse() }
         default:
+            let p = NSEvent.mouseLocation
+            placePet()
+            watchShake(p)
+            if petZone.isVisible, petZone.frame.contains(p) { return }
             if !model.expanded, model.settings.openOnHover, panel.isVisible, hotRect.contains(NSEvent.mouseLocation) {
                 expand(pinned: false)
             }
@@ -356,6 +467,7 @@ final class NotchController {
 
     private func expandedChanged(_ open: Bool) {
         panel.ignoresMouseEvents = !open
+        placePet()
         model.stats.setActive(open)
         model.media.setActive(open)
         watchTimer?.invalidate()

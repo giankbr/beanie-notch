@@ -9,6 +9,7 @@ struct SettingsView: View {
     @EnvironmentObject var model: AppModel
     @EnvironmentObject var messages: MessageBadges
     @EnvironmentObject var devRuns: DevRuns
+    @EnvironmentObject var pet: NotchPet
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var loginError: String?
 
@@ -306,7 +307,7 @@ struct SettingsView: View {
                 }
             }
             card {
-                row("face.smiling", "Notch pet", "Lives in the notch's corner, watches the pointer and reacts to what the Mac is doing") {
+                row("face.smiling", "Notch pet", "Click it, rest the pointer on it, drop files on it; it reacts to what the Mac is doing") {
                     Toggle("", isOn: $settings.notchPet)
                 }
                 if settings.notchPet {
@@ -318,6 +319,25 @@ struct SettingsView: View {
                                 }
                             }
                         }
+                    }
+                    row("character.cursor.ibeam", "Name", "Shown when it talks to you") {
+                        TextField(settings.petKind.title, text: $settings.petName)
+                            .textFieldStyle(.plain).font(.app(size: 10.5)).multilineTextAlignment(.trailing).frame(width: 140)
+                    }
+                    pickerRow("Wears", "Level \(pet.level) · \(pet.xp % 10)/10 to the next · focus, feed and pet it to level up") {
+                        HStack(spacing: 6) {
+                            ForEach(PetAccessory.allCases) { item in
+                                let open = pet.level >= item.level
+                                choice(open ? item.title : "Level \(item.level)", selected: settings.petAccessory == item) {
+                                    if open { settings.petAccessory = item }
+                                } preview: {
+                                    ZStack { Color.black; PetView(mood: .happy, kind: settings.petKind, accessory: item) }.opacity(open ? 1 : 0.35)
+                                }
+                            }
+                        }
+                    }
+                    row("moon", "Cap for prayer", "Puts it on for a while at each prayer time") {
+                        Toggle("", isOn: $settings.petPrayerCap)
                     }
                 }
                 row("music.note", "Mini player", "Artwork and bars beside the notch while music plays") {

@@ -171,6 +171,11 @@ final class Settings: ObservableObject {
     @Published var quakeAlerts: Bool { didSet { save(quakeAlerts, "quakeAlerts") } }
     @Published var notchPet: Bool { didSet { save(notchPet, "notchPet") } }
     @Published var petKind: PetKind { didSet { save(petKind.rawValue, "petKind") } }
+    // Empty for the kind's own name ("Bean").
+    @Published var petName: String { didSet { save(petName, "petName") } }
+    @Published var petAccessory: PetAccessory { didSet { save(petAccessory.rawValue, "petAccessory") } }
+    @Published var petPrayerCap: Bool { didSet { save(petPrayerCap, "petPrayerCap") } }
+    var petTitle: String { petName.trimmingCharacters(in: .whitespaces).isEmpty ? petKind.title : petName }
     // The sound that plays while a focus stretch runs; empty for none.
     @Published var focusSound: String { didSet { save(focusSound, "focusSound") } }
     @Published var waterEvery: Int { didSet { save(waterEvery, "waterEvery") } }
@@ -218,6 +223,9 @@ final class Settings: ObservableObject {
         quakeAlerts = d.object(forKey: "quakeAlerts") as? Bool ?? true
         notchPet = d.bool(forKey: "notchPet")
         petKind = PetKind(rawValue: d.string(forKey: "petKind") ?? "") ?? .bean
+        petName = d.string(forKey: "petName") ?? ""
+        petAccessory = PetAccessory(rawValue: d.string(forKey: "petAccessory") ?? "") ?? .none
+        petPrayerCap = d.object(forKey: "petPrayerCap") as? Bool ?? true
         focusSound = d.string(forKey: "focusSound") ?? ""
         waterEvery = d.object(forKey: "waterEvery") as? Int ?? 0
         eyeBreaks = d.bool(forKey: "eyeBreaks")
