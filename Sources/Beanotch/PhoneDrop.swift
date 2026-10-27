@@ -2,8 +2,9 @@ import AppKit
 import CoreImage.CIFilterBuiltins
 import Network
 
-// Phone to Shelf over the same Wi-Fi, with nothing to install on the phone: while the QR is on screen, a small
-// web server takes uploads at a one-time address. Files land in ~/Downloads/Beanotch and on the Shelf.
+// Phone and Shelf over the same Wi-Fi, with nothing to install on the phone: while the QR is on screen, a small
+// web server takes uploads at a one-time address, and offers what's on the Shelf for download. Uploads land in
+// ~/Downloads/Beanotch and on the Shelf.
 @MainActor
 final class PhoneDrop: ObservableObject {
     @Published private(set) var address: URL?
@@ -14,6 +15,13 @@ final class PhoneDrop: ObservableObject {
 
     private var listener: NWListener?
     private let queue = DispatchQueue(label: "beanotch.phonedrop")
+    private let shelf = Offered()
+
+    // The Shelf's files, for the phone to download; read on the server's queue.
+    var offered: [URL] {
+        get { shelf.urls }
+        set { shelf.urls = newValue }
+    }
 
     var running: Bool { listener != nil }
 
@@ -34,9 +42,9 @@ final class PhoneDrop: ObservableObject {
             problem = "Couldn't start the receiver"
             return
         }
-        let folder = Self.folder
+        let folder = Self.folder, offered = shelf
         listener.newConnectionHandler = { [weak self] connection in
-            DropConnection(connection: connection, token: token, folder: folder, queue: self?.queue ?? .main) { url in
+            DropConnection(connection: connection, token: token, folder: folder, offered: offered, queue: self?.queue ?? .main) { url in
                 Task { @MainActor in
                     self?.received += 1
                     self?.onFile?(url)
@@ -97,11 +105,22 @@ final class PhoneDrop: ObservableObject {
     }
 }
 
-// One HTTP request: the upload page, or one file's bytes streamed to disk. Just enough HTTP for a phone's browser.
+final class Offered: @unchecked Sendable {
+    private let lock = NSLock()
+    private var list: [URL] = []
+    var urls: [URL] {
+        get { lock.withLock { list } }
+        set { lock.withLock { list = newValue } }
+    }
+}
+
+// One HTTP request: the page, the Shelf's list, one Shelf file sent down, or one upload's bytes streamed to disk.
+// Just enough HTTP for a phone's browser.
 private final class DropConnection {
     private let connection: NWConnection
     private let token: String
     private let folder: URL
+    private let offered: Offered
     private let queue: DispatchQueue
     private let done: (URL) -> Void
     private var head = Data()
@@ -109,10 +128,11 @@ private final class DropConnection {
     private var fileURL: URL?
     private var remaining = 0
 
-    init(connection: NWConnection, token: String, folder: URL, queue: DispatchQueue, done: @escaping (URL) -> Void) {
+    init(connection: NWConnection, token: String, folder: URL, offered: Offered, queue: DispatchQueue, done: @escaping (URL) -> Void) {
         self.connection = connection
         self.token = token
         self.folder = folder
+        self.offered = offered
         self.queue = queue
         self.done = done
     }
@@ -148,6 +168,17 @@ private final class DropConnection {
         switch (request[0], components.path) {
         case ("GET", "/\(token)"):
             respond(200, Self.page, type: "text/html; charset=utf-8")
+        case ("GET", "/\(token)/files"):
+            let list = offered.urls.enumerated().map { i, url -> [String: Any] in
+                let size = (try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize ?? 0
+                return ["i": i, "name": url.lastPathComponent, "size": size]
+            }
+            let json = (try? JSONSerialization.data(withJSONObject: list)).map { String(decoding: $0, as: UTF8.self) } ?? "[]"
+            respond(200, json, type: "application/json")
+        case ("GET", let path) where path.hasPrefix("/\(token)/file/"):
+            let urls = offered.urls
+            guard let i = Int(path.dropFirst("/\(token)/file/".count)), urls.indices.contains(i) else { return respond(404, "Not found") }
+            send(urls[i])
         case ("POST", "/\(token)/upload"):
             let raw = components.queryItems?.first { $0.name == "name" }?.value ?? "file"
             let name = (raw as NSString).lastPathComponent.replacingOccurrences(of: ":", with: "-")
@@ -194,6 +225,34 @@ private final class DropConnection {
         if let fileURL { done(fileURL) }
     }
 
+    // A Shelf file, in pieces, as a download. Folders aren't offered.
+    private func send(_ url: URL) {
+        guard let handle = try? FileHandle(forReadingFrom: url),
+              let size = (try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize else { return respond(404, "Not found") }
+        let name = url.lastPathComponent
+        let ascii = String(name.map { $0.isASCII && $0 != "\"" ? $0 : "_" })
+        let encoded = name.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ascii
+        let header = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: \(size)\r\n"
+            + "Content-Disposition: attachment; filename=\"\(ascii)\"; filename*=UTF-8''\(encoded)\r\nConnection: close\r\n\r\n"
+        connection.send(content: Data(header.utf8), completion: .contentProcessed { [self] error in
+            if error != nil { try? handle.close(); connection.cancel(); return }
+            sendChunk(handle)
+        })
+    }
+
+    private func sendChunk(_ handle: FileHandle) {
+        let chunk = (try? handle.read(upToCount: 1 << 20)) ?? Data()
+        if chunk.isEmpty {
+            try? handle.close()
+            connection.send(content: nil, isComplete: true, completion: .contentProcessed { [connection] _ in connection.cancel() })
+            return
+        }
+        connection.send(content: chunk, completion: .contentProcessed { [self] error in
+            if error != nil { try? handle.close(); connection.cancel(); return }
+            sendChunk(handle)
+        })
+    }
+
     private func respond(_ status: Int, _ body: String, type: String = "text/plain; charset=utf-8") {
         let payload = Data(body.utf8)
         let header = "HTTP/1.1 \(status) \(status == 200 ? "OK" : "Error")\r\nContent-Type: \(type)\r\n"
@@ -222,12 +281,28 @@ private final class DropConnection {
     h1{font-size:22px;margin:0 0 6px}p{color:#9a9aa2;margin:0 0 24px}
     label{display:block;padding:28px;border:1.5px dashed #3a3a40;border-radius:18px;cursor:pointer}
     input{display:none}#status{margin-top:18px;color:#5be0bc;min-height:1.4em}
+    h2{font-size:15px;margin:28px 0 10px;text-align:left}
+    #list a{display:flex;justify-content:space-between;gap:12px;padding:12px 14px;margin-bottom:6px;border-radius:12px;background:#17171b;color:#fff;text-decoration:none;text-align:left}
+    #list span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#list small{color:#9a9aa2;flex:none}
     </style></head><body><main>
     <h1>Send to Beanotch</h1><p>Photos and files go straight to your Mac's Shelf.</p>
     <label>Choose files<input id="f" type="file" multiple></label>
-    <div id="status"></div></main>
+    <div id="status"></div>
+    <section id="mac" hidden><h2>On the Mac's Shelf</h2><div id="list"></div></section></main>
     <script>
     const s=document.getElementById('status');
+    const size=b=>b<1e6?Math.max(1,Math.round(b/1e3))+' KB':(b/1e6).toFixed(1)+' MB';
+    fetch(location.pathname+'/files').then(r=>r.json()).then(files=>{
+      if(!files.length)return;
+      const list=document.getElementById('list');
+      for(const f of files){
+        const a=document.createElement('a');a.href=location.pathname+'/file/'+f.i;a.download=f.name;
+        const n=document.createElement('span');n.textContent=f.name;
+        const z=document.createElement('small');z.textContent=size(f.size);
+        a.append(n,z);list.append(a);
+      }
+      document.getElementById('mac').hidden=false;
+    }).catch(()=>{});
     document.getElementById('f').onchange=async e=>{
       const files=[...e.target.files];let n=0;
       for(const f of files){

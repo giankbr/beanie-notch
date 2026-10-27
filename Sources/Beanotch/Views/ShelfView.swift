@@ -15,7 +15,7 @@ struct ShelfView: View {
                 Spacer()
                 IconButton(icon: "square.grid.2x2", active: shelf.grid) { shelf.grid = true }
                 IconButton(icon: "list.bullet", active: !shelf.grid) { shelf.grid = false }
-                PillButton(text: phone ? "Done" : "From phone", icon: "iphone", color: Theme.accent) { phone.toggle() }
+                PillButton(text: phone ? "Done" : "Phone", icon: "iphone", color: Theme.accent) { phone.toggle() }
                 PillButton(text: "Add Files", icon: "plus", color: Theme.accent2) { shelf.pickFiles() }
                 if !shelf.items.isEmpty {
                     PillButton(text: "AirDrop all", icon: "dot.radiowaves.left.and.right", color: Theme.accent2) {
@@ -158,6 +158,7 @@ struct FileThumb: View {
 
 private struct PhoneDropPanel: View {
     @EnvironmentObject var drop: PhoneDrop
+    @EnvironmentObject var shelf: Shelf
 
     var body: some View {
         HStack(spacing: 18) {
@@ -171,8 +172,8 @@ private struct PhoneDropPanel: View {
             }
             .frame(width: 150, height: 150)
             VStack(alignment: .leading, spacing: 6) {
-                Text("Send from your phone").font(.app(size: 14, weight: .semibold))
-                Text("Scan with the phone's camera, on the same Wi-Fi as this Mac. Nothing to install.")
+                Text("Your phone and this Mac").font(.app(size: 14, weight: .semibold))
+                Text("Scan with the phone's camera, on the same Wi-Fi. Send files here, or take what's on the Shelf. Nothing to install.")
                     .font(.app(size: 10)).foregroundStyle(Theme.dim).fixedSize(horizontal: false, vertical: true)
                 if let url = drop.address {
                     Text(url.absoluteString).font(.mono(size: 9)).foregroundStyle(Theme.faint).textSelection(.enabled)
@@ -191,7 +192,11 @@ private struct PhoneDropPanel: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.surface))
         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.stroke))
-        .onAppear { drop.start() }
+        .onAppear {
+            drop.offered = shelf.items.filter { !$0.hasDirectoryPath }
+            drop.start()
+        }
+        .onChange(of: shelf.items) { _, items in drop.offered = items.filter { !$0.hasDirectoryPath } }
         .onDisappear { drop.stop() }
     }
 }
