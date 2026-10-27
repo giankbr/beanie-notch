@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 enum ThemeMode: String, CaseIterable {
-    case system, light, dark
+    case system, light, dark, retro
 
     var title: String { rawValue.capitalized }
 
@@ -10,7 +10,7 @@ enum ThemeMode: String, CaseIterable {
         switch self {
         case .system: nil
         case .light: NSAppearance(named: .aqua)
-        case .dark: NSAppearance(named: .darkAqua)
+        case .dark, .retro: NSAppearance(named: .darkAqua)
         }
     }
 }
@@ -91,6 +91,26 @@ enum AccentChoice: String, CaseIterable {
     }
 }
 
+// The Retro theme's phosphor: the green of old terminals, or the amber of the ones that followed.
+enum Phosphor: String, CaseIterable {
+    case green, amber
+
+    var color: Color {
+        switch self {
+        case .green: Color(red: 0.36, green: 1, blue: 0.5)
+        case .amber: Color(red: 1, green: 0.72, blue: 0.2)
+        }
+    }
+
+    // The glass behind the text: black with a breath of the phosphor in it.
+    var background: Color {
+        switch self {
+        case .green: Color(red: 0.02, green: 0.045, blue: 0.03)
+        case .amber: Color(red: 0.05, green: 0.035, blue: 0.015)
+        }
+    }
+}
+
 // SF Pro is the system's; the others ship in the app (all under the SIL Open Font License) and match the Windows app.
 enum AppFont: String, CaseIterable {
     case system, beVietnam, inter, jakarta
@@ -119,7 +139,18 @@ enum AppFont: String, CaseIterable {
 final class Settings: ObservableObject {
     private static let defaults = UserDefaults.standard
 
-    @Published var theme: ThemeMode { didSet { save(theme.rawValue, "theme") } }
+    @Published var theme: ThemeMode {
+        didSet {
+            save(theme.rawValue, "theme")
+            applyAccent()
+        }
+    }
+    @Published var phosphor: Phosphor {
+        didSet {
+            save(phosphor.rawValue, "phosphor")
+            applyAccent()
+        }
+    }
     @Published var layout: LayoutStyle { didSet { save(layout.rawValue, "layout") } }
     @Published var size: PanelSize { didSet { save(size.rawValue, "size") } }
     @Published var accent: AccentChoice {
@@ -166,11 +197,12 @@ final class Settings: ObservableObject {
     @Published var stretchEvery: Int { didSet { save(stretchEvery, "stretchEvery") } }
 
     // Changes whenever the look changes, so the panel can rebuild with the new colors.
-    var styleKey: String { "\(theme.rawValue)-\(accent.rawValue)-\(layout.rawValue)-\(notchStyle.rawValue)-\(font.rawValue)" }
+    var styleKey: String { "\(theme.rawValue)-\(phosphor.rawValue)-\(accent.rawValue)-\(layout.rawValue)-\(notchStyle.rawValue)-\(font.rawValue)" }
 
     init() {
         let d = Self.defaults
         theme = ThemeMode(rawValue: d.string(forKey: "theme") ?? "") ?? .dark
+        phosphor = Phosphor(rawValue: d.string(forKey: "phosphor") ?? "") ?? .green
         layout = LayoutStyle(rawValue: d.string(forKey: "layout") ?? "") ?? .studio
         size = PanelSize(rawValue: d.string(forKey: "size") ?? "") ?? .regular
         accent = AccentChoice(rawValue: d.string(forKey: "accent") ?? "") ?? .mint
@@ -217,9 +249,11 @@ final class Settings: ObservableObject {
         save(label, "hotkeyLabel")
     }
 
+    // In the Retro theme everything glows in the phosphor's colour, accents included.
     private func applyAccent() {
-        Theme.accent = accent.primary
-        Theme.accent2 = accent.secondary
+        Theme.retro = theme == .retro ? phosphor : nil
+        Theme.accent = Theme.retro?.color ?? accent.primary
+        Theme.accent2 = Theme.retro.map { $0.color.opacity(0.7) } ?? accent.secondary
     }
 
     private func save(_ value: Any, _ key: String) {

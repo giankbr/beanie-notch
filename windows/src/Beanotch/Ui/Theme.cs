@@ -3,7 +3,10 @@ using Windows.UI;
 
 namespace Beanotch.Ui;
 
-public enum ThemeMode { System, Light, Dark }
+public enum ThemeMode { System, Light, Dark, Retro }
+
+// The Retro theme's screen: green or amber phosphor on black, as on an old terminal.
+public enum Phosphor { Green, Amber }
 
 // Segoe UI is Windows' own; the others ship with the app, as on the Mac (all under the SIL Open Font License).
 public enum AppFont { System, BeVietnam, Inter, Jakarta }
@@ -18,12 +21,18 @@ public static class Theme
     public static Color AccentColor { get; private set; } = Primary(AccentChoice.Mint);
     public static Color Accent2Color { get; private set; } = Secondary(AccentChoice.Mint);
 
-    public static void Apply(ThemeMode mode, AccentChoice accent, bool systemIsDark)
+    public static Phosphor? Retro { get; private set; }
+
+    public static void Apply(ThemeMode mode, AccentChoice accent, Phosphor phosphor, bool systemIsDark)
     {
-        Dark = mode switch { ThemeMode.Light => false, ThemeMode.Dark => true, _ => systemIsDark };
-        AccentColor = Primary(accent);
-        Accent2Color = Secondary(accent);
+        Dark = mode switch { ThemeMode.Light => false, ThemeMode.Dark or ThemeMode.Retro => true, _ => systemIsDark };
+        Retro = mode == ThemeMode.Retro ? phosphor : null;
+        AccentColor = Retro is { } p ? Glow(p) : Primary(accent);
+        Accent2Color = Retro is { } q ? WithAlpha(Glow(q), 0.7) : Secondary(accent);
     }
+
+    public static Color Glow(Phosphor p) => p == Phosphor.Amber ? Rgb(1, 0.72, 0.2) : Rgb(0.36, 1, 0.5);
+    private static Color Screen(Phosphor p) => p == Phosphor.Amber ? Rgb(0.05, 0.035, 0.015) : Rgb(0.02, 0.045, 0.03);
 
     public static Color Rgb(double r, double g, double b, double a = 1) =>
         Color.FromArgb((byte)Math.Round(a * 255), (byte)Math.Round(r * 255), (byte)Math.Round(g * 255), (byte)Math.Round(b * 255));
@@ -62,12 +71,12 @@ public static class Theme
     public static readonly Color Black = Rgb(0, 0, 0);
 
     // White on the dark panel, near-black on the light one.
-    public static Color Ink => Dark ? Rgb(1, 1, 1) : Rgb(0.08, 0.08, 0.08);
+    public static Color Ink => Retro is { } p ? Glow(p) : Dark ? Rgb(1, 1, 1) : Rgb(0.08, 0.08, 0.08);
     // Charcoal with lighter cards in the dark; a warm off-white with white cards in the light.
-    public static Color Background => Dark ? Rgb(0.055, 0.055, 0.063) : Rgb(0.953, 0.953, 0.945);
-    public static Color Surface => Dark ? Rgb(1, 1, 1, 0.045) : Rgb(1, 1, 1);
-    public static Color Stroke => Dark ? Rgb(1, 1, 1, 0.07) : Rgb(0, 0, 0, 0.07);
-    public static Color Thumb => Dark ? Rgb(1, 1, 1, 0.14) : Rgb(1, 1, 1);
+    public static Color Background => Retro is { } p ? Screen(p) : Dark ? Rgb(0.055, 0.055, 0.063) : Rgb(0.953, 0.953, 0.945);
+    public static Color Surface => Retro is { } p ? WithAlpha(Glow(p), 0.05) : Dark ? Rgb(1, 1, 1, 0.045) : Rgb(1, 1, 1);
+    public static Color Stroke => Retro is { } p ? WithAlpha(Glow(p), 0.16) : Dark ? Rgb(1, 1, 1, 0.07) : Rgb(0, 0, 0, 0.07);
+    public static Color Thumb => Retro is { } p ? WithAlpha(Glow(p), 0.2) : Dark ? Rgb(1, 1, 1, 0.14) : Rgb(1, 1, 1);
     public static Color Dim => WithAlpha(Ink, 0.55);
     public static Color Faint => WithAlpha(Ink, 0.4);
     public static Color Accent => AccentColor;

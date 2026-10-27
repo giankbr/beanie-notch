@@ -73,6 +73,16 @@ public sealed partial class IslandWindow
             await Shot($"{index++:00}-font-{font.ToString().ToLowerInvariant()}");
         }
 
+        model.Settings.Font = AppFont.System;
+        model.Settings.Theme = ThemeMode.Retro;
+        foreach (var (phosphor, tab) in new[] { (Phosphor.Green, Tab.Home), (Phosphor.Green, Tab.Settings), (Phosphor.Amber, Tab.Today), (Phosphor.Amber, Tab.Prayer) })
+        {
+            model.Settings.Phosphor = phosphor;
+            shell.Rebuild();
+            shell.Open(tab);
+            await Shot($"{index++:00}-retro-{phosphor.ToString().ToLowerInvariant()}-{tab.ToString().ToLowerInvariant()}");
+        }
+
         File.WriteAllLines(Path.Combine(dir, "snapshot.log"), log);
         Microsoft.UI.Xaml.Application.Current.Exit();
     }

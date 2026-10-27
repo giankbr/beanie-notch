@@ -12,6 +12,7 @@ public sealed class AppSettings
     public PrayerMethod Method { get; set; } = PrayerMethod.Kemenag;
     public ThemeMode Theme { get; set; } = ThemeMode.Dark;
     public AccentChoice Accent { get; set; } = AccentChoice.Mint;
+    public Phosphor Phosphor { get; set; } = Phosphor.Green;
     public AppFont Font { get; set; } = AppFont.System;
     public bool ClipboardHistory { get; set; } = true;
     public bool ScreenshotsToShelf { get; set; } = true;

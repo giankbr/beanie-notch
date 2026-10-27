@@ -25,6 +25,7 @@ public sealed partial class IslandWindow : Window
     private readonly Model model;
     private readonly nint hwnd;
     private readonly Grid root = new();
+    private readonly Border scanlines = Scanlines();
     private readonly ClosedView closed;
     private readonly Shell shell;
     private readonly DispatcherQueueTimer collapseTimer, tick, statsTimer, dataTimer;
@@ -45,6 +46,7 @@ public sealed partial class IslandWindow : Window
         shell = new Shell(model, ApplyTheme);
         root.Children.Add(closed.View);
         root.Children.Add(shell.View);
+        root.Children.Add(scanlines);
         shell.View.Visibility = Visibility.Collapsed;
         root.PointerEntered += (_, _) => { collapseTimer?.Stop(); Expand(); };
         root.PointerExited += (_, _) => collapseTimer?.Start();
@@ -115,11 +117,35 @@ public sealed partial class IslandWindow : Window
     private void ApplyTheme()
     {
         var systemDark = new UISettings().GetColorValue(UIColorType.Background).R < 128;
-        Theme.Apply(model.Settings.Theme, model.Settings.Accent, systemDark);
+        Theme.Apply(model.Settings.Theme, model.Settings.Accent, model.Settings.Phosphor, systemDark);
         Ui.Ui.AppFont = model.Settings.Font;
         root.RequestedTheme = Theme.Dark ? ElementTheme.Dark : ElementTheme.Light;
         root.Background = Theme.Brush(model.Expanded ? Theme.Background : Theme.Black);
+        ShowScanlines();
     }
+
+    // The Retro theme's CRT lines: a dark rule every third pixel over the open panel, never in the way of the pointer.
+    private static Border Scanlines() => new()
+    {
+        IsHitTestVisible = false,
+        Background = new Microsoft.UI.Xaml.Media.LinearGradientBrush
+        {
+            MappingMode = Microsoft.UI.Xaml.Media.BrushMappingMode.Absolute,
+            SpreadMethod = Microsoft.UI.Xaml.Media.GradientSpreadMethod.Repeat,
+            StartPoint = new Windows.Foundation.Point(0, 0),
+            EndPoint = new Windows.Foundation.Point(0, 3),
+            GradientStops =
+            {
+                new() { Color = Theme.Rgb(0, 0, 0, 0), Offset = 0 },
+                new() { Color = Theme.Rgb(0, 0, 0, 0), Offset = 0.66 },
+                new() { Color = Theme.Rgb(0, 0, 0, 0.22), Offset = 0.66 },
+                new() { Color = Theme.Rgb(0, 0, 0, 0.22), Offset = 1 },
+            },
+        },
+    };
+
+    private void ShowScanlines() =>
+        scanlines.Visibility = model.Expanded && Theme.Retro is not null ? Visibility.Visible : Visibility.Collapsed;
 
     private void Update()
     {
@@ -140,6 +166,7 @@ public sealed partial class IslandWindow : Window
         closed.View.Visibility = Visibility.Collapsed;
         shell.View.Visibility = Visibility.Visible;
         root.Background = Theme.Brush(Theme.Background);
+        ShowScanlines();
         shell.Shown();
         Place(OpenWidth, OpenHeight, OpenRadius, OpenEar);
     }
@@ -156,6 +183,7 @@ public sealed partial class IslandWindow : Window
         shell.View.Visibility = Visibility.Collapsed;
         closed.View.Visibility = Visibility.Visible;
         root.Background = Theme.Brush(Theme.Black);
+        ShowScanlines();
         Update();
     }
 

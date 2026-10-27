@@ -87,7 +87,7 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
 
     private FrameworkElement Appearance()
     {
-        var theme = Segmented(["System", "Light", "Dark"], (int)S0.Theme, i => { S0.Theme = (ThemeMode)i; Save(rebuild: true); });
+        var theme = Segmented(["System", "Light", "Dark", "Retro"], (int)S0.Theme, i => { S0.Theme = (ThemeMode)i; Save(rebuild: true); });
         var swatches = H(4);
         foreach (var accent in Enum.GetValues<AccentChoice>())
         {
@@ -102,7 +102,11 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
             swatches.Children.Add(b);
         }
         var font = Segmented(["Segoe UI", "Be Vietnam", "Inter", "Jakarta"], (int)S0.Font, i => { S0.Font = (AppFont)i; Save(rebuild: true); });
-        return V(8, Group(Picker("Theme", "The island itself always stays black", theme), Picker("Accent", "Buttons, highlights and the mini player", swatches),
+        var phosphor = Segmented(["Green", "Amber"], (int)S0.Phosphor, i => { S0.Phosphor = (Phosphor)i; Save(rebuild: true); });
+        var tint = S0.Theme == ThemeMode.Retro
+            ? Picker("Phosphor", "The screen's glow in the Retro theme; it stands in for the accent", phosphor)
+            : Picker("Accent", "Buttons, highlights and the mini player", swatches);
+        return V(8, Group(Picker("Theme", "The island itself always stays black", theme), tint,
                           Picker("Font", "Segoe UI is Windows' own; the others ship with Beanotch, as on the Mac", font)));
     }
 

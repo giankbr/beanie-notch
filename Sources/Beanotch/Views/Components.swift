@@ -10,32 +10,41 @@ enum Theme {
     static let amber = Color(red: 0.98, green: 0.68, blue: 0.22)
     static let red = Color(red: 1.0, green: 0.4, blue: 0.4)
 
+    // Set in the Retro theme: the colours below then come from its phosphor instead.
+    nonisolated(unsafe) static var retro: Phosphor?
+
+    static var ink: Color { retro?.color ?? baseInk }
+    static var background: Color { retro?.background ?? baseBackground }
+    static var surface: Color { retro.map { $0.color.opacity(0.05) } ?? baseSurface }
+    static var stroke: Color { retro.map { $0.color.opacity(0.16) } ?? baseStroke }
+    static var thumb: Color { retro.map { $0.color.opacity(0.2) } ?? baseThumb }
+    static var dim: Color { ink.opacity(0.55) }
+    static var faint: Color { ink.opacity(0.4) }
+
     // White on the dark panel, near-black on the light one.
-    static let ink = Color(nsColor: NSColor(name: nil) { appearance in
+    private static let baseInk = Color(nsColor: NSColor(name: nil) { appearance in
         appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? .white : NSColor(white: 0.08, alpha: 1)
     })
     // Charcoal with lighter cards in the dark; a warm off-white with white cards in the light.
-    static let background = Color(nsColor: NSColor(name: nil) { appearance in
+    private static let baseBackground = Color(nsColor: NSColor(name: nil) { appearance in
         appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
             ? NSColor(srgbRed: 0.055, green: 0.055, blue: 0.063, alpha: 1)
             : NSColor(srgbRed: 0.953, green: 0.953, blue: 0.945, alpha: 1)
     })
-    static let surface = Color(nsColor: NSColor(name: nil) { appearance in
+    private static let baseSurface = Color(nsColor: NSColor(name: nil) { appearance in
         appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
             ? NSColor(white: 1, alpha: 0.045)
             : NSColor(white: 1, alpha: 1)
     })
-    static let stroke = Color(nsColor: NSColor(name: nil) { appearance in
+    private static let baseStroke = Color(nsColor: NSColor(name: nil) { appearance in
         appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
             ? NSColor(white: 1, alpha: 0.07)
             : NSColor(white: 0, alpha: 0.07)
     })
     // The raised thumb of a segmented control: lifted grey in the dark, white in the light.
-    static let thumb = Color(nsColor: NSColor(name: nil) { appearance in
+    private static let baseThumb = Color(nsColor: NSColor(name: nil) { appearance in
         appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? NSColor(white: 1, alpha: 0.14) : .white
     })
-    static let dim = ink.opacity(0.55)
-    static let faint = ink.opacity(0.4)
     // SF Pro by default: it's drawn to sit with SF Symbols, which every icon here is.
     nonisolated(unsafe) static var font = AppFont.system
 
@@ -409,10 +418,15 @@ extension Font {
 
     // Figures, sizes and times, the way a dashboard sets them apart from labels.
     static func mono(size: CGFloat, weight: Font.Weight = .medium) -> Font {
-        .system(size: size, weight: weight, design: .monospaced)
+        if Theme.retro != nil { return retroFace(size) }
+        return .system(size: size, weight: weight, design: .monospaced)
     }
 
+    // VT323 is a terminal font with a small body, so it's set a size up to read like the others.
+    private static func retroFace(_ size: CGFloat) -> Font { .custom("VT323-Regular", size: size * 1.32) }
+
     static func app(size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        if Theme.retro != nil { return retroFace(size) }
         guard let prefix = Theme.font.prefix else { return .system(size: size, weight: weight) }
         let face = switch weight {
         case .bold, .heavy, .black: "Bold"
@@ -421,6 +435,26 @@ extension Font {
         default: "Regular"
         }
         return .custom("\(prefix)-\(face)", size: size)
+    }
+}
+
+// The Retro theme's CRT glass: a faint dark line every few points, and a soft darkening towards the edges. Drawn, so
+// it costs nothing to ship, and it lets every click through.
+struct Scanlines: View {
+    var body: some View {
+        Canvas { context, size in
+            var y: CGFloat = 0
+            while y < size.height {
+                context.fill(Path(CGRect(x: 0, y: y, width: size.width, height: 1)), with: .color(.black.opacity(0.22)))
+                y += 3
+            }
+            context.fill(Path(CGRect(origin: .zero, size: size)),
+                         with: .radialGradient(Gradient(colors: [.clear, .black.opacity(0.28)]),
+                                               center: CGPoint(x: size.width / 2, y: size.height / 2),
+                                               startRadius: min(size.width, size.height) * 0.35,
+                                               endRadius: max(size.width, size.height) * 0.75))
+        }
+        .allowsHitTesting(false)
     }
 }
 
