@@ -233,6 +233,15 @@ code { font-family: var(--mono); font-size: .9em; background: var(--surface-2); 
 .term button { background: none; border: 0; color: #999; cursor: pointer; display: grid; place-items: center; }
 .term button:hover { color: #fff; }
 
+/* Tip jar */
+.tip { margin-top: 16px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 20px; padding: 24px 28px; }
+.tip .cup { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; color: #A0663F;
+  background: linear-gradient(180deg, #FFF3E8, #F7E2CF); box-shadow: inset 0 0 0 1px rgba(160,102,63,.18); }
+.tip .cup svg { width: 26px; height: 26px; }
+.tip h3 { margin: 0 0 4px; font-size: 19px; }
+.tip p { margin: 0; color: var(--text-2); font-size: 15px; line-height: 1.5; }
+@media (max-width: 760px) { .tip { grid-template-columns: 1fr; text-align: center; justify-items: center; } }
+
 /* Footer */
 footer { padding: 0; overflow: hidden; }
 .foot { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 28px; width: min(1152px, calc(100% - 48px)); margin: 0 auto; }
@@ -704,6 +713,14 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
         <div class="term"><span>→</span><code>Snapdragon PC? Pick ARM. Every other PC uses the first button.</code></div>
       </article>
     </div>
+    <article class="card tip" id="support">
+      <div class="cup"><i data-lucide="coffee"></i></div>
+      <div>
+        <h3>Enjoying Beanotch?</h3>
+        <p>It's free and made by one person. If it saves you a few clicks a day, a tip or a kind word keeps the beans roasting.</p>
+      </div>
+      <a class="btn btn-primary" href="https://yapp.ink/gian" target="_blank" rel="noopener"><i data-lucide="heart"></i>Send a tip</a>
+    </article>
   </div>
 </section>
 
@@ -715,12 +732,13 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
       <div><h4>Beanotch</h4><p>The notch, finally earning its place.</p></div>
       <div class="cta-row">
         <a class="btn btn-ghost" href="https://github.com/giankbr/beanie-notch"><i data-lucide="github"></i>Star on GitHub</a>
+        <a class="btn btn-ghost" href="https://yapp.ink/gian" target="_blank" rel="noopener"><i data-lucide="coffee"></i>Tip the maker</a>
         <a class="btn btn-primary dl" data-label="Download for Windows" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch.dmg"><i data-lucide="apple"></i>Download Beanotch.dmg</a>
       </div>
     </div>
     <div class="cols">
       <div><h5>PRODUCT</h5><a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#features">AI usage <span class="new">New</span></a><a href="#customize">Customize</a><a href="https://github.com/giankbr/beanie-notch/releases">Releases</a></div>
-      <div><h5>PROJECT</h5><a href="https://github.com/giankbr/beanie-notch">GitHub</a><a href="https://github.com/giankbr/beanie-notch#build">Build from source</a><a href="https://github.com/giankbr/beanie-notch/releases">Changelog</a><a href="https://github.com/giankbr/beanie-notch/issues">Report an issue</a></div>
+      <div><h5>PROJECT</h5><a href="https://github.com/giankbr/beanie-notch">GitHub</a><a href="https://github.com/giankbr/beanie-notch#build">Build from source</a><a href="https://github.com/giankbr/beanie-notch/releases">Changelog</a><a href="https://github.com/giankbr/beanie-notch/issues">Report an issue</a><a href="https://yapp.ink/gian" target="_blank" rel="noopener">Support Beanotch</a></div>
       <div><h5>PRIVACY</h5><span>No tracking</span><span>Location stays on Mac</span><span>No API keys</span><a href="https://github.com/giankbr/beanie-notch#install">Permissions</a></div>
       <div><h5>REQUIREMENTS</h5><span>macOS 14 or later</span><span>Windows 10 or later (beta)</span><span>Apple silicon &amp; Intel</span><span>3.6 MB download</span><span id="version">v1.9.1</span></div>
     </div>
