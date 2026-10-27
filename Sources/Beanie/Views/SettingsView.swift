@@ -28,7 +28,7 @@ struct SettingsView: View {
             case .ai: "AI"
             case .notch: "Notch"
             case .inNotch: "In the notch"
-            case .shelf: "Shelf & Clipboard"
+            case .shelf: "Files"
             case .wellbeing: "Wellbeing"
             case .prayer: "Prayer times"
             case .system: "System"
@@ -51,42 +51,33 @@ struct SettingsView: View {
 
     // Sections down the side, one at a time on the right, so nothing is a long scroll.
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            VStack(alignment: .leading, spacing: 1) {
-                ForEach(Section.allCases) { item in
-                    let active = section == item
-                    Button { withAnimation(.snappy(duration: 0.2)) { section = item } } label: {
-                        HStack(spacing: 7) {
-                            // Without the Prayer page, its section only keeps the place, for the weather.
-                            let plain = item == .prayer && !model.prayerOn
-                            TabIcon(name: plain ? "location.fill" : item.icon, size: 10, weight: .semibold).frame(width: 14)
-                                .foregroundStyle(active ? Theme.accent : Theme.dim)
-                            Text(plain ? "Location" : item.title).font(.app(size: 10.5, weight: active ? .semibold : .regular)).lineLimit(1)
-                                .foregroundStyle(active ? Theme.ink : Theme.ink.opacity(0.75))
-                            Spacer(minLength: 0)
-                        }
-                        .padding(.horizontal, 8)
-                        .frame(height: settings.size == .mini ? 18 : 22)
-                        .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(active ? Theme.ink.opacity(0.08) : .clear))
-                        .contentShape(Rectangle())
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 0) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 1) {
+                        ForEach(Section.allCases) { item in sectionButton(item) }
                     }
-                    .buttonStyle(.plain)
                 }
-                Spacer(minLength: 6)
-                if settings.size != .mini {
+                .scrollIndicators(.never)
+                .scrollBounceBehavior(.basedOnSize)
+                HStack(spacing: 6) {
                     Text("Beanie \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev")")
-                        .font(.mono(size: 8.5)).foregroundStyle(Theme.faint).padding(.leading, 8)
+                        .font(.mono(size: 8.5)).foregroundStyle(Theme.faint).lineLimit(1)
+                    Spacer(minLength: 0)
                     Button { NSApp.terminate(nil) } label: {
-                        Label("Quit", systemImage: "power").font(.app(size: 9.5, weight: .semibold)).foregroundStyle(Theme.red)
-                            .padding(.horizontal, 8).frame(height: 20)
+                        Image(systemName: "power").font(.system(size: 9, weight: .bold)).foregroundStyle(Theme.red)
+                            .frame(width: 20, height: 18).contentShape(Rectangle())
                     }
                     .buttonStyle(PressStyle())
+                    .help("Quit Beanie")
                 }
+                .padding(.leading, 8)
+                .padding(.top, 4)
+                .overlay(alignment: .top) { Rectangle().fill(Theme.stroke).frame(height: 1) }
             }
-            .padding(5)
-            .frame(width: 138)
+            .frame(width: 124)
             .frame(maxHeight: .infinity, alignment: .top)
-            .card()
+            .overlay(alignment: .trailing) { Rectangle().fill(Theme.stroke).frame(width: 1).offset(x: 6) }
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 8) {
@@ -97,6 +88,26 @@ struct SettingsView: View {
             .scrollIndicators(.never)
             .id(section)
         }
+    }
+
+    private func sectionButton(_ item: Section) -> some View {
+        let active = section == item
+        // Without the Prayer page, its section only keeps the place, for the weather.
+        let plain = item == .prayer && !model.prayerOn
+        return Button { withAnimation(.snappy(duration: 0.2)) { section = item } } label: {
+            HStack(spacing: 7) {
+                TabIcon(name: plain ? "location.fill" : item.icon, size: 10, weight: .semibold).frame(width: 14)
+                    .foregroundStyle(active ? Theme.accent : Theme.dim)
+                Text(plain ? "Location" : item.title).font(.app(size: 10.5, weight: active ? .semibold : .regular)).lineLimit(1)
+                    .foregroundStyle(active ? Theme.ink : Theme.ink.opacity(0.75))
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 8)
+            .frame(height: settings.size == .mini ? 18 : 21)
+            .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(active ? Theme.ink.opacity(0.08) : .clear))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder private var content: some View {
@@ -123,14 +134,14 @@ struct SettingsView: View {
                         }
                     }
                 }
-                row("paintpalette", "Accent", "Buttons, highlights and the mini player") {
-                    HStack(spacing: 5) {
+                pickerRow("Accent", "Buttons, highlights and the mini player") {
+                    HStack(spacing: 4) {
                         ForEach(AccentChoice.allCases, id: \.self) { option in
                             Button { settings.accent = option } label: {
-                                Circle().fill(option.primary).frame(width: 13, height: 13)
+                                Circle().fill(option.primary).frame(width: 14, height: 14)
                                     .overlay(Circle().strokeBorder(Theme.background, lineWidth: settings.accent == option ? 2 : 0))
                                     .overlay(Circle().strokeBorder(option.primary, lineWidth: settings.accent == option ? 1 : 0).padding(-2))
-                                    .padding(3)
+                                    .padding(4)
                                     .contentShape(Circle())
                             }
                             .buttonStyle(.plain)

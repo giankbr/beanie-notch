@@ -387,14 +387,20 @@ private struct Header: View {
     @EnvironmentObject var prayer: PrayerTimes
     var showsTitle: Bool
 
+    private func dateLine(_ text: String) -> some View {
+        Text(text).font(.app(size: 9.5, weight: .medium)).foregroundStyle(Theme.faint).lineLimit(1).fixedSize()
+    }
+
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             if showsTitle {
                 Text(model.tab.title).font(.app(size: 15, weight: .bold))
-                Text(Date().formatted(.dateTime.weekday(.wide).day().month(.wide)) + (model.prayerOn ? " · " + prayer.hijri : ""))
-                    .font(.app(size: 9.5, weight: .medium))
-                    .foregroundStyle(Theme.faint)
-                    .lineLimit(1)
+                // The Hijri date goes first when the pills leave too little room.
+                ViewThatFits(in: .horizontal) {
+                    dateLine(Date().formatted(.dateTime.weekday(.wide).day().month(.wide)) + (model.prayerOn ? " · " + prayer.hijri : ""))
+                    dateLine(Date().formatted(.dateTime.weekday(.wide).day().month(.wide)))
+                    dateLine(Date().formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)))
+                }
             }
             Spacer()
             HStack(spacing: 4) {
