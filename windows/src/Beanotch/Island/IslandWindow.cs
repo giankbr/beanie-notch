@@ -20,7 +20,7 @@ public sealed partial class IslandWindow : Window
     // Mac points, as in the Mac app: the closed notch, the open panel, and the shoulders where the notch meets the top
     // edge of the screen.
     private const double ClosedHeight = 30, ClosedRadius = 10, ClosedEar = 6, OpenWidth = 680, OpenHeight = 336, OpenRadius = 22,
-                         OpenEar = 14, FloatingGap = 6;
+                         OpenEar = 14;
 
     private readonly Model model;
     private readonly nint hwnd;
@@ -30,7 +30,7 @@ public sealed partial class IslandWindow : Window
     private readonly DispatcherQueueTimer collapseTimer, tick, statsTimer, dataTimer;
     private Notice? notice;
     private DateTime noticeUntil;
-    private (int W, int H, bool Floating) placed;
+    private (int W, int H) placed;
 
     public IslandWindow()
     {
@@ -127,7 +127,7 @@ public sealed partial class IslandWindow : Window
         else
         {
             var width = closed.Update(notice);
-            Place(width, ClosedHeight, model.Settings.Floating ? ClosedHeight / 2 : ClosedRadius, ClosedEar);
+            Place(width, ClosedHeight, ClosedRadius, ClosedEar);
         }
     }
 
@@ -158,25 +158,20 @@ public sealed partial class IslandWindow : Window
         Update();
     }
 
-    // Hangs from the very top of the screen, centred, like the MacBook notch; or, floating, sits just below as a pill.
-    // The panel narrows on small screens so it never runs off the sides.
+    // Always hangs from the very top of the screen, centred, like the MacBook notch. The panel narrows on small screens
+    // so it never runs off the sides.
     private void Place(double width, double height, double radius, double ear)
     {
-        var floating = model.Settings.Floating;
-        if (floating) ear = 0;
         var scale = Native.GetDpiForWindow(hwnd) / 96.0 * Ui.Ui.K;
         var display = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Primary);
         width = Math.Min(width, display.WorkArea.Width / scale - 2 * ear - 24);
         int e = (int)Math.Round(ear * scale);
         int w = (int)Math.Round(width * scale) + 2 * e, h = (int)Math.Round(height * scale);
         root.Padding = new Thickness(ear * Ui.Ui.K, 0, ear * Ui.Ui.K, 0);
-        if (placed == (w, h, floating)) return;
-        placed = (w, h, floating);
-        var top = floating ? display.WorkArea.Y + (int)(FloatingGap * scale) : display.OuterBounds.Y;
-        AppWindow.MoveAndResize(new RectInt32(display.OuterBounds.X + (display.OuterBounds.Width - w) / 2, top, w, h));
-        var r = (int)Math.Round(Math.Min(radius * scale, h / 2.0));
-        if (floating) Native.Round(hwnd, w, h, r);
-        else Native.Notch(hwnd, w, h, e, r);
+        if (placed == (w, h)) return;
+        placed = (w, h);
+        AppWindow.MoveAndResize(new RectInt32(display.OuterBounds.X + (display.OuterBounds.Width - w) / 2, display.OuterBounds.Y, w, h));
+        Native.Notch(hwnd, w, h, e, (int)Math.Round(Math.Min(radius * scale, h / 2.0)));
     }
 
     private void OnDragOver(object sender, DragEventArgs e)
