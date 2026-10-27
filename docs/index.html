@@ -313,6 +313,8 @@ footer { padding: 0; overflow: hidden; }
   .closed-card .strip { height: 64px; }
   /* Same scale for every notch crop: 2x images shown at 0.3125x their pixel height. */
   .closed-card .strip img { height: 20px; max-width: none; }
+  /* The newer crops carry text on both sides: shrink them to fit rather than cut them off. */
+  #new .closed-card .strip img { max-width: 94%; }
   .closed-card .txt { padding: 14px 18px 16px; gap: 4px; }
   .closed-card h3 { font-size: 16px; }
   .closed-card p { font-size: 14px; }
@@ -467,13 +469,13 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
 </head>
 <body>
 
-<div class="banner"><a href="#platforms">✦ New: Beanotch now runs on Windows 10 and 11, in beta. <i data-lucide="arrow-right"></i></a></div>
+<div class="banner"><a href="#new">✦ New in 1.10: a notch pet, terminal runs, smart copy and the Keycap theme. <i data-lucide="arrow-right"></i></a></div>
 
 <nav>
   <div class="wrap">
     <a class="brand" href="#"><img src="landing-page-assets/beanotch-icon.png" alt="">Beanotch</a>
     <div class="nav-links">
-      <a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#customize">Customize</a><a href="#platforms">Mac vs Windows</a><a href="#faq">FAQ</a>
+      <a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#new">What's new</a><a href="#customize">Customize</a><a href="#platforms">Mac vs Windows</a><a href="#faq">FAQ</a>
     </div>
     <div class="nav-right">
       <button class="icon-btn" id="themeBtn" aria-label="Switch light or dark"><i data-lucide="moon"></i></button>
@@ -518,8 +520,8 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
 
 <div class="stats">
   <div class="wrap">
-    <div class="stat"><strong>3.6 MB</strong><span>Mac download</span></div>
-    <div class="stat"><strong>21 MB</strong><span>Windows, .NET included</span></div>
+    <div class="stat"><strong data-size="mac">3.1 MB</strong><span>Mac download</span></div>
+    <div class="stat"><strong data-size="win">21 MB</strong><span>Windows, .NET included</span></div>
     <div class="stat"><strong>~0%</strong><span>CPU when idle</span></div>
     <div class="stat"><strong>19</strong><span>call services to Join</span></div>
   </div>
@@ -584,7 +586,32 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
       <article class="card closed-card"><div class="strip"><img src="landing-page-assets/notch-messages-crop.png" alt="Unread WhatsApp messages in the notch"></div><div class="txt"><h3>Notices</h3><p>Unread counts and short notices from your apps.</p></div></article>
       <article class="card closed-card"><div class="strip"><img src="landing-page-assets/notch-airpods-crop.png" alt="AirPods charge in the notch"></div><div class="txt"><h3>AirPods</h3><p>Charge for each bud and the case when they connect.</p></div></article>
       <article class="card closed-card"><div class="strip"><img src="landing-page-assets/notch-prayer-crop.png" alt="Prayer countdown in the notch"></div><div class="txt"><h3>Prayer</h3><p>A countdown before each prayer, calculated on your Mac.</p></div></article>
-      <article class="card closed-card more"><i data-lucide="sparkles" style="width:24px;height:24px"></i><h3>And more</h3><p>Charging, Caps Lock, screenshots, Shortcuts results and updates, as short notices.</p></article>
+      <article class="card closed-card more"><i data-lucide="sparkles" style="width:24px;height:24px"></i><h3>And more</h3><p>Charging, Caps Lock, screenshots, eye breaks, Shortcuts results and Ramadan imsak alerts, as short notices.</p></article>
+    </div>
+  </div>
+</section>
+
+<section id="new" style="border-top:1px solid var(--border)">
+  <div class="wrap">
+    <div class="center">
+      <span class="eyebrow">New in 1.10</span>
+      <h2>Small things,<em>right when you need them.</em></h2>
+      <p class="sub">A pet that lives in the notch, a heads-up when a long command finishes, and copied text that turns into something useful.</p>
+    </div>
+    <div class="grid-2 panels">
+      <article class="card panel-card"><div class="shot"><img src="landing-page-assets/keycap.webp" alt="Settings in the Keycap theme, with raised key buttons" loading="lazy"></div><div class="txt"><h3>Keycap theme</h3><p>Buttons, switches and tabs drawn as raised keys. Joins Midnight, true black, and Glass, which lets the desktop through.</p></div></article>
+      <article class="card panel-card"><div class="shot"><img src="landing-page-assets/rates.webp" alt="Rates tab: dollar, gold and fuel prices in rupiah" loading="lazy"></div><div class="txt"><h3>Rates</h3><p>Currencies you watch, gold per gram and, in Indonesia, Pertamina fuel prices for your province. No API keys.</p></div></article>
+    </div>
+    <div class="grid-2 closed-grid">
+      <article class="card closed-card"><div class="strip"><img src="landing-page-assets/notch-new-pet.png" alt="A small pixel pet at the right of the notch, asking bed?" loading="lazy"></div><div class="txt"><h3>Notch pet</h3><p>Bean, Cat, Frog or Ghost. Its eyes follow your pointer, it sweats when the CPU is busy and asks "bed?" after midnight.</p></div></article>
+      <article class="card closed-card"><div class="strip"><img src="landing-page-assets/notch-new-run.png" alt="Done in 1 minute 12 seconds: npm run build" loading="lazy"></div><div class="txt"><h3>Terminal runs</h3><p>Put <code>beanotch run</code> before a slow command. The notch counts the time and tells you when it passes or fails.</p></div></article>
+      <article class="card closed-card"><div class="strip"><img src="landing-page-assets/notch-new-code.png" alt="Code copied: 482913" loading="lazy"></div><div class="txt"><h3>Smart copy</h3><p>Copy a message with a one-time code and only the code lands on the clipboard. Parcels and addresses get a shortcut too.</p></div></article>
+      <article class="card closed-card"><div class="strip"><img src="landing-page-assets/notch-new-price.png" alt="25.99 US dollars is about 471,700 rupiah" loading="lazy"></div><div class="txt"><h3>Prices in your money</h3><p>Copy a price in any currency and see it in yours, at today's rate.</p></div></article>
+      <article class="card closed-card"><div class="strip"><img src="landing-page-assets/notch-new-call.png" alt="Call ended after 42 minutes, 2 alerts held" loading="lazy"></div><div class="txt"><h3>Call mode</h3><p>While the mic or camera is on, alerts wait and a mute button sits in the panel. The held alerts play when you hang up.</p></div></article>
+      <article class="card closed-card"><div class="strip"><img src="landing-page-assets/notch-new-quake.png" alt="Earthquake magnitude 5.4, 156 km away" loading="lazy"></div><div class="txt"><h3>Earthquake alerts</h3><p>In Indonesia, BMKG's latest felt quake and how far it is from you. Ramadan adds imsak and iftar alerts.</p></div></article>
+      <article class="card closed-card"><div class="strip"><img src="landing-page-assets/notch-new-ruler.png" alt="Copied 412 by 236" loading="lazy"></div><div class="txt"><h3>Ruler &amp; color picker</h3><p>Drag across the screen to measure it, or pick any pixel's color. Both copy the result.</p></div></article>
+      <article class="card closed-card"><div class="strip"><img src="landing-page-assets/notch-new-update.png" alt="Beanotch 1.10.4: click to update" loading="lazy"></div><div class="txt"><h3>One-click updates</h3><p>A new version shows up once in the notch. Click it and Beanotch installs the update.</p></div></article>
+      <article class="card closed-card more" style="grid-column:1/-1"><i data-lucide="headphones" style="width:24px;height:24px"></i><h3>Also new</h3><p>Rain, waves or brown noise while you focus. Drop a file on Ask AI to summarize or translate it. Open Shelf files from your phone.</p></article>
     </div>
   </div>
 </section>
@@ -597,12 +624,12 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
       <p class="sub">Small, native on both platforms, and polite about permissions.</p>
     </div>
     <div class="grid-3" style="margin-top:64px">
-      <article class="feature"><div><h3><span><i data-lucide="feather"></i></span>Native and tiny</h3><p>Swift and SwiftUI on the Mac, C# and WinUI 3 on Windows, with no third-party dependencies. A 3.6 MB universal Mac app that idles near 0% CPU.</p></div></article>
+      <article class="feature"><div><h3><span><i data-lucide="feather"></i></span>Native and tiny</h3><p>Swift and SwiftUI on the Mac, C# and WinUI 3 on Windows, with no third-party dependencies. A 3 MB universal Mac app that idles near 0% CPU.</p></div></article>
       <article class="feature"><div><h3><span><i data-lucide="lock"></i></span>Private by default</h3><p>Prayer times are worked out on the Mac. No analytics, no tracking, no API keys.</p></div></article>
       <article class="feature"><div><h3><span><i data-lucide="key-round"></i></span>Asks only when needed</h3><p>Calendars, Location, Camera — macOS prompts the first time a feature actually needs access.</p></div></article>
       <article class="feature"><div><h3><span><i data-lucide="keyboard"></i></span>No Accessibility grant</h3><p>The global shortcut is a Carbon hot key, so ⌥ Space works without handing over input control.</p></div></article>
       <article class="feature"><div><h3><span><i data-lucide="unplug"></i></span>Degrades gracefully</h3><p>Brightness, Night Shift and DDC load at run time. Missing symbols just switch that feature off.</p></div></article>
-      <article class="feature"><div><h3><span><i data-lucide="refresh-cw"></i></span>Updates from GitHub</h3><p>Optionally checks GitHub Releases once a day. Grab the DMG or the installer, and you're done.</p></div></article>
+      <article class="feature"><div><h3><span><i data-lucide="refresh-cw"></i></span>Updates in the notch</h3><p>A new version shows up in the notch once. Click it and Beanotch installs the update and reopens.</p></div></article>
     </div>
   </div>
 </section>
@@ -644,7 +671,7 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
       <article class="card plat-card">
         <div class="vis mac"><img src="landing-page-assets/notch-airpods-crop.png" alt="AirPods charge in the MacBook notch"></div>
         <div class="body">
-          <div class="title"><b><i data-lucide="apple"></i>macOS</b><span>macOS 14+ · 3.6 MB</span></div>
+          <div class="title"><b><i data-lucide="apple"></i>macOS</b><span>macOS 14+ · <b data-size="mac">3.1 MB</b></span></div>
           <div class="lbl"><i style="background:#3B8BFF"></i>ONLY ON MACOS</div>
           <ul class="only mac"><li><span class="ib"><i data-lucide="send"></i></span><div><b>AirDrop from the Shelf</b><span>Drop on the right third of the notch to send.</span></div></li><li><span class="ib"><i data-lucide="headphones"></i></span><div><b>AirPods charge</b><span>Each bud and the case, the moment they connect.</span></div></li><li><span class="ib"><i data-lucide="sun-moon"></i></span><div><b>Night Shift</b><span>One switch in Controls.</span></div></li><li><span class="ib"><i data-lucide="terminal"></i></span><div><b>Codex usage</b><span>Tokens and rate-limit windows from local logs.</span></div></li></ul>
         </div>
@@ -652,7 +679,7 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
       <article class="card plat-card">
         <div class="vis win"><img src="landing-page-assets/win-closed-mic.png" alt="Mic in use, Zoom: the island on Windows"></div>
         <div class="body">
-          <div class="title"><b><svg class="lucide winlogo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 5.1 10.4 4v7.2H3zm8.4-1.2L21 2.5v8.7h-9.6zM3 12.6h7.4v7.3L3 18.8zm8.4 0H21v8.9l-9.6-1.4z"/></svg>Windows</b><span>Windows 10 &amp; 11 · 21 MB · Beta</span></div>
+          <div class="title"><b><svg class="lucide winlogo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 5.1 10.4 4v7.2H3zm8.4-1.2L21 2.5v8.7h-9.6zM3 12.6h7.4v7.3L3 18.8zm8.4 0H21v8.9l-9.6-1.4z"/></svg>Windows</b><span>Windows 10 &amp; 11 · <b data-size="win">21 MB</b> · Beta</span></div>
           <div class="lbl"><i style="background:#8C7CFF"></i>ONLY ON WINDOWS</div>
           <ul class="only win"><li><span class="ib"><i data-lucide="video"></i></span><div><b>Mic &amp; camera alerts</b><span>The island shows when an app starts using them.</span></div></li><li><span class="ib"><i data-lucide="wifi"></i></span><div><b>Wi-Fi &amp; Bluetooth</b><span>Join networks and reconnect headsets from Controls.</span></div></li><li><span class="ib"><i data-lucide="lock"></i></span><div><b>Lock, sleep, snip</b><span>And empty the bin, from Controls.</span></div></li><li><span class="ib"><i data-lucide="eye-off"></i></span><div><b>Hidden files &amp; taskbar</b><span>Toggle hidden files and taskbar auto-hide.</span></div></li></ul>
         </div>
@@ -660,7 +687,7 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
     </div>
     <div class="card both">
       <div class="top"><div class="lbl"><i style="background:var(--live)"></i>ON BOTH</div><span>Same panels, same look, built natively for each</span></div>
-      <div class="chips"><div><i data-lucide="layout-grid"></i>Overview &amp; cleanup</div><div><i data-lucide="calendar"></i>Today &amp; Join</div><div><i data-lucide="moon"></i>Prayer times &amp; qibla</div><div><i data-lucide="music"></i>Synced lyrics</div><div><i data-lucide="inbox"></i>Shelf</div><div><i data-lucide="clipboard"></i>Clipboard history</div><div><i data-lucide="sparkles"></i>Claude Code usage</div><div><i data-lucide="sun"></i>Brightness &amp; DDC</div></div>
+      <div class="chips"><div><i data-lucide="layout-grid"></i>Overview &amp; cleanup</div><div><i data-lucide="calendar"></i>Today &amp; Join</div><div><i data-lucide="moon"></i>Prayer times &amp; qibla</div><div><i data-lucide="music"></i>Synced lyrics</div><div><i data-lucide="inbox"></i>Shelf</div><div><i data-lucide="clipboard"></i>Clipboard history</div><div><i data-lucide="sparkles"></i>Claude Code usage</div><div><i data-lucide="sun"></i>Brightness &amp; DDC</div><div><i data-lucide="smile"></i>Notch pet</div><div><i data-lucide="terminal"></i>Terminal runs</div><div><i data-lucide="clipboard-check"></i>Smart copy</div><div><i data-lucide="coins"></i>Rates, gold &amp; fuel</div><div><i data-lucide="phone"></i>Call mode</div><div><i data-lucide="palette"></i>Keycap, Glass, Midnight</div></div>
     </div>
   </div>
 </section>
@@ -674,6 +701,7 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
     </div>
     <div>
       <details><summary>Is there a Windows version?<i data-lucide="chevron-down"></i></summary><p>Yes, in beta for Windows 10 and 11: a notch-style island at the top centre of the screen with the same pages as on the Mac, built with WinUI 3. <a href="#download" style="color:var(--accent)">Download it here</a>. Most PCs need the regular (x64) installer; Snapdragon PCs get the ARM64 one, which the button picks for you.</p></details>
+      <details><summary>How do terminal runs work?<i data-lucide="chevron-down"></i></summary><p>Turn on Settings › AI › Terminal commands and Beanotch adds a small <code>beanotch</code> command. Run <code>beanotch run npm test</code> (or any command): the notch shows it running, then whether it passed and how long it took. It talks to the app over localhost only. Windows has the same command.</p></details>
       <details><summary>Does it work on a Mac without a notch?<i data-lucide="chevron-down"></i></summary><p>Yes. On Macs without a notch, Beanotch draws a notch-like strip at the top centre of the screen. Pick the floating shape in Settings if you prefer it detached.</p></details>
       <details open><summary>Why does macOS say the app can't be opened?<i data-lucide="chevron-down"></i></summary><p>Beanotch is ad-hoc signed, not notarized. Right-click the app and choose Open once, or run <code>xattr -dr com.apple.quarantine /Applications/Beanotch.app</code>.</p></details>
       <details><summary>Is my location sent anywhere?<i data-lucide="chevron-down"></i></summary><p>Prayer times are worked out on your Mac. For the weather, only your place's coordinates go to Open-Meteo, with no account, no key and no tracking. Lyrics lookups send just the song title and artist.</p></details>
@@ -693,7 +721,7 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
     <div class="grid-2" style="margin-top:56px">
       <article class="card get">
         <div class="title"><b><i data-lucide="apple"></i>macOS</b></div>
-        <p class="meta-line"><span class="ver">v1.9.3</span> · macOS 14 or later · Apple silicon &amp; Intel · 3.6 MB</p>
+        <p class="meta-line"><span class="ver">v1.10.3</span> · macOS 14 or later · Apple silicon &amp; Intel · <span data-size="mac">3.1 MB</span></p>
         <div class="cta-row" style="justify-content:flex-start"><a class="btn btn-primary" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch.dmg"><i data-lucide="apple"></i>Download Beanotch.dmg</a></div>
         <div class="steps">
           <div><span>1</span><strong>Open the DMG</strong><p>Drag Beanotch into Applications.</p></div>
@@ -704,7 +732,7 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
       </article>
       <article class="card get">
         <div class="title"><b><svg class="lucide winlogo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 5.1 10.4 4v7.2H3zm8.4-1.2L21 2.5v8.7h-9.6zM3 12.6h7.4v7.3L3 18.8zm8.4 0H21v8.9l-9.6-1.4z"/></svg>Windows</b><span class="beta">Beta</span></div>
-        <p class="meta-line">Windows 10 and 11 · x64 &amp; Snapdragon (ARM) · 21 MB, .NET included</p>
+        <p class="meta-line"><span class="ver">v1.10.3</span> · Windows 10 and 11 · x64 &amp; Snapdragon (ARM) · <span data-size="win">21 MB</span>, .NET included</p>
         <div class="cta-row" style="justify-content:flex-start">
           <a class="btn btn-primary win-dl" id="winDownload" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch-Setup-x64.exe"><svg class="lucide winlogo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 5.1 10.4 4v7.2H3zm8.4-1.2L21 2.5v8.7h-9.6zM3 12.6h7.4v7.3L3 18.8zm8.4 0H21v8.9l-9.6-1.4z"/></svg><span>Download for Windows</span></a>
           <a class="btn btn-ghost" id="winOther" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch-Setup-arm64.exe"><i data-lucide="cpu"></i><span>ARM</span></a>
@@ -741,7 +769,7 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
       </div>
     </div>
     <div class="cols">
-      <div><h5>PRODUCT</h5><a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#features">AI usage <span class="new">New</span></a><a href="#customize">Customize</a><a href="https://github.com/giankbr/beanie-notch/releases">Releases</a></div>
+      <div><h5>PRODUCT</h5><a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#new">What's new</a><a href="#features">AI usage <span class="new">New</span></a><a href="#customize">Customize</a><a href="https://github.com/giankbr/beanie-notch/releases">Releases</a></div>
       <div><h5>PROJECT</h5><a href="https://github.com/giankbr/beanie-notch">GitHub</a><a href="https://github.com/giankbr/beanie-notch#build">Build from source</a><a href="https://github.com/giankbr/beanie-notch/releases">Changelog</a><a href="https://github.com/giankbr/beanie-notch/issues">Report an issue</a><a href="https://yapp.ink/gian" target="_blank" rel="noopener">Support Beanotch</a></div>
       <div><h5>PRIVACY</h5><span>No tracking</span><span>Location stays on Mac</span><span>No API keys</span><a href="https://github.com/giankbr/beanie-notch#install">Permissions</a></div>
       <div><h5>REQUIREMENTS</h5><span>macOS 14 or later</span><span>Windows 10 or later (beta)</span><span>Apple silicon &amp; Intel</span><span>3.6 MB download</span><span id="version">v1.9.1</span></div>
@@ -859,6 +887,16 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
   // The newest release's version, when GitHub answers (the repository has to be public).
   fetch("https://api.github.com/repos/giankbr/beanie-notch/releases/latest").then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
     if (j && j.tag_name) { document.getElementById("version").textContent = j.tag_name; document.querySelectorAll(".ver").forEach(function (v) { v.textContent = j.tag_name; }); }
+    // And its download sizes, so the page never quotes an old build.
+    var sizes = {};
+    (j && j.assets || []).forEach(function (a) {
+      if (a.name === "Beanotch.dmg") sizes.mac = a.size;
+      if (a.name === "Beanotch-Setup-x64.exe") sizes.win = a.size;
+    });
+    document.querySelectorAll("[data-size]").forEach(function (el) {
+      var bytes = sizes[el.dataset.size];
+      if (bytes) el.textContent = (bytes / 1048576).toFixed(bytes < 10485760 ? 1 : 0) + " MB";
+    });
   }).catch(function () {});
 
 
