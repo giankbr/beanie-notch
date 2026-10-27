@@ -180,6 +180,17 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
                 GradientStops = { new() { Color = Theme.Rgb(0.4, 0.48, 0.75), Offset = 0 }, new() { Color = Theme.Rgb(0.65, 0.43, 0.6), Offset = 1 } },
             };
         }
+        else if (mode == ThemeMode.Pixel)
+        {
+            g.Background = Theme.Brush(Theme.PixelCard);
+            g.Children.Add(new Border
+            {
+                Width = S(20), Height = S(11), Background = Theme.Brush(Theme.Accent),
+                BorderBrush = Theme.Brush(Theme.Black), BorderThickness = new Thickness(1.5, 1.5, 2.5, 2.5),
+                HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom,
+                Margin = new Thickness(0, 0, S(5), S(5)),
+            });
+        }
         else if (mode == ThemeMode.Keycap)
         {
             g.Background = Theme.Brush(dark);

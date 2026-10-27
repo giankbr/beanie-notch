@@ -51,15 +51,19 @@ public static class Ui
     public static readonly FontFamily Mono = new("Cascadia Mono, Consolas");
     public static readonly FontFamily Icons = new("Segoe Fluent Icons, Segoe MDL2 Assets");
 
+    private static readonly FontFamily PixelFont = new("ms-appx:///Assets/Fonts/Silkscreen-Regular.ttf#Silkscreen");
+
     public static TextBlock Text(string text, double size, Color? color = null, FontWeight? weight = null, bool mono = false,
                                  bool wrap = false, bool display = false)
     {
+        // Silkscreen is wide: smaller, and only where text is big enough to stay readable.
+        var pixel = Theme.Pixel && !mono && size >= 14;
         var t = new TextBlock
         {
             Text = text,
-            FontSize = S(size),
-            FontFamily = mono ? Mono : FontFor(weight ?? FontWeights.Normal, display),
-            FontWeight = weight ?? FontWeights.Normal,
+            FontSize = S(pixel ? Math.Round(size * 0.85) : size),
+            FontFamily = pixel ? PixelFont : mono ? Mono : FontFor(weight ?? FontWeights.Normal, display),
+            FontWeight = pixel ? FontWeights.Normal : weight ?? FontWeights.Normal,
             Foreground = Theme.Brush(color ?? Theme.Ink),
             TextTrimming = TextTrimming.CharacterEllipsis,
             TextWrapping = wrap ? TextWrapping.Wrap : TextWrapping.NoWrap,
@@ -130,10 +134,10 @@ public static class Ui
     {
         Child = child,
         Padding = new Thickness(S(padding)),
-        CornerRadius = new CornerRadius(S(radius)),
+        CornerRadius = new CornerRadius(Theme.Pixel ? 0 : S(radius)),
         Background = Theme.Keycap ? Vertical(Theme.Rgb(1, 1, 1, 0.105), Theme.Rgb(1, 1, 1, 0.08)) : Theme.Brush(Theme.Surface),
-        BorderBrush = Theme.Keycap ? KeyEdge() : Theme.Brush(Theme.Stroke),
-        BorderThickness = new Thickness(1),
+        BorderBrush = Theme.Keycap ? KeyEdge() : Theme.Brush(Theme.Pixel ? Theme.PixelEdge : Theme.Stroke),
+        BorderThickness = new Thickness(Theme.Pixel ? 2 : 1),
     };
 
     public static LinearGradientBrush Vertical(params Color[] stops)
@@ -167,6 +171,10 @@ public static class Ui
     // The key's edge: a highlight along the top, a shadow along the thicker bottom lip.
     public static LinearGradientBrush KeyEdge() =>
         Vertical(Theme.Rgb(1, 1, 1, 0.22), Theme.Rgb(1, 1, 1, 0.04), Theme.Rgb(0, 0, 0, 0.55));
+
+    // A pixel button's face: a solid fill as given; a see-through tint over slate, worked out to stay opaque.
+    public static Color PixelFace(Color fill) =>
+        fill.A == 255 ? fill : Blend(Theme.PixelEdge, Theme.WithAlpha(fill, 1), fill.A / 255.0 * 1.5);
 
     // The recess a key sits in: a touch lighter than the card, shaded along its top.
     public static Brush KeyWell() => Theme.Brush(Theme.Rgb(1, 1, 1, 0.055));
@@ -217,6 +225,18 @@ public static class Ui
             b.BorderBrush = edge;
             b.BorderThickness = new Thickness(1, 1, 1, 2);
         }
+        else if (Theme.Pixel && fill.A > 0)
+        {
+            // A flat face in a black outline, thicker along the bottom and right: an 8-bit button's shadow.
+            var face = PixelFace(fill);
+            b.Background = Theme.Brush(face);
+            hover = Theme.Brush(Blend(face, Theme.Rgb(1, 1, 1), 0.08));
+            press = Theme.Brush(Blend(face, Theme.Rgb(0, 0, 0), 0.15));
+            edge = Theme.Brush(Theme.Black);
+            b.BorderBrush = edge;
+            b.BorderThickness = new Thickness(2, 2, 3, 3);
+            b.CornerRadius = new CornerRadius(0);
+        }
         b.Resources["ButtonBackgroundPointerOver"] = hover;
         b.Resources["ButtonBackgroundPressed"] = press;
         b.Resources["ButtonBorderBrushPointerOver"] = edge;
@@ -260,10 +280,10 @@ public static class Ui
         {
             Child = row,
             Padding = new Thickness(S(2)),
-            CornerRadius = new CornerRadius(S(8)),
-            Background = Theme.Keycap ? KeyWell() : Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.06)),
-            BorderBrush = Theme.Keycap ? KeyWellEdge() : null,
-            BorderThickness = new Thickness(Theme.Keycap ? 1 : 0),
+            CornerRadius = new CornerRadius(Theme.Pixel ? 0 : S(8)),
+            Background = Theme.Pixel ? Theme.Brush(Theme.PixelWell) : Theme.Keycap ? KeyWell() : Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.06)),
+            BorderBrush = Theme.Pixel ? Theme.Brush(Theme.PixelEdge) : Theme.Keycap ? KeyWellEdge() : null,
+            BorderThickness = new Thickness(Theme.Pixel ? 2 : Theme.Keycap ? 1 : 0),
             HorizontalAlignment = HorizontalAlignment.Left,
             VerticalAlignment = VerticalAlignment.Center,
         };
@@ -275,7 +295,7 @@ public static class Ui
     {
         var knob = new Border
         {
-            Width = S(13), Height = S(13), CornerRadius = new CornerRadius(S(6.5)),
+            Width = S(13), Height = S(13), CornerRadius = new CornerRadius(Theme.Pixel ? 0 : S(6.5)),
             Background = Theme.Keycap ? Vertical(Theme.Rgb(1, 1, 1), Theme.Rgb(0.84, 0.84, 0.86)) : Theme.Brush(Theme.Rgb(1, 1, 1)),
             BorderBrush = Theme.Keycap ? Theme.Brush(Theme.Rgb(0, 0, 0, 0.35)) : null,
             BorderThickness = new Thickness(0, 0, 0, Theme.Keycap ? 1.5 : 0),
@@ -285,10 +305,10 @@ public static class Ui
         };
         var track = new Grid
         {
-            Width = S(30), Height = S(17), CornerRadius = new CornerRadius(S(8.5)),
+            Width = S(30), Height = S(17), CornerRadius = new CornerRadius(Theme.Pixel ? 0 : S(8.5)),
             Background = Track(on),
-            BorderBrush = Theme.Keycap ? KeyWellEdge() : null,
-            BorderThickness = new Thickness(Theme.Keycap ? 1 : 0),
+            BorderBrush = Theme.Pixel ? Theme.Brush(Theme.Black) : Theme.Keycap ? KeyWellEdge() : null,
+            BorderThickness = new Thickness(Theme.Pixel ? 2 : Theme.Keycap ? 1 : 0),
             Children = { knob },
         };
         var state = on;
@@ -308,6 +328,7 @@ public static class Ui
         (true, true) => Vertical(Blend(Theme.Accent, Theme.Rgb(0, 0, 0), 0.25), Theme.Accent),
         (true, false) => Theme.Brush(Theme.Accent),
         (false, true) => KeyWell(),
+        (false, false) when Theme.Pixel => Theme.Brush(Theme.PixelWell),
         _ => Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.18)),
     };
 

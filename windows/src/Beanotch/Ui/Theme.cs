@@ -3,7 +3,7 @@ using Windows.UI;
 
 namespace Beanotch.Ui;
 
-public enum ThemeMode { System, Light, Dark, Midnight, Glass, Keycap }
+public enum ThemeMode { System, Light, Dark, Midnight, Glass, Keycap, Pixel }
 
 // Segoe UI is Windows' own; the others ship with the app, as on the Mac (all under the SIL Open Font License).
 public enum AppFont { System, BeVietnam, Inter, Jakarta }
@@ -23,6 +23,11 @@ public static class Theme
     public static ThemeMode Mode { get; private set; } = ThemeMode.Dark;
     // Buttons, switches and cards drawn as raised keys, like the landing page's.
     public static bool Keycap => Mode == ThemeMode.Keycap;
+    // 8-bit, like the notch pet: square boxes with a dark outline and a hard bevel, and a pixel font for titles.
+    public static bool Pixel => Mode == ThemeMode.Pixel;
+    public static readonly Color PixelCard = Rgb(0.102, 0.102, 0.141);
+    public static readonly Color PixelEdge = Rgb(0.227, 0.227, 0.322);
+    public static readonly Color PixelWell = Rgb(0.059, 0.059, 0.086);
 
     public static void Apply(ThemeMode mode, AccentChoice accent, bool systemIsDark)
     {
@@ -76,6 +81,7 @@ public static class Theme
     {
         ThemeMode.Midnight => Black,
         ThemeMode.Glass => Rgb(0.09, 0.09, 0.09),
+        ThemeMode.Pixel => Rgb(0.043, 0.043, 0.051),
         _ => Dark ? Rgb(0.055, 0.055, 0.063) : Rgb(0.953, 0.953, 0.945),
     };
     // The open panel's fill: the background, or a dark wash over the acrylic in Glass. Anything drawn over the page
@@ -85,6 +91,7 @@ public static class Theme
     {
         ThemeMode.Midnight => Rgb(1, 1, 1, 0.035),
         ThemeMode.Glass => Rgb(1, 1, 1, 0.07),
+        ThemeMode.Pixel => PixelCard,
         _ => Dark ? Rgb(1, 1, 1, 0.045) : Rgb(1, 1, 1),
     };
     public static Color Stroke => Mode == ThemeMode.Glass ? Rgb(1, 1, 1, 0.1) : Dark ? Rgb(1, 1, 1, 0.07) : Rgb(0, 0, 0, 0.07);
