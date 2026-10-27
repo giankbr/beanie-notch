@@ -153,7 +153,8 @@ h2 em { font-style: normal; color: var(--title-2); display: block; }
 /* Customize */
 .custom { margin-top: 64px; display: grid; grid-template-columns: 1.6fr 1fr; padding: 0; }
 .preview { background: var(--sky); position: relative; display: flex; align-items: center; justify-content: center; padding: 60px 36px; min-height: 520px; }
-.preview img { width: 100%; max-width: 690px; transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+.preview img { width: 100%; max-width: 720px; height: auto; transition: opacity .25s ease, filter .35s ease; }
+.preview img.swap { opacity: .35; }
 .preview .live { position: absolute; left: 24px; bottom: 22px; font-size: 13px; color: #fff; background: rgba(28,42,66,.78); padding: 7px 14px; border-radius: 999px; display: flex; align-items: center; gap: 8px; }
 .preview .live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #4ADE80; }
 .settings { padding: 30px 32px; display: flex; flex-direction: column; gap: 24px; }
@@ -298,7 +299,9 @@ footer { padding: 0; overflow: hidden; }
   .btn { height: 48px; padding: 0 20px; font-size: 15px; }
   nav .btn-ghost { display: none; }
   .meta { gap: 14px 20px; }
-  .preview { min-height: 300px; padding: 40px 16px; }
+  .preview { min-height: 0; padding: 28px 12px 64px; }
+  .preview .live { left: 12px; right: 12px; bottom: 14px; justify-content: center; font-size: 12px; }
+  .seg button { font-size: 13px; padding: 8px 2px; white-space: nowrap; }
   .settings { padding: 24px 20px; }
   .two { grid-template-columns: 1fr; }
 }
@@ -485,7 +488,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
     <p class="sub">Layouts, themes, accents, sizes and notch shapes. Every choice previews live, right where it will sit. Try it here: this page follows along.</p>
     <div class="card custom">
       <div class="preview">
-        <img id="previewImg" src="landing-page-assets/controls.png" alt="Brow's Controls panel">
+        <img id="previewImg" src="landing-page-assets/preview/studio-regular-dark-drop.webp" alt="Brow's Controls panel in the chosen look" width="1400" height="474">
         <div class="live" id="liveLabel">Live preview · Studio · Dark · Blue · Medium · Drop</div>
       </div>
       <div class="settings">
@@ -493,7 +496,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
         <div><label>Layout</label><div class="seg" data-key="layout"><button aria-pressed="true">Studio</button><button>Compact</button><button>Top tabs</button><button>Classic</button></div></div>
         <div class="two">
           <div><label>Theme</label><div class="seg" data-key="theme"><button>Dark</button><button>Light</button></div></div>
-          <div><label>Panel size</label><div class="seg" data-key="size"><button>S</button><button aria-pressed="true">M</button><button>L</button></div></div>
+          <div><label>Panel size</label><div class="seg" data-key="size"><button>Mini</button><button>S</button><button aria-pressed="true">M</button><button>L</button></div></div>
         </div>
         <div><label>Accent</label><div class="dots" id="dots"></div></div>
         <div><label>Notch shape</label><div class="shapes" data-key="shape"><button data-s="drop" aria-pressed="true">Drop</button><button data-s="seamless">Seamless</button><button data-s="floating">Floating</button></div></div>
@@ -587,16 +590,44 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
   }).join("");
 
   // Accent dots, the app's ten accents
-  var accents = [["Blue","#3B8BFF"],["Gold","#F2C230"],["Mint","#3DDC97"],["Teal","#2BD4C5"],["Ocean","#2E9BFF"],["Indigo","#6366F1"],["Violet","#A855F7"],["Rose","#EC4899"],["Crimson","#EF4444"],["Graphite","#D4D4D4"]];
+  var accents = [["Ocean","#4D9EFF"],["Mint","#54DBAD"],["Sunset","#FF944D"],["Rose","#FF6B99"],["Lime","#9EDB3D"],["Violet","#997AFF"],["Teal","#33C7D1"],["Gold","#F2C24D"],["Crimson","#F0545C"],["Graphite","#9EA6B3"]];
   var dots = document.getElementById("dots");
   dots.innerHTML = accents.map(function (a, i) {
     return '<button style="--c:' + a[1] + '" aria-label="' + a[0] + '" aria-pressed="' + (i === 0) + '" data-name="' + a[0] + '"></button>';
   }).join("");
 
-  var state = { layout: "Studio", theme: "Dark", size: "M", accent: "Blue", shape: "Drop", font: "Be Vietnam Pro" };
-  var sizes = { S: "Small", M: "Medium", L: "Large" };
+  var state = { layout: "Studio", theme: "Dark", size: "M", accent: "Ocean", shape: "Drop", font: "Be Vietnam Pro" };
+  var sizes = { Mini: "Mini", S: "Small", M: "Medium", L: "Large" };
+  // The previews are the app itself rendered in each look (in Ocean); other accents shift its hue.
+  var layoutKeys = { Studio: "studio", Compact: "sidebar", "Top tabs": "tabs", Classic: "classic" };
+  var sizeKeys = { Mini: "mini", S: "compact", M: "regular", L: "large" };
+  var previewImg = document.getElementById("previewImg");
+  function hue(hex) {
+    var r = parseInt(hex.slice(1, 3), 16) / 255, g = parseInt(hex.slice(3, 5), 16) / 255, b = parseInt(hex.slice(5, 7), 16) / 255;
+    var max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+    if (!d) return 0;
+    var h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    return (h * 60 + 360) % 360;
+  }
+  function previewSrc() {
+    var size = sizeKeys[state.size], name = size === "mini" ? "mini" : layoutKeys[state.layout] + "-" + size;
+    return "landing-page-assets/preview/" + name + "-" + state.theme.toLowerCase() + "-" + state.shape.toLowerCase() + ".webp";
+  }
+  function updatePreview() {
+    var src = previewSrc();
+    var accent = accents.filter(function (a) { return a[0] === state.accent; })[0] || accents[0];
+    previewImg.style.filter = accent[0] === "Graphite" ? "saturate(.15)" : "hue-rotate(" + Math.round(hue(accent[1]) - hue(accents[0][1])) + "deg)";
+    if (previewImg.getAttribute("src") === src) return;
+    previewImg.classList.add("swap");
+    var next = new Image();
+    next.onload = function () { previewImg.src = src; previewImg.classList.remove("swap"); };
+    next.onerror = function () { previewImg.classList.remove("swap"); };
+    next.src = src;
+  }
   function label() {
-    document.getElementById("liveLabel").textContent = "Live preview · " + state.layout + " · " + state.theme + " · " + state.accent + " · " + sizes[state.size] + " · " + state.shape;
+    var layout = state.size === "Mini" ? "Notch tabs" : state.layout;
+    document.getElementById("liveLabel").textContent = "Live preview · " + layout + " · " + state.theme + " · " + state.accent + " · " + sizes[state.size] + " · " + state.shape;
+    updatePreview();
   }
 
   function setTheme(mode, save) {
@@ -623,7 +654,6 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
       var key = group.dataset.key, value = b.textContent.trim();
       if (key === "theme") return setTheme(value === "Dark" ? "dark" : "light", true);
       if (key === "font") { root.setAttribute("data-font", value === "SF Pro" ? "sf" : "vietnam"); }
-      if (key === "size") { document.getElementById("previewImg").style.transform = "scale(" + ({ S: .86, M: 1, L: 1.1 })[value] + ")"; }
       state[key] = value;
       label();
     });
