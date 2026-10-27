@@ -261,9 +261,9 @@ struct ExpandedView: View {
         let inset = 12 + (settings.notchStyle == .seamless ? NotchStyle.ear : 0)
         return VStack(spacing: 0) {
             HStack(spacing: 0) {
-                EarTabs(tabs: Array(Tab.allCases.prefix(5))).frame(maxWidth: .infinity, alignment: .leading)
+                EarTabs(tabs: Array(model.visibleTabs.prefix((model.visibleTabs.count + 1) / 2))).frame(maxWidth: .infinity, alignment: .leading)
                 Color.clear.frame(width: model.closedSize.width + 16)
-                EarTabs(tabs: Array(Tab.allCases.dropFirst(5))).frame(maxWidth: .infinity, alignment: .trailing)
+                EarTabs(tabs: Array(model.visibleTabs.dropFirst((model.visibleTabs.count + 1) / 2))).frame(maxWidth: .infinity, alignment: .trailing)
             }
             .padding(.horizontal, inset)
             .frame(height: model.closedSize.height)
@@ -372,7 +372,7 @@ private struct Header: View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             if showsTitle {
                 Text(model.tab.title).font(.app(size: 15, weight: .bold))
-                Text(Date().formatted(.dateTime.weekday(.wide).day().month(.wide)) + " · " + prayer.hijri)
+                Text(Date().formatted(.dateTime.weekday(.wide).day().month(.wide)) + (model.prayerOn ? " · " + prayer.hijri : ""))
                     .font(.app(size: 9.5, weight: .medium))
                     .foregroundStyle(Theme.faint)
                     .lineLimit(1)
@@ -390,7 +390,7 @@ private struct Header: View {
                 }
                 .buttonStyle(PressStyle())
                 .frame(maxWidth: 160)
-            } else if let next = prayer.next {
+            } else if model.prayerOn, let next = prayer.next {
                 Button { model.tab = .prayer } label: {
                     Pill(text: "\(prayer.label(next)) \(next.time.formatted(date: .omitted, time: .shortened))",
                          color: Theme.accent2, icon: "moon.fill")
@@ -484,7 +484,7 @@ private struct StudioSidebar: View {
             item(.today)
             item(.prayer, count: prayer.next?.time.formatted(.dateTime.hour(.twoDigits(amPM: .omitted)).minute()))
             item(.music, live: media.now?.playing == true)
-            group("Files")
+            if shown(.shelf) || shown(.clipboard) { group("Files") }
             item(.shelf, count: shelf.items.isEmpty ? nil : "\(shelf.items.count)")
             item(.clipboard, count: clipboard.entries.isEmpty ? nil : "\(clipboard.entries.count)")
             group("System")
@@ -513,7 +513,13 @@ private struct StudioSidebar: View {
         .padding(.bottom, 2)
     }
 
-    private func item(_ tab: Tab, count: String? = nil, live: Bool = false) -> some View {
+    private func shown(_ tab: Tab) -> Bool { model.visibleTabs.contains(tab) }
+
+    @ViewBuilder private func item(_ tab: Tab, count: String? = nil, live: Bool = false) -> some View {
+        if shown(tab) { row(tab, count: count, live: live) }
+    }
+
+    private func row(_ tab: Tab, count: String?, live: Bool) -> some View {
         let active = model.tab == tab
         return Button {
             withAnimation(.easeInOut(duration: 0.18)) { model.tab = tab }
@@ -586,7 +592,7 @@ private struct TopTabs: View {
 
     var body: some View {
         HStack(spacing: 2) {
-            ForEach(Tab.allCases) { tab in
+            ForEach(model.visibleTabs) { tab in
                 let active = model.tab == tab
                 Button {
                     withAnimation(.easeInOut(duration: 0.18)) { model.tab = tab }
@@ -618,7 +624,7 @@ private struct Rail: View {
 
     var body: some View {
         VStack(spacing: settings.size == .compact ? 1 : 2) {
-            ForEach(Tab.allCases) { tab in
+            ForEach(model.visibleTabs) { tab in
                 let active = model.tab == tab
                 Button {
                     withAnimation(.easeInOut(duration: 0.18)) { model.tab = tab }
@@ -652,7 +658,7 @@ private struct TabMenu: View {
 
     var body: some View {
         Menu {
-            ForEach(Tab.allCases) { tab in
+            ForEach(model.visibleTabs) { tab in
                 Button { model.tab = tab } label: { Label(tab.title, systemImage: tab.icon) }
             }
         } label: {
@@ -709,8 +715,8 @@ private struct LauncherGrid: View {
 
     var body: some View {
         // Two rows that share the panel's height, so the tiles fill it at every size.
-        let tabs = Tab.allCases
-        let rows = [Array(tabs.prefix(5)), Array(tabs.dropFirst(5))]
+        let tabs = model.visibleTabs
+        let rows = [Array(tabs.prefix((tabs.count + 1) / 2)), Array(tabs.dropFirst((tabs.count + 1) / 2))]
         VStack(spacing: 8) {
             ForEach(rows.indices, id: \.self) { r in
                 HStack(spacing: 8) {

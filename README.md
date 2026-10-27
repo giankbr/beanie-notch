@@ -100,6 +100,7 @@ Brow is written in Swift and SwiftUI with no third-party dependencies. The downl
   - **Minimal**: just the page; the title is the menu.
   - **Launcher**: opens on a grid of live tiles.
 - Every page fits every layout and size, and scrolls when the panel is too short for it.
+- **Pages:** switch off any page you don't use in Settings › Pages. Turning off Prayer also removes prayer times from the header and the notch, and the Hijri date.
 - Dark and light themes, 10 accent colors and 3 panel sizes.
 - Three notch shapes: drop, seamless and floating.
 - Flat buttons that light up under the pointer, and segmented controls with a sliding thumb.

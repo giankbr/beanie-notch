@@ -132,7 +132,7 @@ final class AppModel: ObservableObject {
         power.onNotice = notify
         audio.onNotice = notify
         calendar.onNotice = notify
-        prayer.onNotice = notify
+        prayer.onNotice = { [weak self] n in if self?.prayerOn == true { self?.show(n) } }
         tasks.onNotice = notify
         keyboard.onNotice = notify
         health.onNotice = notify
@@ -192,6 +192,11 @@ final class AppModel: ObservableObject {
             self?.show(Notice(icon: "arrow.down.circle.fill", color: Theme.accent, left: "Downloaded", right: url.lastPathComponent))
         }
         settings.$downloadsInNotch.sink { [weak self] on in self?.downloads.setEnabled(on) }.store(in: &sinks)
+        settings.$hiddenTabs.sink { [weak self] hidden in
+            guard let self, hidden.contains(tab.rawValue), tab != .settings else { return }
+            tab = .home
+            if hidden.contains(Tab.home.rawValue) { tab = Tab.allCases.first { !hidden.contains($0.rawValue) } ?? .settings }
+        }.store(in: &sinks)
         settings.$keyboardAlerts.sink { [weak self] on in self?.keyboard.enabled = on }.store(in: &sinks)
         settings.$waterEvery.sink { [weak self] v in self?.health.waterEvery = v }.store(in: &sinks)
         settings.$eyeBreaks.sink { [weak self] v in self?.health.eyeBreaks = v }.store(in: &sinks)
@@ -273,7 +278,14 @@ final class AppModel: ObservableObject {
         return min(420, max(260, longest * 6.4 * 2 + 40))
     }
 
-    var showsPrayerCountdown: Bool { settings.prayerCountdown && prayer.soon != nil }
+    var showsPrayerCountdown: Bool { prayerOn && settings.prayerCountdown && prayer.soon != nil }
+
+    // The pages in the menus, without the ones switched off. Settings always stays.
+    var visibleTabs: [Tab] { Tab.allCases.filter { $0 == .settings || !settings.hiddenTabs.contains($0.rawValue) } }
+
+    // With the Prayer page off, everything about prayer goes: the header time, the countdown, the alerts, the
+    // Hijri date.
+    var prayerOn: Bool { !settings.hiddenTabs.contains(Tab.prayer.rawValue) }
     var closedHeight: CGFloat { closedSize.height }
 }
 

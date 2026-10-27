@@ -6,6 +6,7 @@ struct SettingsView: View {
     @EnvironmentObject var clipboard: ClipboardHistory
     @EnvironmentObject var prayer: PrayerTimes
     @EnvironmentObject var updater: Updater
+    @EnvironmentObject var model: AppModel
     @EnvironmentObject var messages: MessageBadges
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var loginError: String?
@@ -18,11 +19,12 @@ struct SettingsView: View {
     @State private var section: Section = .appearance
 
     enum Section: String, CaseIterable, Identifiable {
-        case appearance, notch, inNotch, shelf, wellbeing, prayer, system
+        case appearance, pages, notch, inNotch, shelf, wellbeing, prayer, system
         var id: String { rawValue }
         var title: String {
             switch self {
             case .appearance: "Appearance"
+            case .pages: "Pages"
             case .notch: "Notch"
             case .inNotch: "In the notch"
             case .shelf: "Shelf & Clipboard"
@@ -34,6 +36,7 @@ struct SettingsView: View {
         var icon: String {
             switch self {
             case .appearance: "paintbrush.fill"
+            case .pages: "square.stack.fill"
             case .notch: "rectangle.topthird.inset.filled"
             case .inNotch: "bell.badge.fill"
             case .shelf: "tray.full.fill"
@@ -52,9 +55,11 @@ struct SettingsView: View {
                     let active = section == item
                     Button { withAnimation(.snappy(duration: 0.2)) { section = item } } label: {
                         HStack(spacing: 7) {
-                            TabIcon(name: item.icon, size: 10, weight: .semibold).frame(width: 14)
+                            // Without the Prayer page, its section only keeps the place, for the weather.
+                            let plain = item == .prayer && !model.prayerOn
+                            TabIcon(name: plain ? "location.fill" : item.icon, size: 10, weight: .semibold).frame(width: 14)
                                 .foregroundStyle(active ? Theme.accent : Theme.dim)
-                            Text(item.title).font(.app(size: 10.5, weight: active ? .semibold : .regular)).lineLimit(1)
+                            Text(plain ? "Location" : item.title).font(.app(size: 10.5, weight: active ? .semibold : .regular)).lineLimit(1)
                                 .foregroundStyle(active ? Theme.ink : Theme.ink.opacity(0.75))
                             Spacer(minLength: 0)
                         }
@@ -95,6 +100,7 @@ struct SettingsView: View {
     @ViewBuilder private var content: some View {
         switch section {
         case .appearance: appearance
+        case .pages: pages
         case .notch: notch
         case .inNotch: inNotch
         case .shelf: shelfSection
@@ -160,6 +166,36 @@ struct SettingsView: View {
                                                                                       set: { settings.systemFont = $0 == 0 }))
                 }
             }
+        }
+    }
+
+    // Pages to keep in the menus; the rest disappear from every layout.
+    private var pages: some View {
+        card {
+            ForEach(Tab.allCases.filter { $0 != .settings }) { tab in
+                row(tab.icon, tab.title, caption(for: tab)) {
+                    Toggle("", isOn: Binding(
+                        get: { !settings.hiddenTabs.contains(tab.rawValue) },
+                        set: { on in
+                            if on { settings.hiddenTabs.remove(tab.rawValue) } else { settings.hiddenTabs.insert(tab.rawValue) }
+                        }))
+                }
+            }
+        }
+    }
+
+    private func caption(for tab: Tab) -> String {
+        switch tab {
+        case .prayer: "Off also hides prayer times in the header and the notch, and the Hijri date"
+        case .home: "System stats and cleanup"
+        case .today: "Weather, calendar, tasks and timers"
+        case .music: "The player and lyrics; the notch still shows what's playing"
+        case .shelf: "Files dropped on the notch still land here"
+        case .clipboard: "History and notes"
+        case .ai: "Claude Code and Codex usage"
+        case .controls: "Quick switches, brightness, batteries, Shortcuts"
+        case .tools: "Uninstaller, large files, camera mirror"
+        case .settings: ""
         }
     }
 
@@ -262,30 +298,32 @@ struct SettingsView: View {
 
     private var prayerSection: some View {
         card {
-            row("location", "Location", prayer.place?.name ?? "Not set") {
+            row("location", "Location", (prayer.place?.name ?? "Not set") + (model.prayerOn ? "" : " · used for the weather")) {
                 CityMenu(label: "Change")
             }
-            row("function", "Method", "Fajr and Isha angles") {
-                Menu {
-                    ForEach(PrayerTimes.Method.allCases) { m in Button(m.title) { prayer.method = m } }
-                } label: {
-                    Text(prayer.method.title).font(.app(size: 10, weight: .semibold))
+            if model.prayerOn {
+                row("function", "Method", "Fajr and Isha angles") {
+                    Menu {
+                        ForEach(PrayerTimes.Method.allCases) { m in Button(m.title) { prayer.method = m } }
+                    } label: {
+                        Text(prayer.method.title).font(.app(size: 10, weight: .semibold))
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
                 }
-                .menuStyle(.borderlessButton)
-                .fixedSize()
-            }
-            row("sun.haze", "Asr", "Hanafi waits for a shadow twice an object's length") {
-                Segmented(options: ["Standard", "Hanafi"], selection: Binding(get: { prayer.hanafi ? 1 : 0 },
-                                                                           set: { prayer.hanafi = $0 == 1 }))
-            }
-            row("moon", "Prayer alerts", "A notice and a sound in the notch at each prayer") {
-                Toggle("", isOn: $prayer.alerts)
-            }
-            row("hourglass", "Countdown in the notch", "Before each prayer, and Imsak and iftar in Ramadan") {
-                Toggle("", isOn: $settings.prayerCountdown)
-            }
-            row("alarm", "Remind me before", "Minutes before each prayer") {
-                Segmented(options: ["Off", "5", "10", "15"], selection: index($prayer.reminder, Self.reminders))
+                row("sun.haze", "Asr", "Hanafi waits for a shadow twice an object's length") {
+                    Segmented(options: ["Standard", "Hanafi"], selection: Binding(get: { prayer.hanafi ? 1 : 0 },
+                                                                               set: { prayer.hanafi = $0 == 1 }))
+                }
+                row("moon", "Prayer alerts", "A notice and a sound in the notch at each prayer") {
+                    Toggle("", isOn: $prayer.alerts)
+                }
+                row("hourglass", "Countdown in the notch", "Before each prayer, and Imsak and iftar in Ramadan") {
+                    Toggle("", isOn: $settings.prayerCountdown)
+                }
+                row("alarm", "Remind me before", "Minutes before each prayer") {
+                    Segmented(options: ["Off", "5", "10", "15"], selection: index($prayer.reminder, Self.reminders))
+                }
             }
         }
     }

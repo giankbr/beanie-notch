@@ -24,11 +24,11 @@ struct GreetingHeader: View {
         // One line, so the page under it keeps its height: the greeting on Overview, the page's name elsewhere.
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(model.tab == .home ? "\(greeting), \(name)" : model.tab.title).font(.app(size: 14, weight: .bold)).lineLimit(1)
-            Text(Date().formatted(.dateTime.weekday(.wide).month(.wide).day()) + " · " + prayer.hijri)
+            Text(Date().formatted(.dateTime.weekday(.wide).month(.wide).day()) + (model.prayerOn ? " · " + prayer.hijri : ""))
                 .font(.app(size: 9.5, weight: .medium)).foregroundStyle(Theme.faint).lineLimit(1)
             Spacer()
             HStack(spacing: 6) {
-                if let next = prayer.next {
+                if model.prayerOn, let next = prayer.next {
                     Pill(text: "\(prayer.label(next)) \(next.time.formatted(date: .omitted, time: .shortened))",
                          color: Theme.accent2, icon: "moon.fill")
                 }
@@ -48,7 +48,7 @@ struct DockBar: View {
 
     var body: some View {
         HStack(spacing: 2) {
-            ForEach(Tab.allCases) { tab in
+            ForEach(model.visibleTabs) { tab in
                 button(tab.icon, tab.title, active: model.tab == tab) {
                     withAnimation(.easeInOut(duration: 0.18)) { model.tab = tab }
                 }

@@ -71,7 +71,7 @@ private struct TodayStrip: View {
             }
         } else {
             StatCell(label: "Weather", color: Theme.accent, value: "–",
-                     caption: prayer.place == nil ? "Set your place in Prayer" : weather.failed ? "Didn't load" : "Loading…")
+                     caption: prayer.place == nil ? "Set your place in Settings" : weather.failed ? "Didn't load" : "Loading…")
         }
     }
 
