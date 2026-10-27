@@ -49,6 +49,7 @@ final class ClipboardHistory: ObservableObject {
         didSet { UserDefaults.standard.set(enabled, forKey: "clipboardEnabled") }
     }
 
+    var onText: ((String) -> Void)?
     private var lastChange = NSPasteboard.general.changeCount
     private var timer: Timer?
 
@@ -92,7 +93,10 @@ final class ClipboardHistory: ObservableObject {
         } else if let first = types.first, first == .tiff || first == .png, let image = Self.image(from: pb) {
             insert(.image(image.0, image.1), source: source)
         } else if let text = pb.string(forType: .string) {
-            if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { insert(.text(text), source: source) }
+            if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                insert(.text(text), source: source)
+                onText?(text)
+            }
         } else if let image = Self.image(from: pb) {
             insert(.image(image.0, image.1), source: source)
         }

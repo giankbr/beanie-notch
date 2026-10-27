@@ -129,6 +129,8 @@ final class AppModel: ObservableObject {
     let devRuns = DevRuns()
     let meeting = MeetingWatcher()
     let ambient = Ambient()
+    let rates = Rates()
+    lazy var smartCopy = SmartCopy(rates: rates)
     // Set by the controller: opens the panel and keeps it open (a permission request is waiting).
     var openPanel: (() -> Void)?
     private let volumeWatcher = VolumeWatcher()
@@ -213,6 +215,9 @@ final class AppModel: ObservableObject {
             guard let self else { return }
             if end != nil, phase == .focus, let sound = Ambient.Sound(rawValue: name) { ambient.play(sound) } else { ambient.stop() }
         }.store(in: &sinks)
+        smartCopy.onNotice = notify
+        clipboard.onText = { [weak self] text in self?.smartCopy.check(text) }
+        settings.$smartCopy.sink { [weak self] on in self?.smartCopy.enabled = on }.store(in: &sinks)
         settings.$meetingMode.sink { [weak self] on in self?.meeting.setEnabled(on) }.store(in: &sinks)
         meeting.onEnd = { [weak self] length in
             guard let self else { return }
@@ -397,6 +402,7 @@ extension View {
             .environmentObject(m.claude)
             .environmentObject(m.devRuns)
             .environmentObject(m.meeting)
+            .environmentObject(m.rates)
     }
 }
 

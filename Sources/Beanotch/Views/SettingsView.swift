@@ -330,6 +330,9 @@ struct SettingsView: View {
             row("doc.on.clipboard", "Clipboard history", "Keeps the last 100 texts and images you copy") {
                 Toggle("", isOn: $clipboard.enabled)
             }
+            row("wand.and.stars", "Smart copy", "Codes from messages, prices in your currency, addresses and parcels, in the notch") {
+                Toggle("", isOn: $settings.smartCopy)
+            }
         }
     }
 
