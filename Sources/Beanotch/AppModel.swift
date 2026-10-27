@@ -130,6 +130,7 @@ final class AppModel: ObservableObject {
     let meeting = MeetingWatcher()
     let ambient = Ambient()
     let rates = Rates()
+    let quakes = Quakes()
     lazy var smartCopy = SmartCopy(rates: rates)
     // Set by the controller: opens the panel and keeps it open (a permission request is waiting).
     var openPanel: (() -> Void)?
@@ -218,6 +219,9 @@ final class AppModel: ObservableObject {
         smartCopy.onNotice = notify
         clipboard.onText = { [weak self] text in self?.smartCopy.check(text) }
         settings.$smartCopy.sink { [weak self] on in self?.smartCopy.enabled = on }.store(in: &sinks)
+        quakes.onNotice = notify
+        quakes.place = { [weak self] in self?.prayer.place }
+        settings.$quakeAlerts.sink { [weak self] on in self?.quakes.setEnabled(on) }.store(in: &sinks)
         settings.$meetingMode.sink { [weak self] on in self?.meeting.setEnabled(on) }.store(in: &sinks)
         meeting.onEnd = { [weak self] length in
             guard let self else { return }

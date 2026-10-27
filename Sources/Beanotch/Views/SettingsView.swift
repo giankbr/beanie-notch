@@ -355,6 +355,11 @@ struct SettingsView: View {
             row("location", "Location", (prayer.place?.name ?? "Not set") + (model.prayerOn ? "" : " · used for the weather")) {
                 CityMenu(label: "Change")
             }
+            if let place = prayer.place, PrayerTimes.inIndonesia(place) {
+                row("waveform.path.ecg", "Earthquakes", "From BMKG: near you, strong ones, or a tsunami risk, in red in the notch") {
+                    Toggle("", isOn: $settings.quakeAlerts)
+                }
+            }
             if model.prayerOn {
                 row("function", "Method", "Fajr and Isha angles") {
                     Menu {

@@ -290,7 +290,8 @@ final class PrayerTimes: ObservableObject {
         if next?.time != soon?.time || next?.name != soon?.name { soon = next }
     }
 
-    nonisolated private static func distance(_ p: Place, _ lat: Double, _ lng: Double) -> Double {
+    // In kilometres, near enough at these distances.
+    nonisolated static func distance(_ p: Place, _ lat: Double, _ lng: Double) -> Double {
         let dLat = (p.lat - lat) * 111, dLng = (p.lng - lng) * 111 * cos(lat * .pi / 180)
         return (dLat * dLat + dLng * dLng).squareRoot()
     }

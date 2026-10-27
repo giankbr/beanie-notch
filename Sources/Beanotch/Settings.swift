@@ -168,6 +168,7 @@ final class Settings: ObservableObject {
     @Published var downloadsInNotch: Bool { didSet { save(downloadsInNotch, "downloadsInNotch") } }
     @Published var meetingMode: Bool { didSet { save(meetingMode, "meetingMode") } }
     @Published var smartCopy: Bool { didSet { save(smartCopy, "smartCopy") } }
+    @Published var quakeAlerts: Bool { didSet { save(quakeAlerts, "quakeAlerts") } }
     // The sound that plays while a focus stretch runs; empty for none.
     @Published var focusSound: String { didSet { save(focusSound, "focusSound") } }
     @Published var waterEvery: Int { didSet { save(waterEvery, "waterEvery") } }
@@ -212,6 +213,7 @@ final class Settings: ObservableObject {
         downloadsInNotch = d.object(forKey: "downloadsInNotch") as? Bool ?? true
         meetingMode = d.object(forKey: "meetingMode") as? Bool ?? true
         smartCopy = d.object(forKey: "smartCopy") as? Bool ?? true
+        quakeAlerts = d.object(forKey: "quakeAlerts") as? Bool ?? true
         focusSound = d.string(forKey: "focusSound") ?? ""
         waterEvery = d.object(forKey: "waterEvery") as? Int ?? 0
         eyeBreaks = d.bool(forKey: "eyeBreaks")
