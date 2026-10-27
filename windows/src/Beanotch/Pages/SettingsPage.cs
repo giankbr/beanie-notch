@@ -123,7 +123,10 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
     private FrameworkElement Island()
     {
         UIElement Toggle(string title, string caption, bool on, Action<bool> set) => Row(null, title, caption, Switch(on, v => { set(v); Save(); }));
-        return V(8, Group(
+        var shape = Segmented(["Notch", "Floating"], S0.Floating ? 1 : 0, i => { S0.Floating = i == 1; Save(); });
+        return V(8, Group(Picker("Shape", "Hang from the top edge like a MacBook notch, or float just below it", shape),
+                          Toggle("Time when idle", "Otherwise the notch stays empty and black", S0.IdleClock, v => S0.IdleClock = v)),
+            Group(
             Toggle("Lyrics", "The line being sung, while music plays", S0.Lyrics, v => S0.Lyrics = v),
             Toggle("Volume", "Level when it changes", S0.VolumeHud, v => S0.VolumeHud = v),
             Toggle("Downloads", "Progress from Chrome, Edge and Firefox", S0.DownloadsInIsland, v => S0.DownloadsInIsland = v),

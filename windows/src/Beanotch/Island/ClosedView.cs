@@ -35,6 +35,7 @@ public sealed class ClosedView
     public double Update(Notice? notice)
     {
         var white = Theme.Rgb(1, 1, 1);
+        row.Visibility = Visibility.Visible;
         level.Visibility = Visibility.Collapsed;
         right.Foreground = Theme.Brush(Theme.Rgb(1, 1, 1, 0.7));
 
@@ -93,6 +94,12 @@ public sealed class ClosedView
             return 230;
         }
 
+        // Idle: an empty black notch, as on a MacBook, unless the time was asked for.
+        if (!model.Settings.IdleClock)
+        {
+            row.Visibility = Visibility.Collapsed;
+            return 180;
+        }
         Show(Glyphs.Clock, Theme.Rgb(1, 1, 1, 0.55), DateTime.Now.ToString("ddd d MMM"), DateTime.Now.ToString("HH.mm"));
         right.Foreground = Theme.Brush(white);
         return 190;

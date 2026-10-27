@@ -21,6 +21,10 @@ public sealed class AppSettings
     public bool DeviceAlerts { get; set; } = true;
     public bool KeyboardAlerts { get; set; } = true;
     public bool PrayerCountdown { get; set; } = true;
+    // The island hangs from the top edge like the MacBook notch; floating keeps it as a pill just below.
+    public bool Floating { get; set; }
+    // When nothing else is showing, the notch is empty and black unless this puts the time in it.
+    public bool IdleClock { get; set; }
     public bool MeetingAlerts { get; set; } = true;
     public int PrayerReminder { get; set; } = 10;
     public string CalendarUrl { get; set; } = "";

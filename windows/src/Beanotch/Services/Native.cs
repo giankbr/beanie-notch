@@ -44,6 +44,40 @@ static partial class Native
         SHFileOperationW(ref op);
     }
 
+    [LibraryImport("gdi32.dll")]
+    private static partial nint CreateRectRgn(int left, int top, int right, int bottom);
+
+    [LibraryImport("gdi32.dll")]
+    private static partial nint CreateEllipticRgn(int left, int top, int right, int bottom);
+
+    [LibraryImport("gdi32.dll")]
+    private static partial int CombineRgn(nint destination, nint first, nint second, int mode);
+
+    [LibraryImport("gdi32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool DeleteObject(nint handle);
+
+    // The MacBook notch's outline: flat along the top edge of the screen, rounded at the bottom, and with a concave
+    // shoulder on each side where it meets the top edge. The body sits between the shoulders.
+    internal static void Notch(nint hwnd, int width, int height, int ear, int radius)
+    {
+        var body = CreateRoundRectRgn(ear, -radius, width - ear + 1, height + 1, radius * 2, radius * 2);
+        if (ear > 0)
+        {
+            foreach (var (left, centre) in new[] { (0, 0), (width - ear, width) })
+            {
+                // A square at the top corner, less the circle that curves from the top edge down into the body's side.
+                var square = CreateRectRgn(left, 0, left + ear, ear);
+                var circle = CreateEllipticRgn(centre - ear, 0, centre + ear + 1, ear * 2 + 1);
+                CombineRgn(square, square, circle, 4 /* RGN_DIFF */);
+                CombineRgn(body, body, square, 2 /* RGN_OR */);
+                DeleteObject(square);
+                DeleteObject(circle);
+            }
+        }
+        SetWindowRgn(hwnd, body, true);
+    }
+
     // Clips the window to a rounded rectangle, so the island can be a true pill. Windows owns the region afterwards.
     internal static void Round(nint hwnd, int width, int height, int radius)
     {

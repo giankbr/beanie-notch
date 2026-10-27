@@ -53,8 +53,11 @@ jobs:
           $env:BEANOTCH_SNAPSHOT = $dir
           $app = Start-Process out/Beanotch/Beanotch.exe -PassThru
           Add-Type -AssemblyName System.Windows.Forms, System.Drawing
-          foreach ($at in 5, 9) {
-            Start-Sleep -Seconds ($at - ($at -eq 9 ? 5 : 0))
+          # The idle notch (about 2 s in), the volume notice (5 s) and the open panel (10 s).
+          $last = 0
+          foreach ($at in 2, 5, 10) {
+            Start-Sleep -Seconds ($at - $last)
+            $last = $at
             $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
             $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
             [System.Drawing.Graphics]::FromImage($bmp).CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
