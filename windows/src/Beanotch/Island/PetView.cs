@@ -98,7 +98,8 @@ public sealed partial class PetView
         if (m == Model.PetMood.Panic) dx = frame % 2 == 0 ? -0.5 : 0.5;
         void Dot(double x, double y, Color color, double w = 1, double h = 1)
         {
-            var r = new Rectangle { Width = S(w * Pixel) + 0.3, Height = S(h * Pixel) + 0.3, Fill = Ui.Theme.Brush(color) };
+            // A pixel larger than the grid, so no seams show between them at any scaling.
+            var r = new Rectangle { Width = S(w * Pixel) + 0.8, Height = S(h * Pixel) + 0.8, Fill = Ui.Theme.Brush(color) };
             Canvas.SetLeft(r, S((x + 3 + dx) * Pixel));
             Canvas.SetTop(r, S((y + dy) * Pixel));
             canvas.Children.Add(r);
