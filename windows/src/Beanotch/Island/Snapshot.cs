@@ -102,7 +102,7 @@ public sealed partial class IslandWindow
         shell.Open(Tab.Today);
         await Shot($"{index++:00}-today-rates", 6000);
         Pages.TodayPage.StartLeft = 0;
-        foreach (var (theme, tab) in new[] { (ThemeMode.Midnight, Tab.Home), (ThemeMode.Midnight, Tab.Today), (ThemeMode.Glass, Tab.Home), (ThemeMode.Glass, Tab.Settings) })
+        foreach (var (theme, tab) in new[] { (ThemeMode.Midnight, Tab.Home), (ThemeMode.Midnight, Tab.Today), (ThemeMode.Glass, Tab.Home), (ThemeMode.Glass, Tab.Settings), (ThemeMode.Keycap, Tab.Home), (ThemeMode.Keycap, Tab.Settings) })
         {
             model.Settings.Theme = theme;
             ApplyTheme();

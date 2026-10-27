@@ -3,7 +3,7 @@ using Windows.UI;
 
 namespace Beanotch.Ui;
 
-public enum ThemeMode { System, Light, Dark, Midnight, Glass }
+public enum ThemeMode { System, Light, Dark, Midnight, Glass, Keycap }
 
 // Segoe UI is Windows' own; the others ship with the app, as on the Mac (all under the SIL Open Font License).
 public enum AppFont { System, BeVietnam, Inter, Jakarta }
@@ -21,6 +21,8 @@ public static class Theme
     public static Color Accent2Color { get; private set; } = Secondary(AccentChoice.Mint);
 
     public static ThemeMode Mode { get; private set; } = ThemeMode.Dark;
+    // Buttons, switches and cards drawn as raised keys, like the landing page's.
+    public static bool Keycap => Mode == ThemeMode.Keycap;
 
     public static void Apply(ThemeMode mode, AccentChoice accent, bool systemIsDark)
     {

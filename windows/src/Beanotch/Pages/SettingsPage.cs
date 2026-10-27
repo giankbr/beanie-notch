@@ -180,6 +180,17 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
                 GradientStops = { new() { Color = Theme.Rgb(0.4, 0.48, 0.75), Offset = 0 }, new() { Color = Theme.Rgb(0.65, 0.43, 0.6), Offset = 1 } },
             };
         }
+        else if (mode == ThemeMode.Keycap)
+        {
+            g.Background = Theme.Brush(dark);
+            g.Children.Add(new Border
+            {
+                Width = S(20), Height = S(11), CornerRadius = new CornerRadius(S(3)),
+                Background = KeyFace(Theme.Accent), BorderBrush = KeyEdge(), BorderThickness = new Thickness(1, 1, 1, 2),
+                HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Bottom,
+                Margin = new Thickness(0, 0, S(5), S(5)),
+            });
+        }
         else g.Background = Theme.Brush(mode switch { ThemeMode.Light => light, ThemeMode.Midnight => Theme.Black, _ => dark });
 
         Border Line(double width, double height, Color color) => new()

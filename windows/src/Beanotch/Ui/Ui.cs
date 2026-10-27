@@ -131,10 +131,46 @@ public static class Ui
         Child = child,
         Padding = new Thickness(S(padding)),
         CornerRadius = new CornerRadius(S(radius)),
-        Background = Theme.Brush(Theme.Surface),
-        BorderBrush = Theme.Brush(Theme.Stroke),
+        Background = Theme.Keycap ? Vertical(Theme.Rgb(1, 1, 1, 0.105), Theme.Rgb(1, 1, 1, 0.08)) : Theme.Brush(Theme.Surface),
+        BorderBrush = Theme.Keycap ? KeyEdge() : Theme.Brush(Theme.Stroke),
         BorderThickness = new Thickness(1),
     };
+
+    public static LinearGradientBrush Vertical(params Color[] stops)
+    {
+        var brush = new LinearGradientBrush { StartPoint = new Windows.Foundation.Point(0, 0), EndPoint = new Windows.Foundation.Point(0, 1) };
+        for (var i = 0; i < stops.Length; i++)
+            brush.GradientStops.Add(new GradientStop { Color = stops[i], Offset = stops.Length == 1 ? 0 : (double)i / (stops.Length - 1) });
+        return brush;
+    }
+
+    // A key's face: lit from the top, a shade darker at the bottom. A see-through tint sits on a neutral key, worked
+    // out against the panel so the face stays opaque.
+    public static LinearGradientBrush KeyFace(Color fill, bool lit = false)
+    {
+        Color top, bottom;
+        if (fill.A == 255)
+        {
+            top = Blend(fill, Theme.Rgb(1, 1, 1), 0.28);
+            bottom = Blend(fill, Theme.Rgb(0, 0, 0), 0.12);
+        }
+        else
+        {
+            var tint = Theme.WithAlpha(fill, 1);
+            top = Blend(Blend(Theme.Background, Theme.Rgb(1, 1, 1), 0.2), tint, fill.A / 255.0);
+            bottom = Blend(Blend(Theme.Background, Theme.Rgb(1, 1, 1), 0.135), tint, fill.A / 255.0);
+        }
+        if (lit) { top = Blend(top, Theme.Rgb(1, 1, 1), 0.08); bottom = Blend(bottom, Theme.Rgb(1, 1, 1), 0.08); }
+        return Vertical(top, bottom);
+    }
+
+    // The key's edge: a highlight along the top, a shadow along the thicker bottom lip.
+    public static LinearGradientBrush KeyEdge() =>
+        Vertical(Theme.Rgb(1, 1, 1, 0.22), Theme.Rgb(1, 1, 1, 0.04), Theme.Rgb(0, 0, 0, 0.55));
+
+    // The recess a key sits in: a touch lighter than the card, shaded along its top.
+    public static Brush KeyWell() => Theme.Brush(Theme.Rgb(1, 1, 1, 0.055));
+    public static Brush KeyWellEdge() => Vertical(Theme.Rgb(0, 0, 0, 0.5), Theme.Rgb(1, 1, 1, 0.06));
 
     public static Border Pill(string text, Color color, string? glyph = null, bool dot = false)
     {
@@ -169,12 +205,22 @@ public static class Ui
             HorizontalContentAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Center,
         };
-        var hover = Theme.Brush(Blend(fill, Theme.Ink, 0.08));
-        var press = Theme.Brush(Blend(fill, Theme.Ink, 0.14));
+        Brush hover = Theme.Brush(Blend(fill, Theme.Ink, 0.08));
+        Brush press = Theme.Brush(Blend(fill, Theme.Ink, 0.14));
+        Brush edge = Theme.Brush(Colors.Transparent);
+        if (Theme.Keycap && fill.A > 0)
+        {
+            b.Background = KeyFace(fill);
+            hover = KeyFace(fill, lit: true);
+            press = Theme.Brush(Blend(Theme.WithAlpha(fill, 1), Theme.Background, 1 - fill.A / 255.0));
+            edge = KeyEdge();
+            b.BorderBrush = edge;
+            b.BorderThickness = new Thickness(1, 1, 1, 2);
+        }
         b.Resources["ButtonBackgroundPointerOver"] = hover;
         b.Resources["ButtonBackgroundPressed"] = press;
-        b.Resources["ButtonBorderBrushPointerOver"] = Theme.Brush(Colors.Transparent);
-        b.Resources["ButtonBorderBrushPressed"] = Theme.Brush(Colors.Transparent);
+        b.Resources["ButtonBorderBrushPointerOver"] = edge;
+        b.Resources["ButtonBorderBrushPressed"] = edge;
         b.Resources["ButtonForegroundPointerOver"] = Theme.Brush(Theme.Ink);
         b.Resources["ButtonForegroundPressed"] = Theme.Brush(Theme.Ink);
         b.Click += (_, _) => onClick();
@@ -215,7 +261,9 @@ public static class Ui
             Child = row,
             Padding = new Thickness(S(2)),
             CornerRadius = new CornerRadius(S(8)),
-            Background = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.06)),
+            Background = Theme.Keycap ? KeyWell() : Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.06)),
+            BorderBrush = Theme.Keycap ? KeyWellEdge() : null,
+            BorderThickness = new Thickness(Theme.Keycap ? 1 : 0),
             HorizontalAlignment = HorizontalAlignment.Left,
             VerticalAlignment = VerticalAlignment.Center,
         };
@@ -228,7 +276,9 @@ public static class Ui
         var knob = new Border
         {
             Width = S(13), Height = S(13), CornerRadius = new CornerRadius(S(6.5)),
-            Background = Theme.Brush(Theme.Rgb(1, 1, 1)),
+            Background = Theme.Keycap ? Vertical(Theme.Rgb(1, 1, 1), Theme.Rgb(0.84, 0.84, 0.86)) : Theme.Brush(Theme.Rgb(1, 1, 1)),
+            BorderBrush = Theme.Keycap ? Theme.Brush(Theme.Rgb(0, 0, 0, 0.35)) : null,
+            BorderThickness = new Thickness(0, 0, 0, Theme.Keycap ? 1.5 : 0),
             HorizontalAlignment = on ? HorizontalAlignment.Right : HorizontalAlignment.Left,
             Margin = new Thickness(S(2)),
             Transitions = [new RepositionThemeTransition()],
@@ -236,7 +286,9 @@ public static class Ui
         var track = new Grid
         {
             Width = S(30), Height = S(17), CornerRadius = new CornerRadius(S(8.5)),
-            Background = Theme.Brush(on ? Theme.Accent : Theme.WithAlpha(Theme.Ink, 0.18)),
+            Background = Track(on),
+            BorderBrush = Theme.Keycap ? KeyWellEdge() : null,
+            BorderThickness = new Thickness(Theme.Keycap ? 1 : 0),
             Children = { knob },
         };
         var state = on;
@@ -244,12 +296,20 @@ public static class Ui
         {
             state = !state;
             knob.HorizontalAlignment = state ? HorizontalAlignment.Right : HorizontalAlignment.Left;
-            track.Background = Theme.Brush(state ? Theme.Accent : Theme.WithAlpha(Theme.Ink, 0.18));
+            track.Background = Track(state);
             changed(state);
         }, radius: 8.5);
         button.HorizontalAlignment = HorizontalAlignment.Right;
         return button;
     }
+
+    private static Brush Track(bool on) => (on, Theme.Keycap) switch
+    {
+        (true, true) => Vertical(Blend(Theme.Accent, Theme.Rgb(0, 0, 0), 0.25), Theme.Accent),
+        (true, false) => Theme.Brush(Theme.Accent),
+        (false, true) => KeyWell(),
+        _ => Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.18)),
+    };
 
     // A settings or quick-settings row: icon, title over caption, and a control on the right.
     public static Grid Row(string? glyph, string title, string caption, UIElement? trailing)
