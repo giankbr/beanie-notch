@@ -115,15 +115,18 @@ final class Notes: ObservableObject {
     }
 }
 
-// Looks for a newer release on GitHub. The repository has to be public for this to get an answer.
+// Looks for a newer release on GitHub, and can install it.
 @MainActor
 final class Updater: ObservableObject {
-    static let repository = "giankbr/beanotch"
+    static let repository = "giankbr/beanie-notch"
 
     @Published private(set) var latest: String?
     @Published private(set) var page: URL?
     @Published private(set) var checking = false
     @Published private(set) var failed = false
+    @Published private(set) var installing = false
+    @Published private(set) var installError: String?
+    private var download: URL?
     @Published var automatic: Bool {
         didSet { UserDefaults.standard.set(automatic, forKey: "checkUpdates") }
     }
@@ -150,7 +153,8 @@ final class Updater: ObservableObject {
         checking = true
         failed = false
         Task {
-            struct Release: Decodable { let tag_name: String; let html_url: String }
+            struct Asset: Decodable { let name: String; let browser_download_url: String }
+            struct Release: Decodable { let tag_name: String; let html_url: String; let assets: [Asset] }
             var request = URLRequest(url: URL(string: "https://api.github.com/repos/\(Self.repository)/releases/latest")!, timeoutInterval: 10)
             request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
             let release: Release? = await {
@@ -166,8 +170,63 @@ final class Updater: ObservableObject {
             let version = release.tag_name.trimmingCharacters(in: CharacterSet(charactersIn: "vV"))
             latest = version
             page = URL(string: release.html_url)
+            download = release.assets.first { $0.name.hasSuffix(".dmg") }.flatMap { URL(string: $0.browser_download_url) }
             if announce, updateAvailable { onNewVersion?(version) }
         }
+    }
+
+    // Downloads the release's disk image and swaps the app in place once this copy has quit. Files fetched here carry
+    // no quarantine flag, so the new copy opens without the first-launch prompt. Without a writable app folder, the
+    // release page opens instead.
+    func install() {
+        let bundle = URL(fileURLWithPath: Bundle.main.bundlePath)
+        let folder = bundle.deletingLastPathComponent()
+        guard let download, !installing, FileManager.default.isWritableFile(atPath: folder.path) else {
+            if let page { NSWorkspace.shared.open(page) }
+            return
+        }
+        installing = true
+        installError = nil
+        Task {
+            do {
+                let (file, response) = try await URLSession.shared.download(from: download)
+                guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw URLError(.badServerResponse) }
+                let image = FileManager.default.temporaryDirectory.appendingPathComponent("update-\(UUID().uuidString).dmg")
+                try FileManager.default.moveItem(at: file, to: image)
+                let mount = try await Task.detached { try Self.attach(image) }.value
+                guard let app = try FileManager.default.contentsOfDirectory(at: mount, includingPropertiesForKeys: nil)
+                    .first(where: { $0.pathExtension == "app" }) else { throw CocoaError(.fileNoSuchFile) }
+                let target = folder.appendingPathComponent(app.lastPathComponent)
+                let script = """
+                while kill -0 "$1" 2>/dev/null; do sleep 0.2; done
+                rm -rf "$2" "$3" && ditto "$4" "$3"; ok=$?
+                hdiutil detach "$5" -quiet; rm -f "$6"
+                [ $ok -eq 0 ] && open "$3"
+                """
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: "/bin/sh")
+                process.arguments = ["-c", script, "sh", String(getpid()), bundle.path, target.path, app.path, mount.path, image.path]
+                try process.run()
+                NSApp.terminate(nil)
+            } catch {
+                installing = false
+                installError = "Couldn't install the update"
+            }
+        }
+    }
+
+    nonisolated private static func attach(_ image: URL) throws -> URL {
+        let process = Process(), pipe = Pipe()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/hdiutil")
+        process.arguments = ["attach", image.path, "-nobrowse", "-readonly", "-noautoopen", "-plist"]
+        process.standardOutput = pipe
+        try process.run()
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        process.waitUntilExit()
+        let plist = try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
+        let entities = plist?["system-entities"] as? [[String: Any]] ?? []
+        guard let path = entities.compactMap({ $0["mount-point"] as? String }).first else { throw CocoaError(.fileReadUnknown) }
+        return URL(fileURLWithPath: path)
     }
 
     static func newer(_ a: String, than b: String) -> Bool {

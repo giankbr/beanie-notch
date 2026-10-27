@@ -375,8 +375,8 @@ struct SettingsView: View {
             }
             row("arrow.down.app", "Updates", updateCaption) {
                 HStack(spacing: 8) {
-                    if updater.updateAvailable, let page = updater.page {
-                        PillButton(text: "Get \(updater.latest ?? "")", color: Theme.accent) { NSWorkspace.shared.open(page) }
+                    if updater.updateAvailable {
+                        PillButton(text: updater.installing ? "Installing…" : "Install \(updater.latest ?? "")", color: Theme.accent) { updater.install() }
                     } else {
                         PillButton(text: updater.checking ? "Checking…" : "Check now", color: Theme.accent2) { updater.check() }
                     }
@@ -428,7 +428,8 @@ struct SettingsView: View {
     }
 
     private var updateCaption: String {
-        if updater.failed { return "Couldn't reach GitHub (the repository must be public)" }
+        if let error = updater.installError { return error }
+        if updater.failed { return "Couldn't reach GitHub" }
         if updater.updateAvailable { return "Beanotch \(updater.latest ?? "") is out, you have \(updater.current)" }
         if updater.latest != nil { return "Up to date (\(updater.current))" }
         return "Looks for a new release on GitHub once a day"
