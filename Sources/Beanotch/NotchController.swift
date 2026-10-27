@@ -138,11 +138,12 @@ final class NotchController {
 
         let zone = DropZoneView()
         zone.onHover = { [weak self] in
-            guard let self, model.settings.openOnHover else { return }
+            // A notice that opens something waits for its click instead.
+            guard let self, model.settings.openOnHover, model.notice?.open == nil else { return }
             expand(pinned: false)
         }
         zone.onClick = { [weak self] in
-            // A message notice opens its app; otherwise the panel opens.
+            // A notice with a link (a chat app, Maps, a parcel tracker) opens it; otherwise the panel opens.
             if let app = self?.model.notice?.open {
                 NSWorkspace.shared.open(app)
             } else {
