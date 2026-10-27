@@ -337,6 +337,36 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
   .closed-card .strip img, .watermark, .watermark span, .hero-shot img { transform: none !important; }
   .watermark.idle span { opacity: 1; }
 }
+
+/* Windows, coming soon */
+#windows { border-top: 1px solid var(--border); }
+.win { display: grid; grid-template-columns: 1fr 1.1fr; gap: 56px; align-items: center; margin-top: 8px; }
+.soon { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: .4px; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); padding: 5px 12px; border-radius: 999px; }
+.soon::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: blink 1.6s ease-in-out infinite; }
+@keyframes blink { 50% { opacity: .25; } }
+.plan { margin: 28px 0 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; }
+.plan div { display: flex; gap: 10px; align-items: center; font-size: 15px; }
+.plan svg { color: var(--live); }
+.plan .later svg { color: var(--text-3); }
+.plan .later { color: var(--text-3); grid-column: 1 / -1; }
+.win-note { font-size: 13.5px; color: var(--text-3); margin-top: 14px; }
+.desk { position: relative; aspect-ratio: 16 / 10; border-radius: 22px; overflow: hidden; border: 1px solid var(--border);
+  background: radial-gradient(120% 90% at 20% 0%, #3d6fd8 0%, transparent 60%), radial-gradient(90% 80% at 100% 100%, #7a4fd6 0%, transparent 60%), #1b2a52; }
+.desk .island { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: 58%; height: 34px; border-radius: 999px; background: #000;
+  display: flex; align-items: center; justify-content: space-between; padding: 0 16px; color: #fff; font-size: 12px; box-shadow: 0 10px 30px -10px rgba(0,0,0,.6); }
+.desk .island span:first-child { color: #9ec5ff; display: flex; gap: 8px; align-items: center; white-space: nowrap; overflow: hidden; }
+.desk .island span:first-child::before { content: ""; width: 14px; height: 14px; border-radius: 4px; background: linear-gradient(135deg, #ff9a4d, #b84fd6); flex: none; }
+.desk .bars { display: flex; gap: 2px; align-items: flex-end; height: 12px; }
+.desk .bars i { width: 3px; height: 8px; background: #9ec5ff; border-radius: 2px; animation: eq 1s ease-in-out infinite; }
+.desk .bars i:nth-child(2) { animation-delay: .2s; } .desk .bars i:nth-child(3) { animation-delay: .4s; } .desk .bars i:nth-child(4) { animation-delay: .1s; }
+@keyframes eq { 0%, 100% { height: 4px; } 50% { height: 12px; } }
+.desk .taskbar { position: absolute; left: 0; right: 0; bottom: 0; height: 44px; background: rgba(20,24,36,.72); backdrop-filter: blur(16px); display: flex; justify-content: center; align-items: center; gap: 10px; }
+.desk .taskbar i { width: 26px; height: 26px; border-radius: 7px; background: rgba(255,255,255,.14); }
+.desk .taskbar i:first-child { background: linear-gradient(135deg, #4cc2ff, #0a6cff); }
+.desk .label { position: absolute; left: 16px; bottom: 58px; font-size: 12px; color: rgba(255,255,255,.75); background: rgba(0,0,0,.35); padding: 6px 12px; border-radius: 999px; }
+@media (max-width: 960px) { .win { grid-template-columns: 1fr; gap: 36px; } }
+@media (max-width: 560px) { .plan { grid-template-columns: 1fr; } .desk .island { width: 78%; } }
+@media (prefers-reduced-motion: reduce) { .soon::before, .desk .bars i { animation: none; } }
 </style>
 </head>
 <body>
@@ -347,7 +377,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
   <div class="wrap">
     <a class="brand" href="#"><img src="landing-page-assets/brow-icon.png" alt="">Brow</a>
     <div class="nav-links">
-      <a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#customize">Customize</a><a href="#faq">FAQ</a>
+      <a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#customize">Customize</a><a href="#windows">Windows</a><a href="#faq">FAQ</a>
     </div>
     <div class="nav-right">
       <button class="icon-btn" id="themeBtn" aria-label="Switch light or dark"><i data-lucide="moon"></i></button>
@@ -503,6 +533,35 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
         <div><label>Typeface</label><div class="seg" data-key="font"><button>SF Pro</button><button aria-pressed="true">Be Vietnam Pro</button></div></div>
         <div class="toggle-row"><div><strong>Lyrics in closed notch</strong><small>Synced, from 4 free sources</small></div><button class="switch" role="switch" aria-checked="true" aria-label="Lyrics in closed notch"></button></div>
       </div>
+    </div>
+  </div>
+</section>
+
+<section id="windows">
+  <div class="wrap win">
+    <div>
+      <span class="soon">Coming to Windows</span>
+      <h2>Brow for Windows.<em>Without a notch.</em></h2>
+      <p class="sub">Windows laptops don't have a notch, so Brow becomes a small island at the top centre of the screen: the same panels, built natively for Windows 11 rather than ported.</p>
+      <div class="plan">
+        <div><i data-lucide="check"></i>Now playing &amp; synced lyrics</div>
+        <div><i data-lucide="check"></i>Clipboard history</div>
+        <div><i data-lucide="check"></i>File shelf</div>
+        <div><i data-lucide="check"></i>Prayer times</div>
+        <div><i data-lucide="check"></i>AI usage</div>
+        <div><i data-lucide="check"></i>Timers &amp; world clocks</div>
+        <div class="later"><i data-lucide="minus"></i>AirDrop and Night Shift stay on Mac</div>
+      </div>
+      <div class="cta-row" style="justify-content:flex-start">
+        <a class="btn btn-primary" href="https://github.com/giankbr/brow/subscription"><i data-lucide="bell"></i>Watch for the release</a>
+        <a class="btn btn-ghost" href="https://github.com/giankbr/brow/issues/new?title=Windows%3A%20"><i data-lucide="message-square"></i>Ask for a feature</a>
+      </div>
+      <p class="win-note">On GitHub, choose Watch › Custom › Releases to get an email when it ships.</p>
+    </div>
+    <div class="desk" aria-hidden="true">
+      <div class="island"><span>Yang tak bisa terobati</span><span class="bars"><i></i><i></i><i></i><i></i></span></div>
+      <div class="label">Concept · Windows 11</div>
+      <div class="taskbar"><i></i><i></i><i></i><i></i><i></i></div>
     </div>
   </div>
 </section>
