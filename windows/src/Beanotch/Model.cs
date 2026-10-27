@@ -26,7 +26,10 @@ public sealed class Model
     public Quakes Quakes { get; }
     public SmartCopy SmartCopy { get; }
     public Ambient Ambient { get; } = new();
-    private DateTimeOffset fedUntil;
+    private DateTimeOffset fedUntil, surprisedUntil;
+
+    // The pet jumps at each alert.
+    public void Surprise() => surprisedUntil = DateTimeOffset.Now.AddSeconds(2.5);
     public WeatherReport? Weather { get; private set; }
     public IReadOnlyList<CalendarEvent> Events { get; private set; } = [];
     public bool CalendarFailed { get; private set; }
@@ -66,14 +69,16 @@ public sealed class Model
     private void Raise(string glyph, Windows.UI.Color color, string left, string right, double seconds) =>
         Notice?.Invoke(new Notice(glyph, color, left, right, TimeSpan.FromSeconds(seconds), Essential: true));
 
-    public enum PetMood { Happy, Sleepy, Panic, Eating, Dancing }
+    public enum PetMood { Happy, Sleepy, Panic, Eating, Dancing, Surprised, Late }
 
     // How the island's pet is feeling, as on the Mac (Windows has no drink reminder, so it's never thirsty).
     public PetMood Mood =>
-        DateTimeOffset.Now < fedUntil ? PetMood.Eating
+        DateTimeOffset.Now < surprisedUntil ? PetMood.Surprised
+        : DateTimeOffset.Now < fedUntil ? PetMood.Eating
         : Stats.Cpu > 0.85 ? PetMood.Panic
         : Services.Native.Idle > TimeSpan.FromMinutes(3) ? PetMood.Sleepy
         : Media.Playing ? PetMood.Dancing
+        : DateTime.Now.Hour < 4 ? PetMood.Late
         : PetMood.Happy;
 
     public bool Ramadan => new UmAlQuraCalendar().GetMonth(DateTime.Now) == 9;

@@ -27,19 +27,28 @@ public sealed class ClosedView
         left.Foreground = Theme.Brush(Theme.Rgb(1, 1, 1));
         level.Width = S(56);
         pet = new PetView(() => model.Mood);
-        row = Columns(8, (pet.View, null), (icon, null), (left, 1), (level, null), (right, null));
+        row = Columns(8, (icon, null), (left, 1), (level, null), (right, null), (pet.View, null));
         row.Padding = new Thickness(S(13), 0, S(13), 0);
         row.VerticalAlignment = VerticalAlignment.Center;
         View = row;
     }
 
-    // Lays out the content and returns the width the island needs, in Mac points.
+    // The pet keeps the right corner whatever shows, so the island grows by its room.
     public double Update(Notice? notice)
+    {
+        var width = Content(notice);
+        pet.Show(model.Settings.NotchPet);
+        if (!model.Settings.NotchPet) return width;
+        row.Visibility = Visibility.Visible;
+        return width + 44;
+    }
+
+    // Lays out the content and returns the width the island needs, in Mac points.
+    private double Content(Notice? notice)
     {
         var white = Theme.Rgb(1, 1, 1);
         row.Visibility = Visibility.Visible;
         level.Visibility = Visibility.Collapsed;
-        pet.Show(false);
         icon.Visibility = Visibility.Visible;
         right.Foreground = Theme.Brush(Theme.Rgb(1, 1, 1, 0.7));
 
@@ -111,17 +120,17 @@ public sealed class ClosedView
             return 230;
         }
 
-        // Idle: the pet, when it's switched on.
+        // Idle with the pet: its word on the left, the pet in its corner.
         if (model.Settings.NotchPet)
         {
-            pet.Show(true);
-            icon.Visibility = Visibility.Collapsed;
-            var mood = model.Mood;
-            Show(Glyphs.Music, Theme.Accent, "", mood switch
+            Show(Glyphs.Music, Theme.Accent, model.Mood switch
             {
-                Model.PetMood.Sleepy => "zzz", Model.PetMood.Panic => "hot!", Model.PetMood.Eating => "nom", Model.PetMood.Dancing => "♪", _ => "",
-            });
-            return 230;
+                Model.PetMood.Sleepy => "zzz", Model.PetMood.Panic => "hot!", Model.PetMood.Eating => "nom", Model.PetMood.Dancing => "♪",
+                Model.PetMood.Surprised => "!", Model.PetMood.Late => "bed?", _ => "",
+            }, "");
+            icon.Visibility = Visibility.Collapsed;
+            left.Foreground = Theme.Brush(Theme.Rgb(1, 1, 1, 0.6));
+            return 190;
         }
 
         // Idle: an empty black notch, as on a MacBook, unless the time was asked for.

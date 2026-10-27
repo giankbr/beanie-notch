@@ -182,6 +182,7 @@ public sealed partial class IslandWindow : Window
         }
         notice = n;
         noticeUntil = DateTime.UtcNow + n.Duration;
+        if (n.Key != "volume") model.Surprise();
         Update();
     }
 

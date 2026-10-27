@@ -37,6 +37,9 @@ public sealed partial class IslandWindow
         model.Settings.NotchPet = true;
         Update();
         await Shot("03b-closed-pet");
+        Show(new Notice(Glyphs.Screenshot, Theme.Accent2, "Screenshot", "On the Shelf", TimeSpan.FromSeconds(10)));
+        await Shot("03c-closed-pet-notice", 600);
+        notice = null;
         model.Settings.NotchPet = false;
         Update();
 

@@ -57,6 +57,7 @@ public sealed class PetView
         double dx = 0, dy = m switch
         {
             Model.PetMood.Dancing => frame % 4 < 2 ? 1 : 3,
+            Model.PetMood.Surprised => frame % 6 < 3 ? 0.5 : 1.5,
             Model.PetMood.Sleepy => frame % 32 < 16 ? 2 : 2.5,
             _ => frame % 24 < 12 ? 2 : 2.3,
         };
@@ -82,6 +83,16 @@ public sealed class PetView
                 Dot(3, 3.5, Eye, 1, 2); Dot(8, 3.5, Eye, 1, 2);
                 Dot(4.5, 7, Shade, 2);
                 Dot(12, 1 + frame % 6 / 3.0, Water, 1, 1.5);
+                break;
+            case Model.PetMood.Surprised:
+                Dot(2.5, 3, Eye, 2, 2); Dot(7.5, 3, Eye, 2, 2);
+                Dot(3, 3.5, Shade); Dot(8, 3.5, Shade);
+                Dot(5, 6.5, Shade, 1.5, 1.5);
+                Dot(13, 0.5, Eye, 1, 2.5); Dot(13, 3.5, Eye);
+                break;
+            case Model.PetMood.Late:
+                Dot(2.5, 4.5, Eye, 2, 0.8); Dot(7.5, 4.5, Eye, 2, 0.8);
+                Dot(4.5, 6.3, Shade, 2, frame % 32 < 12 ? 1.8 : 0.6);
                 break;
             case Model.PetMood.Eating:
                 Dot(3, 4, Eye, 1, 1.5); Dot(8, 4, Eye, 1, 1.5);
