@@ -116,7 +116,7 @@ Beanie is written in Swift and SwiftUI with no third-party dependencies. The dow
 
 ## Install
 
-1. Download `Beanie.dmg` from [Releases](../../releases), open it, and drag Beanie into Applications.
+1. Download `Beanotch.dmg` from [Releases](../../releases), open it, and drag Beanie into Applications.
 
    ![The Beanie disk image](docs/install.png)
 
@@ -145,7 +145,7 @@ macOS asks for access only when a feature needs it:
 The build needs Xcode, which provides the macOS SDK for the Now Playing helper.
 
 ```bash
-./build.sh                   # → dist/Beanie.app and dist/Beanie.dmg (laid out with dmgbuild, set up in .build/ on first run)
+./build.sh                   # → dist/Beanie.app and dist/Beanotch.dmg (laid out with dmgbuild, set up in .build/ on first run)
 VERSION=1.2.0 ./build.sh     # set the version
 ```
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Builds dist/Beanie.app (universal, ad-hoc signed) and dist/Beanie.dmg.
+# Builds dist/Beanie.app (universal, ad-hoc signed) and dist/Beanotch.dmg.
 set -euo pipefail
 cd "$(dirname "$0")"
 version="${VERSION:-1.0.0}"
@@ -45,11 +45,11 @@ fi
 if [ -x "$venv/bin/dmgbuild" ]; then
   swift tools/make_dmg_background.swift "$work/background.png"
   "$venv/bin/dmgbuild" -s tools/dmg_settings.py -D app="$app" -D background="$work/background.png" \
-    "Beanie $version" "$dist/Beanie.dmg" > /dev/null
+    "Beanotch $version" "$dist/Beanotch.dmg" > /dev/null
 else
   mkdir "$work/dmg"
   cp -R "$app" "$work/dmg/"
   ln -s /Applications "$work/dmg/Applications"
-  hdiutil create -volname "Beanie $version" -srcfolder "$work/dmg" -ov -format UDZO "$dist/Beanie.dmg" > /dev/null
+  hdiutil create -volname "Beanotch $version" -srcfolder "$work/dmg" -ov -format UDZO "$dist/Beanotch.dmg" > /dev/null
 fi
-echo "built $app and $dist/Beanie.dmg"
+echo "built $app and $dist/Beanotch.dmg"

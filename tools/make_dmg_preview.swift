@@ -45,7 +45,7 @@ for (i, color) in [NSColor(srgbRed: 1, green: 0.37, blue: 0.34, alpha: 1), NSCol
 }
 let titleStyle = NSMutableParagraphStyle()
 titleStyle.alignment = .center
-NSAttributedString(string: "Beanie \(version)", attributes: [.font: NSFont.systemFont(ofSize: 13, weight: .semibold),
+NSAttributedString(string: "Beanotch \(version)", attributes: [.font: NSFont.systemFont(ofSize: 13, weight: .semibold),
                                                       .foregroundColor: NSColor(white: 0.85, alpha: 1), .paragraphStyle: titleStyle])
     .draw(in: NSRect(x: windowRect.minX, y: windowRect.maxY - titleBar + 6, width: windowRect.width, height: 18))
 
