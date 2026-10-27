@@ -568,8 +568,9 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
       </div>
       <div class="cta-row" style="justify-content:flex-start">
         <a class="btn btn-primary" id="winDownload" href="https://github.com/giankbr/beanie-notch/releases/download/windows-v0.2.0/Beanotch-Setup-x64.exe"><i data-lucide="download"></i><span>Download for Windows</span></a>
+        <a class="btn btn-ghost" id="winOther" href="https://github.com/giankbr/beanie-notch/releases/download/windows-v0.2.0/Beanotch-Setup-arm64.exe"><i data-lucide="cpu"></i><span>Snapdragon (ARM)</span></a>
       </div>
-      <p class="win-note">Preview 0.2.0 · Windows 10 and 11 · 21 MB, .NET included. <span id="winOther">Snapdragon PC? Get the <a href="https://github.com/giankbr/beanie-notch/releases/download/windows-v0.2.0/Beanotch-Setup-arm64.exe" style="color:var(--accent)">ARM64 version</a>.</span> The installer isn't signed yet: if SmartScreen appears, choose More info › Run anyway. Found a bug? <a href="https://github.com/giankbr/beanie-notch/issues/new?title=Windows%3A%20" style="color:var(--accent)">Tell us</a>.</p>
+      <p class="win-note">Preview 0.2.0 · Windows 10 and 11 · 21 MB, .NET included. Most PCs (Intel or AMD) need the first button; Snapdragon PCs the ARM one. The installer isn't signed yet: if SmartScreen appears, choose More info › Run anyway. Found a bug? <a href="https://github.com/giankbr/beanie-notch/issues/new?title=Windows%3A%20" style="color:var(--accent)">Tell us</a>.</p>
     </div>
     <div class="desk" aria-hidden="true">
       <div class="island"><span>Yang tak bisa terobati</span><span class="bars"><i></i><i></i><i></i><i></i></span></div>
@@ -863,16 +864,17 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
   });
 })();
 
-// On a Snapdragon PC, the main Windows button downloads the ARM64 build instead (Chromium reports the architecture).
+// On a Snapdragon PC the two Windows buttons swap, so the main one is the ARM64 build (Chromium reports the architecture).
 (function () {
   var data = navigator.userAgentData;
   if (!data || !data.getHighEntropyValues) return;
   data.getHighEntropyValues(["architecture", "platform"]).then(function (v) {
     if (v.platform !== "Windows" || v.architecture !== "arm") return;
-    var main = document.getElementById("winDownload");
+    var main = document.getElementById("winDownload"), other = document.getElementById("winOther");
     main.href = main.href.replace("-x64.exe", "-arm64.exe");
     main.querySelector("span").textContent = "Download for Windows on ARM";
-    document.getElementById("winOther").innerHTML = 'Intel or AMD PC? Get the <a href="' + main.href.replace("-arm64.exe", "-x64.exe") + '" style="color:var(--accent)">x64 version</a>.';
+    other.href = other.href.replace("-arm64.exe", "-x64.exe");
+    other.querySelector("span").textContent = "Intel / AMD (x64)";
   }).catch(function () {});
 })();
 </script>
