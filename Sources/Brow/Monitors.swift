@@ -165,21 +165,35 @@ final class ScreenshotWatcher {
         return FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Desktop")
     }
 
+    private var generation = 0
+
     func setEnabled(_ on: Bool) {
         source?.cancel()
         source = nil
+        generation += 1
         guard on else { return }
-        let dir = folder
-        seen = Set(Self.files(in: dir).map(\.path))
-        let fd = open(dir.path, O_EVTONLY)
-        guard fd >= 0 else { return }
-        let s = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fd, eventMask: .write, queue: .main)
-        s.setEventHandler { [weak self] in
-            MainActor.assumeIsolated { self?.scan(dir) }
+        let dir = folder, ticket = generation
+        // The first look at Desktop waits on macOS's access prompt, so it happens off the main thread.
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            let existing = Set(Self.files(in: dir).map(\.path))
+            let fd = open(dir.path, O_EVTONLY)
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated {
+                    guard let self, fd >= 0, ticket == self.generation else {
+                        if fd >= 0 { close(fd) }
+                        return
+                    }
+                    self.seen = existing
+                    let s = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fd, eventMask: .write, queue: .main)
+                    s.setEventHandler { [weak self] in
+                        MainActor.assumeIsolated { self?.scan(dir) }
+                    }
+                    s.setCancelHandler { close(fd) }
+                    s.resume()
+                    self.source = s
+                }
+            }
         }
-        s.setCancelHandler { close(fd) }
-        s.resume()
-        source = s
     }
 
     private func scan(_ dir: URL) {

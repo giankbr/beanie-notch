@@ -54,21 +54,36 @@ final class DownloadWatcher: ObservableObject {
     private let folder = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Downloads")
     private static let partialTypes: Set = ["crdownload", "download", "part", "opdownload"]
 
+    private var generation = 0
+
     func setEnabled(_ on: Bool) {
         source?.cancel()
         source = nil
         stopSampling()
         partials = []
         current = nil
+        generation += 1
         guard on else { return }
-        let fd = open(folder.path, O_EVTONLY)
-        guard fd >= 0 else { return }
-        let s = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fd, eventMask: .write, queue: .main)
-        s.setEventHandler { [weak self] in MainActor.assumeIsolated { self?.scan() } }
-        s.setCancelHandler { close(fd) }
-        s.resume()
-        source = s
-        scan()
+        let path = folder.path, ticket = generation
+        // Opening Downloads the first time waits for the user to answer macOS's access prompt, which needs the
+        // main thread free to show it: so it's opened off it.
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            let fd = open(path, O_EVTONLY)
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated {
+                    guard let self, fd >= 0, ticket == self.generation else {
+                        if fd >= 0 { close(fd) }
+                        return
+                    }
+                    let s = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fd, eventMask: .write, queue: .main)
+                    s.setEventHandler { [weak self] in MainActor.assumeIsolated { self?.scan() } }
+                    s.setCancelHandler { close(fd) }
+                    s.resume()
+                    self.source = s
+                    self.scan()
+                }
+            }
+        }
     }
 
     private func scan() {
