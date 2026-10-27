@@ -15,7 +15,7 @@ public sealed record GitHubRelease([property: JsonPropertyName("tag_name")] stri
 [JsonSerializable(typeof(GitHubRelease[]))]
 internal sealed partial class ReleaseJson : JsonSerializerContext;
 
-// Windows builds are released under windows-v* tags next to the Mac ones. Installing downloads the setup for this
+// Windows installers ship in the same releases as the Mac disk image. Installing downloads the setup for this
 // PC's processor and runs it quietly; it closes this copy, replaces it and opens the new one.
 public sealed class Updater
 {
@@ -42,11 +42,13 @@ public sealed class Updater
             request.Headers.UserAgent.ParseAdd("Beanotch-Windows");
             using var response = await Http.SendAsync(request);
             var releases = response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync(ReleaseJson.Default.GitHubReleaseArray) : null;
-            var release = releases?.FirstOrDefault(r => r.Tag.StartsWith("windows-v", StringComparison.Ordinal));
-            if (release is null) { Failed = releases is null; return; }
-            Latest = release.Tag["windows-v".Length..];
+            // The newest release that carries a Windows installer: the Mac and Windows builds share one release.
             var arch = RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "arm64" : "x64";
-            download = release.Assets.FirstOrDefault(a => a.Name == $"Beanotch-Setup-{arch}.exe")?.Url;
+            var name = $"Beanotch-Setup-{arch}.exe";
+            var release = releases?.FirstOrDefault(r => r.Assets.Any(a => a.Name == name));
+            if (release is null) { Failed = releases is null; return; }
+            Latest = release.Tag.Replace("windows-", "").TrimStart('v');
+            download = release.Assets.First(a => a.Name == name).Url;
         }
         catch (Exception) { Failed = true; }
         finally { Checking = false; }

@@ -2,7 +2,7 @@
 
 Windows laptops don't have a notch, so Beanotch for Windows is a small island at the top centre of the screen. Hover it to open the panels. It's built natively with WinUI 3 rather than ported from the Mac app.
 
-> **Status: early preview.** It builds on every push (see the Windows workflow in GitHub Actions) but hasn't been tried on real hardware yet. Expect rough edges.
+> **Status: beta.** It builds on every push (see the Windows workflow in GitHub Actions) but hasn't been tried on real hardware yet. Expect rough edges.
 
 ## What's in it
 

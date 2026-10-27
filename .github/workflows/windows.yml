@@ -6,6 +6,12 @@ on:
   pull_request:
     paths: ["windows/**"]
   workflow_dispatch:
+  # Publishing a release (the Mac disk image) builds Windows at the same version and attaches its installers.
+  release:
+    types: [published]
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -21,8 +27,21 @@ jobs:
       - name: Test the shared code
         if: matrix.arch == 'x64'
         run: dotnet test windows/tests/Beanotch.Core.Tests
+      - name: Version
+        shell: pwsh
+        run: |
+          $version = if ("${{ github.event_name }}" -eq "release") { "${{ github.event.release.tag_name }}".TrimStart("v") }
+                     else { ([xml](Get-Content windows/src/Beanotch/Beanotch.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1 }
+          "VERSION=$version" | Out-File -Append $env:GITHUB_ENV
       - name: Publish
-        run: dotnet publish windows/src/Beanotch/Beanotch.csproj -c Release -r win-${{ matrix.arch }} -p:Platform=${{ matrix.arch }} -o out/Beanotch
+        run: dotnet publish windows/src/Beanotch/Beanotch.csproj -c Release -r win-${{ matrix.arch }} -p:Platform=${{ matrix.arch }} -p:Version=${{ env.VERSION }} -o out/Beanotch
+      - name: Resource files
+        if: matrix.arch == 'x64'
+        shell: pwsh
+        run: |
+          Get-ChildItem out/Beanotch -Recurse -Include *.pri, *.xbf, *.xaml | Format-Table FullName, Length -AutoSize | Out-String -Width 300
+          Get-ChildItem obj -Recurse -Include *.pri -ErrorAction SilentlyContinue | Format-Table FullName, Length -AutoSize | Out-String -Width 300
+          Get-ChildItem windows/src/Beanotch/obj -Recurse -Include *.pri | Format-Table FullName, Length -AutoSize | Out-String -Width 300
       # Runs the app on the build machine in its snapshot mode: it photographs the island and every page, then quits.
       - name: Snapshots
         if: matrix.arch == 'x64'
@@ -54,9 +73,13 @@ jobs:
         run: |
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
-          $version = ([xml](Get-Content windows/src/Beanotch/Beanotch.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
-          & $iscc /DAppVersion=$version /DArch=${{ matrix.arch }} windows/installer/Beanotch.iss
+          & $iscc /DAppVersion=${{ env.VERSION }} /DArch=${{ matrix.arch }} windows/installer/Beanotch.iss
       - uses: actions/upload-artifact@v4
         with:
           name: Beanotch-Setup-${{ matrix.arch }}
           path: out/Beanotch-Setup-${{ matrix.arch }}.exe
+      - name: Attach to the release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" "out/Beanotch-Setup-${{ matrix.arch }}.exe" --clobber --repo ${{ github.repository }}
