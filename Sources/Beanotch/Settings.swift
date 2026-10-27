@@ -170,6 +170,7 @@ final class Settings: ObservableObject {
     @Published var smartCopy: Bool { didSet { save(smartCopy, "smartCopy") } }
     @Published var quakeAlerts: Bool { didSet { save(quakeAlerts, "quakeAlerts") } }
     @Published var notchPet: Bool { didSet { save(notchPet, "notchPet") } }
+    @Published var petKind: PetKind { didSet { save(petKind.rawValue, "petKind") } }
     // The sound that plays while a focus stretch runs; empty for none.
     @Published var focusSound: String { didSet { save(focusSound, "focusSound") } }
     @Published var waterEvery: Int { didSet { save(waterEvery, "waterEvery") } }
@@ -216,6 +217,7 @@ final class Settings: ObservableObject {
         smartCopy = d.object(forKey: "smartCopy") as? Bool ?? true
         quakeAlerts = d.object(forKey: "quakeAlerts") as? Bool ?? true
         notchPet = d.bool(forKey: "notchPet")
+        petKind = PetKind(rawValue: d.string(forKey: "petKind") ?? "") ?? .bean
         focusSound = d.string(forKey: "focusSound") ?? ""
         waterEvery = d.object(forKey: "waterEvery") as? Int ?? 0
         eyeBreaks = d.bool(forKey: "eyeBreaks")

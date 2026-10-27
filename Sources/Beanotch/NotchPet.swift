@@ -68,37 +68,93 @@ final class NotchPet: ObservableObject {
     }
 }
 
+// The pets to pick from, each a pixel to a character ("#" body, "-" shade), with where its eyes and mouth sit.
+enum PetKind: String, CaseIterable, Identifiable {
+    case bean, cat, frog, ghost
+    var id: String { rawValue }
+    var title: String { rawValue.capitalized }
+
+    var shape: [String] {
+        switch self {
+        case .bean: ["....####....", "..########..", ".##########.", ".##########.", "############",
+                     "############", "############", ".#######-##.", "..#####-##..", "....##-#...."]
+        case .cat: [".#........#.", ".##......##.", ".####--####.", "############", "############",
+                    "############", "############", ".##########.", "..########..", "..##....##.."]
+        case .frog: [".###....###.", "#####..#####", "############", "############", "############",
+                     "############", ".##########.", ".##########.", "..##....##..", "............"]
+        case .ghost: ["...######...", "..########..", ".##########.", ".##########.", ".##########.",
+                      ".##########.", ".##########.", ".##########.", ".###.##.###.", ".#...#...#.."]
+        }
+    }
+
+    var body: Color {
+        switch self {
+        case .bean: Color(red: 0.62, green: 0.4, blue: 0.26)
+        case .cat: Color(red: 0.96, green: 0.6, blue: 0.26)
+        case .frog: Color(red: 0.42, green: 0.76, blue: 0.36)
+        case .ghost: Color(red: 0.92, green: 0.92, blue: 1)
+        }
+    }
+
+    var shade: Color {
+        switch self {
+        case .bean: Color(red: 0.36, green: 0.22, blue: 0.14)
+        case .cat: Color(red: 0.74, green: 0.38, blue: 0.14)
+        case .frog: Color(red: 0.2, green: 0.48, blue: 0.2)
+        case .ghost: Color(red: 0.32, green: 0.3, blue: 0.45)
+        }
+    }
+
+    // The white of the eye and the pupil; the ghost's are the other way round.
+    var socket: Color { self == .ghost ? Color(red: 0.16, green: 0.15, blue: 0.26) : .white }
+    var pupil: Color { self == .ghost ? .white : Color(red: 0.12, green: 0.08, blue: 0.06) }
+
+    // Each eye's top-left pixel, and the middle of the mouth.
+    var eyes: [CGPoint] {
+        switch self {
+        case .frog: [CGPoint(x: 1.5, y: 0.5), CGPoint(x: 8.5, y: 0.5)]
+        case .cat: [CGPoint(x: 2.5, y: 3.5), CGPoint(x: 7.5, y: 3.5)]
+        default: [CGPoint(x: 2.5, y: 3), CGPoint(x: 7.5, y: 3)]
+        }
+    }
+
+    var mouth: CGPoint {
+        switch self {
+        case .frog: CGPoint(x: 6, y: 4.8)
+        case .cat: CGPoint(x: 6, y: 6.3)
+        default: CGPoint(x: 6, y: 6.5)
+        }
+    }
+}
+
 struct PetView: View {
     let mood: NotchPet.Mood
+    var kind: PetKind = .bean
+    // How far right of the screen's centre the pet sits, so its eyes can follow the pointer; nil looks straight ahead.
+    var offset: CGFloat?
 
-    // The bean, a pixel to a character: body, and the end of its crease curling round the bottom.
-    private static let shape = [
-        "....####....",
-        "..########..",
-        ".##########.",
-        ".##########.",
-        "############",
-        "############",
-        "############",
-        ".#######-##.",
-        "..#####-##..",
-        "....##-#....",
-    ]
-    private static let body = Color(red: 0.62, green: 0.4, blue: 0.26)
-    private static let shade = Color(red: 0.36, green: 0.22, blue: 0.14)
     private static let pixel: CGFloat = 1.9
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 0.125)) { context in
             let frame = Int(context.date.timeIntervalSinceReferenceDate * 8)
-            Canvas { g, _ in draw(&g, frame: frame) }
+            let look = look()
+            Canvas { g, _ in draw(&g, frame: frame, look: look) }
                 .frame(width: 18 * Self.pixel, height: 14 * Self.pixel)
         }
     }
 
-    private func draw(_ g: inout GraphicsContext, frame: Int) {
+    // Where the pointer is from the pet, as -1…1 across and down.
+    private func look() -> CGPoint {
+        guard let offset, let screen = NSScreen.screens.first(where: { $0.safeAreaInsets.top > 0 }) ?? NSScreen.main else { return .zero }
+        let mouse = NSEvent.mouseLocation
+        let pet = CGPoint(x: screen.frame.midX + offset, y: screen.frame.maxY - 16)
+        return CGPoint(x: max(-1, min(1, (mouse.x - pet.x) / 160)), y: max(-1, min(1, (pet.y - mouse.y) / 120)))
+    }
+
+    private func draw(_ g: inout GraphicsContext, frame: Int, look: CGPoint) {
         let p = Self.pixel
-        // Moves: a bob to music, a shake when panicking, slow breathing otherwise.
+        // Moves: a bob to music, a jump at an alert, a shake when panicking, slow breathing otherwise.
         var dx: CGFloat = 0, dy: CGFloat = 2
         switch mood {
         case .dancing: dy = frame % 4 < 2 ? 1 : 3
@@ -111,46 +167,59 @@ struct PetView: View {
             // A hair larger than the grid, so no seams show between pixels.
             g.fill(Path(CGRect(x: (x + 3 + dx) * p, y: (y + dy) * p, width: w * p + 0.3, height: h * p + 0.3)), with: .color(color))
         }
-        for (y, row) in Self.shape.enumerated() {
+        for (y, row) in kind.shape.enumerated() {
             for (x, c) in row.enumerated() where c != "." {
-                dot(CGFloat(x), CGFloat(y), c == "-" ? Self.shade : Self.body)
+                dot(CGFloat(x), CGFloat(y), c == "-" ? kind.shade : kind.body)
             }
         }
-        dot(2, 2, .white.opacity(0.35))
+        if kind != .ghost { dot(kind == .frog ? 4 : 2, 2, .white.opacity(0.35)) }
 
-        // Eyes, and what the face is doing.
-        let eye = Color.white
-        let blink = frame % 40 == 0
+        let blush = Color(red: 1, green: 0.5, blue: 0.55).opacity(0.6)
+        let water = Color(red: 0.4, green: 0.75, blue: 1)
+        let m = kind.mouth
+        // Eyes: open ones look toward the pointer; a panicked one can't keep still.
+        func eyes(height: CGFloat = 2, pupils: Bool = true, jitter: CGFloat = 0) {
+            for e in kind.eyes {
+                dot(e.x, e.y + (2 - height), kind.socket, w: 2, h: height)
+                if pupils {
+                    let px = e.x + 0.5 + look.x * 0.5 + jitter, py = e.y + (2 - height) + max(0, height - 1) / 2 + look.y * min(0.5, (height - 1) / 2)
+                    dot(px, py, kind.pupil)
+                }
+            }
+        }
+        func closed() { for e in kind.eyes { dot(e.x, e.y + 1.3, kind.socket, w: 2, h: 0.5) } }
         switch mood {
         case .sleepy:
-            dot(2.5, 4.5, eye, w: 2, h: 0.5); dot(7.5, 4.5, eye, w: 2, h: 0.5)
+            closed()
             let rise = CGFloat(frame % 24) / 8
             g.draw(Text("z").font(.system(size: 6, weight: .heavy)).foregroundColor(.white.opacity(0.8)),
                    at: CGPoint(x: (15 + dx) * p, y: (3 - rise) * p))
         case .panic:
-            dot(3, 3.5, eye, h: 2); dot(8, 3.5, eye, h: 2)
-            dot(4.5, 7, Self.shade, w: 2)
-            dot(12, 1 + CGFloat(frame % 6) / 3, Color(red: 0.4, green: 0.75, blue: 1), h: 1.5)
+            eyes(jitter: frame % 2 == 0 ? -0.2 : 0.2)
+            dot(m.x - 1, m.y + 0.5, kind.shade, w: 2)
+            dot(12, 1 + CGFloat(frame % 6) / 3, water, h: 1.5)
         case .eating:
-            dot(3, 4, eye, h: 1.5); dot(8, 4, eye, h: 1.5)
-            dot(4.5, 6.5, Self.shade, w: 2.5, h: frame % 4 < 2 ? 1.5 : 0.5)
+            eyes(height: 1.5)
+            dot(m.x - 1.25, m.y, kind.shade, w: 2.5, h: frame % 4 < 2 ? 1.5 : 0.5)
             if frame % 4 < 2 { dot(-1, 7, .white.opacity(0.7), w: 0.7, h: 0.7) }
         case .surprised:
-            dot(2.5, 3, eye, w: 2, h: 2); dot(7.5, 3, eye, w: 2, h: 2)
-            dot(3, 3.5, Self.shade); dot(8, 3.5, Self.shade)
-            dot(5, 6.5, Self.shade, w: 1.5, h: 1.5)
+            eyes()
+            dot(m.x - 0.75, m.y, kind.shade, w: 1.5, h: 1.5)
             dot(13, 0.5, .white, h: 2.5); dot(13, 3.5, .white)
         case .late:
-            dot(2.5, 4.5, eye, w: 2, h: 0.8); dot(7.5, 4.5, eye, w: 2, h: 0.8)
-            dot(4.5, 6.3, Self.shade, w: 2, h: frame % 32 < 12 ? 1.8 : 0.6)
+            eyes(height: 1)
+            dot(m.x - 1, m.y - 0.2, kind.shade, w: 2, h: frame % 32 < 12 ? 1.8 : 0.6)
         case .thirsty:
-            dot(3, 4, eye, h: 1.5); dot(8, 4, eye, h: 1.5)
-            dot(5, 6.5, Color(red: 1, green: 0.45, blue: 0.5), w: 1.5, h: 1)
-            dot(12.5, 2 + CGFloat(frame % 8) / 4, Color(red: 0.4, green: 0.75, blue: 1), w: 1, h: 1.5)
+            eyes(height: 1.5)
+            dot(m.x - 0.75, m.y, Color(red: 1, green: 0.45, blue: 0.5), w: 1.5, h: 1)
+            dot(12.5, 2 + CGFloat(frame % 8) / 4, water, w: 1, h: 1.5)
         case .happy, .dancing:
-            dot(1.5, 5.5, Color(red: 1, green: 0.5, blue: 0.55).opacity(0.55), w: 1.5); dot(9, 5.5, Color(red: 1, green: 0.5, blue: 0.55).opacity(0.55), w: 1.5)
-            if blink { dot(3, 4.5, eye, h: 0.5); dot(8, 4.5, eye, h: 0.5) } else { dot(3, 3.5, eye, h: 2); dot(8, 3.5, eye, h: 2) }
-            dot(4.5, 6.5, Self.shade, w: 2, h: 0.6)
+            if let left = kind.eyes.first, let right = kind.eyes.last, kind != .frog {
+                dot(left.x - 1, left.y + 2.5, blush, w: 1.5); dot(right.x + 1.5, right.y + 2.5, blush, w: 1.5)
+            }
+            if frame % 40 == 0 { closed() } else { eyes() }
+            if kind == .cat { dot(m.x - 0.5, m.y - 1, kind.shade) }
+            dot(m.x - (kind == .frog ? 2 : 1), m.y, kind.shade, w: kind == .frog ? 4 : 2, h: 0.6)
             if mood == .dancing {
                 let up = CGFloat(frame % 16) / 4
                 g.draw(Text("♪").font(.system(size: 7, weight: .bold)).foregroundColor(.white.opacity(0.85)),

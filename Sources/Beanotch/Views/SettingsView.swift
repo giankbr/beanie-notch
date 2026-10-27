@@ -306,8 +306,19 @@ struct SettingsView: View {
                 }
             }
             card {
-                row("face.smiling", "Notch pet", "A coffee bean beside the camera: it naps, sweats, eats, gets thirsty and dances") {
+                row("face.smiling", "Notch pet", "Lives in the notch's corner, watches the pointer and reacts to what the Mac is doing") {
                     Toggle("", isOn: $settings.notchPet)
+                }
+                if settings.notchPet {
+                    pickerRow("Pet", "Who lives in the notch") {
+                        HStack(spacing: 6) {
+                            ForEach(PetKind.allCases) { kind in
+                                choice(kind.title, selected: settings.petKind == kind) { settings.petKind = kind } preview: {
+                                    ZStack { Color.black; PetView(mood: .happy, kind: kind) }
+                                }
+                            }
+                        }
+                    }
                 }
                 row("music.note", "Mini player", "Artwork and bars beside the notch while music plays") {
                     Toggle("", isOn: $settings.miniPlayer)

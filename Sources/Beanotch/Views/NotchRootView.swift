@@ -56,7 +56,10 @@ struct NotchRootView: View {
             closedContent
                 .frame(width: model.closedWidth, height: model.closedHeight)
                 .overlay(alignment: .trailing) {
-                    if settings.notchPet { PetView(mood: pet.mood).padding(.trailing, 8).allowsHitTesting(false) }
+                    if settings.notchPet {
+                        PetView(mood: pet.mood, kind: settings.petKind, offset: model.closedWidth / 2 - 8 - 17)
+                            .padding(.trailing, 8).allowsHitTesting(false)
+                    }
                 }
                 .opacity(model.expanded ? 0 : 1)
                 .allowsHitTesting(!model.expanded)
