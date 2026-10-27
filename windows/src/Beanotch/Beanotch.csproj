@@ -38,6 +38,17 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.250108002" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
   </ItemGroup>
+  <!-- Runtime pieces the app never loads: debugger support, Widgets, WebView2, phone controls, HTTP/3, and the
+       XAML strings for every language but English (the app itself is English only). -->
+  <Target Name="DropUnusedRuntime" AfterTargets="Publish">
+    <ItemGroup>
+      <Unused Include="$(PublishDir)Microsoft.DiaSymReader.Native.*.dll;$(PublishDir)mscordaccore*.dll;$(PublishDir)mscordbi.dll;$(PublishDir)createdump.exe;$(PublishDir)Microsoft.Windows.Widgets.dll;$(PublishDir)Microsoft.Web.WebView2.Core.dll;$(PublishDir)WebView2Loader.dll;$(PublishDir)Microsoft.UI.Xaml.Phone.dll;$(PublishDir)msquic.dll" />
+      <Folders Include="$([System.IO.Directory]::GetDirectories('$(PublishDir)'))" />
+      <Languages Include="@(Folders)" Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Filename)%(Extension)', '^[a-z]{2,3}(-[A-Za-z]+)+$')) and '%(Filename)%(Extension)' != 'en-us' and '%(Filename)%(Extension)' != 'en-US'" />
+    </ItemGroup>
+    <Delete Files="@(Unused)" />
+    <RemoveDir Directories="@(Languages)" />
+  </Target>
   <ItemGroup>
     <ProjectReference Include="..\Beanotch.Core\Beanotch.Core.csproj" />
   </ItemGroup>
