@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Beanie — The notch, finally earning its place</title>
+<title>Beanotch — The notch, finally earning its place</title>
 <meta name="description" content="Beanie turns the MacBook notch into a dashboard: system stats, your next meeting, prayer times, AI usage, a file shelf, clipboard history and synced lyrics. Free, open source, 3.6 MB.">
-<meta property="og:title" content="Beanie — The notch, finally earning its place">
+<meta property="og:title" content="Beanotch — The notch, finally earning its place">
 <meta property="og:description" content="A tiny native macOS app that turns the notch into a dashboard. Free and open source.">
 <meta property="og:image" content="landing-page-assets/overview.png">
 <link rel="icon" href="landing-page-assets/beanie-icon.png">
@@ -256,7 +256,7 @@ footer { padding: 0; overflow: hidden; }
 .font-note { grid-column: 2; font-size: 12.5px; color: var(--text-3); display: flex; gap: 8px; justify-content: flex-start; align-items: center; }
 .bottom { display: flex; justify-content: space-between; padding: 22px 56px; background: var(--inner); border-top: 1px solid var(--border); border-radius: 0 0 28px 28px; font-size: 13.5px; color: var(--text-3); flex-wrap: wrap; gap: 8px; }
 /* The watermark: letters rise in once the footer shows, lift under the pointer, and an accent spotlight follows it. */
-.watermark { font-size: clamp(60px, 21vw, 300px); font-weight: 800; letter-spacing: -.035em; line-height: .78; text-align: center; margin-top: 30px; user-select: none; cursor: default; white-space: nowrap; padding-top: .06em; }
+.watermark { font-size: clamp(40px, 15vw, 216px); font-weight: 800; letter-spacing: -.035em; line-height: .78; text-align: center; margin-top: 30px; user-select: none; cursor: default; white-space: nowrap; padding-top: .06em; }
 .watermark span { display: inline-block; color: transparent; -webkit-background-clip: text; background-clip: text;
   background-image: radial-gradient(circle at var(--mx, -999px) var(--my, -999px), color-mix(in srgb, var(--accent) 85%, transparent) 0, transparent 0.9em), linear-gradient(180deg, var(--ui-3), transparent 92%);
   transform: translateY(var(--lift, 0)) scale(var(--grow, 1)); transform-origin: 50% 100%;
@@ -267,6 +267,8 @@ footer { padding: 0; overflow: hidden; }
 .watermark span:nth-child(4) { transition-delay: 0s, .24s; }
 .watermark span:nth-child(5) { transition-delay: 0s, .32s; }
 .watermark span:nth-child(6) { transition-delay: 0s, .40s; }
+.watermark span:nth-child(7) { transition-delay: 0s, .48s; }
+.watermark span:nth-child(8) { transition-delay: 0s, .56s; }
 .watermark span:hover { --lift: -.08em; --grow: 1.03; }
 
 /* Small screens */
@@ -384,6 +386,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
 .desk .taskbar i:first-child { background: linear-gradient(135deg, #4cc2ff, #0a6cff); }
 .desk .label { position: absolute; left: 16px; bottom: 58px; font-size: 12px; color: rgba(255,255,255,.75); background: rgba(0,0,0,.35); padding: 6px 12px; border-radius: 999px; }
 @media (max-width: 960px) { .win { grid-template-columns: 1fr; gap: 36px; } }
+@media (max-width: 400px) { .brand { font-size: 17px; gap: 8px; } .brand img { width: 26px; height: 26px; } nav .btn-sm { padding: 0 12px; } }
 @media (max-width: 560px) { .plan { grid-template-columns: 1fr; } .desk .island { width: 78%; } }
 @media (prefers-reduced-motion: reduce) { .soon::before, .desk .bars i { animation: none; } }
 </style>
@@ -394,7 +397,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
 
 <nav>
   <div class="wrap">
-    <a class="brand" href="#"><img src="landing-page-assets/beanie-icon.png" alt="">Beanie</a>
+    <a class="brand" href="#"><img src="landing-page-assets/beanie-icon.png" alt="">Beanotch</a>
     <div class="nav-links">
       <a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#customize">Customize</a><a href="#windows">Windows</a><a href="#faq">FAQ</a>
     </div>
@@ -621,7 +624,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
     <div class="running">Running locally · 0.1% CPU</div>
     <div class="foot-top">
       <img src="landing-page-assets/beanie-icon.png" alt="">
-      <div><h4>Beanie</h4><p>The notch, finally earning its place.</p></div>
+      <div><h4>Beanotch</h4><p>The notch, finally earning its place.</p></div>
       <div class="cta-row">
         <a class="btn btn-ghost" href="https://github.com/giankbr/beanie-notch"><i data-lucide="github"></i>Star on GitHub</a>
         <a class="btn btn-primary" href="https://github.com/giankbr/beanie-notch/releases/latest"><i data-lucide="apple"></i>Download Beanie.dmg</a>
@@ -638,9 +641,9 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
       <div class="chips" id="chips"></div>
       <div class="font-note"><i data-lucide="type"></i>Be Vietnam Pro © The Be Vietnam Pro Project Authors · SIL Open Font License</div>
     </div>
-    <div class="bottom"><span>© 2026 Beanie</span><span>Made with Swift · no analytics</span></div>
+    <div class="bottom"><span>© 2026 Beanotch</span><span>Made with Swift · no analytics</span></div>
   </div>
-  <div class="watermark" aria-hidden="true"><span>B</span><span>E</span><span>A</span><span>N</span><span>I</span><span>E</span></div>
+  <div class="watermark" aria-hidden="true"><span>B</span><span>E</span><span>A</span><span>N</span><span>O</span><span>T</span><span>C</span><span>H</span></div>
 </footer>
 
 <script>
