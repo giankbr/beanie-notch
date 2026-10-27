@@ -211,20 +211,20 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
     {
         var focus = Model.Focus;
         var resting = focus.OnBreak;
-        bigTime = Text(Clock(focus.Left), 20, weight: FontWeights.Bold, display: true);
+        bigTime = Text(Clock(focus.Left), 16, weight: FontWeights.Bold, display: true);
         bigTime.HorizontalAlignment = HorizontalAlignment.Center;
-        var label = Text(resting ? "RELAX" : "FOCUS", 7.5, Theme.Dim, FontWeights.Medium);
+        var label = Text(resting ? "RELAX" : "FOCUS", 6.5, Theme.Dim, FontWeights.Medium);
         label.CharacterSpacing = 150;
         label.HorizontalAlignment = HorizontalAlignment.Center;
         var emoji = new TextBlock
         {
             Text = resting ? "☕" : "🍅",
-            FontSize = S(12),
+            FontSize = S(10),
             FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe UI Emoji"),
             HorizontalAlignment = HorizontalAlignment.Center,
         };
-        var play = IconButton(focus.Running ? Glyphs.Pause : Glyphs.Play, () => { focus.Toggle(); Right(); }, 12, Theme.Ink,
-                              focus.Running ? "Pause" : "Start", 26);
+        var play = IconButton(focus.Running ? Glyphs.Pause : Glyphs.Play, () => { focus.Toggle(); Right(); }, 10, Theme.Ink,
+                              focus.Running ? "Pause" : "Start", 20);
         play.HorizontalAlignment = HorizontalAlignment.Center;
         var inside = V(0, emoji, bigTime, label, play);
         inside.VerticalAlignment = VerticalAlignment.Center;
@@ -286,7 +286,7 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
         return Rows(8, (dial, 1), (bottom, null));
     }
 
-    private const double RingSide = 118, RingStroke = 5;
+    private const double RingSide = 94, RingStroke = 4.5;
     private Microsoft.UI.Xaml.Shapes.Path? ring;
 
     private void FocusTick()

@@ -364,16 +364,9 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
 
 /* Windows beta */
 #windows { border-top: 1px solid var(--border); }
-.win { display: grid; grid-template-columns: 1fr 1.1fr; gap: 56px; align-items: center; margin-top: 8px; }
 .soon { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: .4px; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); padding: 5px 12px; border-radius: 999px; }
 .soon::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: blink 1.6s ease-in-out infinite; }
 @keyframes blink { 50% { opacity: .25; } }
-.plan { margin: 28px 0 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; }
-.plan div { display: flex; gap: 10px; align-items: center; font-size: 15px; }
-.plan svg { color: var(--live); }
-.plan .later svg { color: var(--text-3); }
-.plan .later { color: var(--text-3); grid-column: 1 / -1; }
-.plan .next, .plan .next svg { color: var(--text-3); }
 .win-note { font-size: 13.5px; color: var(--text-3); margin-top: 14px; }
 .desk { position: relative; aspect-ratio: 16 / 10; border-radius: 22px; overflow: hidden; border: 1px solid var(--border);
   background: radial-gradient(120% 90% at 20% 0%, #3d6fd8 0%, transparent 60%), radial-gradient(90% 80% at 100% 100%, #7a4fd6 0%, transparent 60%), #1b2a52; }
@@ -389,22 +382,83 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
 .desk .taskbar i { width: 26px; height: 26px; border-radius: 7px; background: rgba(255,255,255,.14); }
 .desk .taskbar i:first-child { background: linear-gradient(135deg, #4cc2ff, #0a6cff); }
 .desk .label { position: absolute; left: 16px; bottom: 58px; font-size: 12px; color: rgba(255,255,255,.75); background: rgba(0,0,0,.35); padding: 6px 12px; border-radius: 999px; }
-@media (max-width: 960px) { .win { grid-template-columns: 1fr; gap: 36px; } }
 @media (max-width: 560px) { nav .btn { height: 36px; padding: 0 14px; font-size: 13.5px; border-radius: 11px; gap: 7px; } nav .btn svg.lucide { width: 14px; height: 14px; } }
 @media (max-width: 400px) { .brand { font-size: 17px; gap: 8px; } .brand img { width: 26px; height: 26px; } nav .btn { padding: 0 12px; } }
-@media (max-width: 560px) { .plan { grid-template-columns: 1fr; } .desk .island { width: 78%; } }
 @media (prefers-reduced-motion: reduce) { .soon::before, .desk .bars i { animation: none; } }
+/* Hero: the Mac and Windows side by side */
+.hero-shot.platform-stage { background: none; padding: 0; overflow: visible; border-radius: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; text-align: left; }
+.platform-stage .cap { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+.platform-stage .cap b { display: flex; gap: 10px; align-items: center; font-size: 16px; font-weight: 600; }
+.platform-stage .cap span { color: var(--text-3); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.platform-stage .shot { height: 300px; border-radius: 24px; overflow: hidden; display: flex; justify-content: center; align-items: flex-start;
+  box-shadow: 0 30px 60px -34px rgba(59,139,255,.55); }
+.platform-stage .shot:not(.desk) { background: var(--sky); }
+.platform-stage .shot img { width: 100%; max-width: 620px; }
+.platform-stage .desk.shot { aspect-ratio: auto; display: block; }
+svg.winlogo { width: 1.1em; height: 1.1em; }
+.platform-stage .cap svg.winlogo, .plat-card .title svg.winlogo, .get .title svg.winlogo { width: 1em; height: 1em; }
+/* Windows' island hangs from the top edge, like the notch */
+.desk .island { top: 0 !important; border-radius: 0 0 18px 18px !important; }
+
+/* Mac vs Windows */
+.plat-card { padding: 0; overflow: hidden; border-radius: 24px; }
+.plat-card .vis { height: 120px; display: flex; justify-content: center; align-items: flex-start; }
+.plat-card .vis.mac { background: var(--sky); }
+.plat-card .vis.mac img { width: min(522px, 88%); }
+.plat-card .vis.win { background: radial-gradient(120% 140% at 30% 0%, #3b4a9e 0%, #1E2340 60%); }
+.plat-card .vis.win .island { width: min(380px, 88%); height: 40px; background: #000; border-radius: 0 0 20px 20px; display: flex; align-items: center; gap: 10px; padding: 0 18px;
+  color: #F5A524; font-size: 14px; font-weight: 600; }
+.plat-card .vis.win .island span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.plat-card .vis.win .island em { color: #fff; font-style: normal; font-size: 12px; }
+.plat-card .body { padding: 32px; display: flex; flex-direction: column; gap: 24px; }
+.plat-card .title, .get .title { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.plat-card .title b { display: flex; gap: 12px; align-items: center; font-size: 26px; font-weight: 700; letter-spacing: -.5px; }
+.plat-card .title span { color: var(--text-3); font-size: 13px; text-align: right; }
+.lbl { display: flex; gap: 8px; align-items: center; font-size: 12px; font-weight: 700; color: var(--text-3); letter-spacing: .08em; }
+.lbl i { width: 6px; height: 6px; border-radius: 50%; display: block; }
+.only { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 18px; }
+.only li { display: flex; gap: 14px; align-items: flex-start; }
+.only .ib { width: 36px; height: 36px; border-radius: 10px; background: var(--surface-2); display: grid; place-items: center; flex: none; }
+.only.mac .ib svg { color: #3B8BFF; } .only.win .ib svg { color: #8C7CFF; }
+.only b { display: block; font-size: 15px; font-weight: 600; }
+.only span { display: block; color: var(--text-3); font-size: 14px; margin-top: 3px; line-height: 1.45; }
+.both { margin-top: 24px; padding: 32px; border-radius: 24px; }
+.both .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+.both .top > span { color: var(--text-3); font-size: 13px; }
+.both .chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.both .chips div { display: flex; gap: 10px; align-items: center; padding: 14px 16px; background: var(--inner); border: 1px solid var(--border); border-radius: 14px; font-size: 15px; font-weight: 500; }
+.both .chips svg { color: var(--text-2); }
+
+/* Get Beanotch: one card per platform */
+.get { padding: 40px; display: flex; flex-direction: column; gap: 24px; border-radius: 28px; }
+.get .title b { display: flex; gap: 12px; align-items: center; font-size: 30px; font-weight: 700; letter-spacing: -.6px; }
+.get .beta { padding: 5px 12px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); font-size: 13px; font-weight: 600; }
+.get .meta-line { margin: -8px 0 0; color: var(--text-3); font-size: 14px; }
+.get .steps { margin-top: 0; }
+.get .term { max-width: none; }
+.get .term code { white-space: normal; }
+@media (max-width: 960px) {
+  .hero-shot.platform-stage { grid-template-columns: 1fr; margin-inline: 16px; }
+  .both .chips { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .hero .pill { font-size: 11.5px; white-space: nowrap; gap: 6px; }
+  .platform-stage .shot { height: 220px; }
+  .both .chips { grid-template-columns: 1fr; }
+  .plat-card .body, .both, .get { padding: 24px; }
+  .plat-card .title { flex-wrap: wrap; }
+}
 </style>
 </head>
 <body>
 
-<div class="banner"><a href="#windows">✦ New: Beanotch for Windows is in beta. <i data-lucide="arrow-right"></i></a></div>
+<div class="banner"><a href="#platforms">✦ New: Beanotch now runs on Windows 10 and 11, in beta. <i data-lucide="arrow-right"></i></a></div>
 
 <nav>
   <div class="wrap">
     <a class="brand" href="#"><img src="landing-page-assets/beanotch-icon.png" alt="">Beanotch</a>
     <div class="nav-links">
-      <a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#customize">Customize</a><a href="#windows">Windows</a><a href="#faq">FAQ</a>
+      <a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#customize">Customize</a><a href="#platforms">Mac vs Windows</a><a href="#faq">FAQ</a>
     </div>
     <div class="nav-right">
       <button class="icon-btn" id="themeBtn" aria-label="Switch light or dark"><i data-lucide="moon"></i></button>
@@ -417,30 +471,43 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
 <header class="hero">
   <div class="wrap">
     <a class="pill" href="https://github.com/giankbr/beanie-notch"><b>FREE</b>Open source · macOS 14+ · Windows 10+ <i data-lucide="arrow-right"></i></a>
-    <h1 id="headline">The notch,<br>finally earning its place.</h1>
-    <p class="lead">Hover the notch or press ⌥ Space. System stats, your next meeting, prayer times, AI usage, a file shelf, clipboard history and synced lyrics — in a 3.6 MB native app that idles near 0% CPU.</p>
+    <h1 id="headline">The top of your screen,<br>finally earning its place.</h1>
+    <p class="lead">A notch dashboard on Mac, a notch-style island on Windows. System stats, your next meeting, prayer times, AI usage, clipboard history and synced lyrics, one hover away.</p>
     <div class="cta-row">
-      <a class="btn btn-primary dl" data-label="Download for Windows" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch.dmg"><i data-lucide="apple"></i>Download for macOS</a>
-      <a class="btn btn-ghost" href="https://github.com/giankbr/beanie-notch">View source <i data-lucide="arrow-right"></i></a>
+      <a class="btn btn-primary" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch.dmg"><i data-lucide="apple"></i>Download for macOS</a>
+      <a class="btn btn-ghost win-dl" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch-Setup-x64.exe"><svg class="lucide winlogo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 5.1 10.4 4v7.2H3zm8.4-1.2L21 2.5v8.7h-9.6zM3 12.6h7.4v7.3L3 18.8zm8.4 0H21v8.9l-9.6-1.4z"/></svg>Download for Windows</a>
     </div>
     <div class="meta">
       <span><i data-lucide="code"></i>Swift + SwiftUI</span>
       <span><i data-lucide="code"></i>C# + WinUI 3</span>
       <span><i data-lucide="package"></i>0 dependencies</span>
-      <span><i data-lucide="monitor"></i>macOS &amp; Windows</span>
+      <span><i data-lucide="cpu"></i>x64 &amp; ARM</span>
       <span><i data-lucide="shield-check"></i>No tracking</span>
     </div>
   </div>
-  <div class="stage"><div class="hero-shot"><img src="landing-page-assets/overview.png" alt="Beanotch's Overview panel open under the notch: health, CPU, memory, network, disk, cleanup and quick settings"></div></div>
+  <div class="stage"><div class="hero-shot platform-stage">
+    <div>
+      <div class="cap"><b><i data-lucide="apple"></i>macOS</b><span>Hover the notch · ⌥ Space</span></div>
+      <div class="shot"><img src="landing-page-assets/overview.png" alt="Beanotch's Overview panel open under the MacBook notch: health, CPU, memory, network, disk, cleanup and quick settings"></div>
+    </div>
+    <div>
+      <div class="cap"><b><svg class="lucide winlogo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 5.1 10.4 4v7.2H3zm8.4-1.2L21 2.5v8.7h-9.6zM3 12.6h7.4v7.3L3 18.8zm8.4 0H21v8.9l-9.6-1.4z"/></svg>Windows</b><span>Hover the island · Beta</span></div>
+      <div class="desk shot" aria-hidden="true">
+        <div class="island"><span>Yang tak bisa terobati</span><span class="bars"><i></i><i></i><i></i><i></i></span></div>
+        <div class="label">Beta · Windows 11</div>
+        <div class="taskbar"><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+    </div>
+  </div></div>
   <div style="position:relative;max-width:1200px;margin:0 auto"><div class="hero-glow"></div></div>
 </header>
 
 <div class="stats">
   <div class="wrap">
-    <div class="stat"><strong>3.6 MB</strong><span>download size</span></div>
+    <div class="stat"><strong>3.6 MB</strong><span>Mac download</span></div>
+    <div class="stat"><strong>21 MB</strong><span>Windows, .NET included</span></div>
     <div class="stat"><strong>~0%</strong><span>CPU when idle</span></div>
     <div class="stat"><strong>19</strong><span>call services to Join</span></div>
-    <div class="stat"><strong>4</strong><span>lyrics sources, no keys</span></div>
   </div>
 </div>
 
@@ -485,9 +552,9 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
   <div class="wrap">
     <div class="head-row">
       <div>
-        <span class="eyebrow">Closed notch</span>
+        <span class="eyebrow">Closed notch &amp; island</span>
         <h2>Even closed,<em>still useful.</em></h2>
-        <p class="sub">The notch grows just enough to show what matters right now, then tucks itself away again.</p>
+        <p class="sub">The notch on Mac, or the island on Windows, grows just enough to show what matters right now, then tucks itself away again.</p>
       </div>
       <div class="gestures">
         <div><kbd>↔</kbd><b>Swipe</b><span>next song</span></div>
@@ -512,8 +579,8 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
   <div class="wrap">
     <div class="center">
       <span class="eyebrow">Under the hood</span>
-      <h2>Built the way<em>a Mac app should be.</em></h2>
-      <p class="sub">Small, native, and polite about permissions.</p>
+      <h2>Built the way<em>native apps should be.</em></h2>
+      <p class="sub">Small, native on both platforms, and polite about permissions.</p>
     </div>
     <div class="grid-3" style="margin-top:64px">
       <article class="feature"><div><h3><span><i data-lucide="feather"></i></span>Native and tiny</h3><p>Swift and SwiftUI on the Mac, C# and WinUI 3 on Windows, with no third-party dependencies. A 3.6 MB universal Mac app that idles near 0% CPU.</p></div></article>
@@ -521,7 +588,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
       <article class="feature"><div><h3><span><i data-lucide="key-round"></i></span>Asks only when needed</h3><p>Calendars, Location, Camera — macOS prompts the first time a feature actually needs access.</p></div></article>
       <article class="feature"><div><h3><span><i data-lucide="keyboard"></i></span>No Accessibility grant</h3><p>The global shortcut is a Carbon hot key, so ⌥ Space works without handing over input control.</p></div></article>
       <article class="feature"><div><h3><span><i data-lucide="unplug"></i></span>Degrades gracefully</h3><p>Brightness, Night Shift and DDC load at run time. Missing symbols just switch that feature off.</p></div></article>
-      <article class="feature"><div><h3><span><i data-lucide="refresh-cw"></i></span>Updates from GitHub</h3><p>Optionally checks GitHub Releases once a day. Grab the DMG, drag to Applications, done.</p></div></article>
+      <article class="feature"><div><h3><span><i data-lucide="refresh-cw"></i></span>Updates from GitHub</h3><p>Optionally checks GitHub Releases once a day. Grab the DMG or the installer, and you're done.</p></div></article>
     </div>
   </div>
 </section>
@@ -552,33 +619,34 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
   </div>
 </section>
 
-<section id="windows">
-  <div class="wrap win">
-    <div>
-      <span class="soon">Windows beta</span>
-      <h2>Beanotch for Windows.<em>Without a notch.</em></h2>
-      <p class="sub">Windows laptops don't have a notch, so Beanotch becomes a small island at the top centre of the screen. Hover it to open the panels, built natively with WinUI 3 rather than ported.</p>
-      <div class="plan">
-        <div><i data-lucide="check"></i>Overview &amp; cleanup</div>
-        <div><i data-lucide="check"></i>Today, calendar &amp; focus</div>
-        <div><i data-lucide="check"></i>Prayer times &amp; qibla</div>
-        <div><i data-lucide="check"></i>Now playing &amp; lyrics</div>
-        <div><i data-lucide="check"></i>Shelf &amp; clipboard</div>
-        <div><i data-lucide="check"></i>AI usage</div>
-        <div><i data-lucide="check"></i>Controls &amp; brightness</div>
-        <div><i data-lucide="check"></i>Uninstaller &amp; large files</div>
-        <div class="later"><i data-lucide="minus"></i>AirDrop and Night Shift stay on Mac</div>
-      </div>
-      <div class="cta-row" style="justify-content:flex-start">
-        <a class="btn btn-primary" id="winDownload" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch-Setup-x64.exe"><i data-lucide="download"></i><span>Download for Windows</span></a>
-        <a class="btn btn-ghost" id="winOther" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch-Setup-arm64.exe"><i data-lucide="cpu"></i><span>Snapdragon (ARM)</span></a>
-      </div>
-      <p class="win-note">Beta · Windows 10 and 11 · 21 MB, .NET included. Most PCs (Intel or AMD) need the first button; Snapdragon PCs the ARM one. The installer isn't signed yet: if SmartScreen appears, choose More info › Run anyway. Found a bug? <a href="https://github.com/giankbr/beanie-notch/issues/new?title=Windows%3A%20" style="color:var(--accent)">Tell us</a>.</p>
+<section id="platforms" style="border-top:1px solid var(--border)">
+  <div class="wrap">
+    <div class="center">
+      <span class="eyebrow">Mac vs Windows</span>
+      <h2>One app,<em>two homes.</em></h2>
+      <p class="sub">Built natively for each, not ported. Most panels work the same on both; a few things only one system allows.</p>
     </div>
-    <div class="desk" aria-hidden="true">
-      <div class="island"><span>Yang tak bisa terobati</span><span class="bars"><i></i><i></i><i></i><i></i></span></div>
-      <div class="label">Beta · Windows 11</div>
-      <div class="taskbar"><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="grid-2 plat" style="margin-top:64px">
+      <article class="card plat-card">
+        <div class="vis mac"><img src="landing-page-assets/notch-airpods-crop.png" alt="AirPods charge in the MacBook notch"></div>
+        <div class="body">
+          <div class="title"><b><i data-lucide="apple"></i>macOS</b><span>macOS 14+ · 3.6 MB</span></div>
+          <div class="lbl"><i style="background:#3B8BFF"></i>ONLY ON MACOS</div>
+          <ul class="only mac"><li><span class="ib"><i data-lucide="send"></i></span><div><b>AirDrop from the Shelf</b><span>Drop on the right third of the notch to send.</span></div></li><li><span class="ib"><i data-lucide="headphones"></i></span><div><b>AirPods charge</b><span>Each bud and the case, the moment they connect.</span></div></li><li><span class="ib"><i data-lucide="sun-moon"></i></span><div><b>Night Shift</b><span>One switch in Controls.</span></div></li><li><span class="ib"><i data-lucide="terminal"></i></span><div><b>Codex usage</b><span>Tokens and rate-limit windows from local logs.</span></div></li></ul>
+        </div>
+      </article>
+      <article class="card plat-card">
+        <div class="vis win"><div class="island"><i data-lucide="video"></i><span>Zoom is using the camera</span><em>●</em></div></div>
+        <div class="body">
+          <div class="title"><b><svg class="lucide winlogo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 5.1 10.4 4v7.2H3zm8.4-1.2L21 2.5v8.7h-9.6zM3 12.6h7.4v7.3L3 18.8zm8.4 0H21v8.9l-9.6-1.4z"/></svg>Windows</b><span>Windows 10 &amp; 11 · 21 MB · Beta</span></div>
+          <div class="lbl"><i style="background:#8C7CFF"></i>ONLY ON WINDOWS</div>
+          <ul class="only win"><li><span class="ib"><i data-lucide="video"></i></span><div><b>Mic &amp; camera alerts</b><span>The island shows when an app starts using them.</span></div></li><li><span class="ib"><i data-lucide="bluetooth"></i></span><div><b>Bluetooth connects</b><span>Devices joining, plus charging and low battery.</span></div></li><li><span class="ib"><i data-lucide="lock"></i></span><div><b>Lock, sleep, snip</b><span>And empty the bin, from Controls.</span></div></li><li><span class="ib"><i data-lucide="eye-off"></i></span><div><b>Hidden files &amp; taskbar</b><span>Toggle hidden files and taskbar auto-hide.</span></div></li></ul>
+        </div>
+      </article>
+    </div>
+    <div class="card both">
+      <div class="top"><div class="lbl"><i style="background:var(--live)"></i>ON BOTH</div><span>Same panels, same look, built natively for each</span></div>
+      <div class="chips"><div><i data-lucide="layout-grid"></i>Overview &amp; cleanup</div><div><i data-lucide="calendar"></i>Today &amp; Join</div><div><i data-lucide="moon"></i>Prayer times &amp; qibla</div><div><i data-lucide="music"></i>Synced lyrics</div><div><i data-lucide="inbox"></i>Shelf</div><div><i data-lucide="clipboard"></i>Clipboard history</div><div><i data-lucide="sparkles"></i>Claude Code usage</div><div><i data-lucide="sun"></i>Brightness &amp; DDC</div></div>
     </div>
   </div>
 </section>
@@ -591,7 +659,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
       <p class="sub">Beanotch is free, open and tiny. If something isn't covered here, <a href="https://github.com/giankbr/beanie-notch/issues" style="color:var(--accent)">open an issue on GitHub</a>.</p>
     </div>
     <div>
-      <details><summary>Is there a Windows version?<i data-lucide="chevron-down"></i></summary><p>Yes, in beta: a small island at the top centre of the screen with the same pages as on the Mac. <a href="#windows" style="color:var(--accent)">Download it here</a>. Most PCs need the regular (x64) installer; Snapdragon PCs get the ARM64 one, which the button picks for you.</p></details>
+      <details><summary>Is there a Windows version?<i data-lucide="chevron-down"></i></summary><p>Yes, in beta for Windows 10 and 11: a notch-style island at the top centre of the screen with the same pages as on the Mac, built with WinUI 3. <a href="#download" style="color:var(--accent)">Download it here</a>. Most PCs need the regular (x64) installer; Snapdragon PCs get the ARM64 one, which the button picks for you.</p></details>
       <details><summary>Does it work on a Mac without a notch?<i data-lucide="chevron-down"></i></summary><p>Yes. On Macs without a notch, Beanotch draws a notch-like strip at the top centre of the screen. Pick the floating shape in Settings if you prefer it detached.</p></details>
       <details open><summary>Why does macOS say the app can't be opened?<i data-lucide="chevron-down"></i></summary><p>Beanotch is ad-hoc signed, not notarized. Right-click the app and choose Open once, or run <code>xattr -dr com.apple.quarantine /Applications/Beanotch.app</code>.</p></details>
       <details><summary>Is my location sent anywhere?<i data-lucide="chevron-down"></i></summary><p>Prayer times are worked out on your Mac. For the weather, only your place's coordinates go to Open-Meteo, with no account, no key and no tracking. Lyrics lookups send just the song title and artist.</p></details>
@@ -601,29 +669,39 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
   </div>
 </section>
 
-<section id="download" style="padding-top:0; padding-bottom:56px">
+<section id="download" style="padding-bottom:56px">
   <div class="wrap">
-    <div class="card cta">
-      <div class="left">
-        <span class="eyebrow">Get Beanotch</span>
-        <h2>Give your notch<em>a job.</em></h2>
-        <p class="sub">Free and open source. A 3.6 MB universal app for macOS 14 or later, and a beta for Windows 10 and 11.</p>
-        <div class="cta-row" style="justify-content:flex-start">
-          <a class="btn btn-primary dl" data-label="Download for Windows" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch.dmg"><i data-lucide="apple"></i>Download Beanotch.dmg</a>
-          <a class="btn btn-ghost" href="https://github.com/giankbr/beanie-notch"><i data-lucide="github"></i>View on GitHub</a>
-        </div>
+    <div class="center">
+      <span class="eyebrow">Get Beanotch</span>
+      <h2>Pick your platform.<em>Both are free.</em></h2>
+      <p class="sub">Open source, no account, no tracking. Install takes under a minute.</p>
+    </div>
+    <div class="grid-2" style="margin-top:56px">
+      <article class="card get">
+        <div class="title"><b><i data-lucide="apple"></i>macOS</b></div>
+        <p class="meta-line"><span class="ver">v1.9.3</span> · macOS 14 or later · Apple silicon &amp; Intel · 3.6 MB</p>
+        <div class="cta-row" style="justify-content:flex-start"><a class="btn btn-primary" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch.dmg"><i data-lucide="apple"></i>Download Beanotch.dmg</a></div>
         <div class="steps">
           <div><span>1</span><strong>Open the DMG</strong><p>Drag Beanotch into Applications.</p></div>
-          <div><span>2</span><strong>First launch</strong><p>It's ad-hoc signed, so right-click and choose Open once.</p></div>
+          <div><span>2</span><strong>First launch</strong><p>Not notarized yet: right-click › Open once.</p></div>
           <div><span>3</span><strong>Hover the notch</strong><p>Or press ⌥ Space. That's it.</p></div>
         </div>
-      </div>
-      <div class="right">
-        <div class="menubar"><i data-lucide="apple" style="width:13px;height:13px"></i><span id="clock">09:41</span></div>
-        <img class="notch" src="landing-page-assets/notch-download-crop.png" alt="">
-        <img class="window" src="landing-page-assets/install-window.png" alt="The Beanotch disk image: drag Beanotch into Applications">
         <div class="term"><span>$</span><code id="cmd">xattr -dr com.apple.quarantine /Applications/Beanotch.app</code><button id="copy" aria-label="Copy command"><i data-lucide="copy"></i></button></div>
-      </div>
+      </article>
+      <article class="card get">
+        <div class="title"><b><svg class="lucide winlogo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 5.1 10.4 4v7.2H3zm8.4-1.2L21 2.5v8.7h-9.6zM3 12.6h7.4v7.3L3 18.8zm8.4 0H21v8.9l-9.6-1.4z"/></svg>Windows</b><span class="beta">Beta</span></div>
+        <p class="meta-line">Windows 10 and 11 · x64 &amp; Snapdragon (ARM) · 21 MB, .NET included</p>
+        <div class="cta-row" style="justify-content:flex-start">
+          <a class="btn btn-primary win-dl" id="winDownload" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch-Setup-x64.exe"><svg class="lucide winlogo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 5.1 10.4 4v7.2H3zm8.4-1.2L21 2.5v8.7h-9.6zM3 12.6h7.4v7.3L3 18.8zm8.4 0H21v8.9l-9.6-1.4z"/></svg><span>Download for Windows</span></a>
+          <a class="btn btn-ghost" id="winOther" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch-Setup-arm64.exe"><i data-lucide="cpu"></i><span>ARM</span></a>
+        </div>
+        <div class="steps">
+          <div><span>1</span><strong>Run the installer</strong><p>Installs for you only, no admin prompt.</p></div>
+          <div><span>2</span><strong>SmartScreen</strong><p>Not signed yet: More info › Run anyway.</p></div>
+          <div><span>3</span><strong>Hover the island</strong><p>It sits at the top centre of the screen.</p></div>
+        </div>
+        <div class="term"><span>→</span><code>Snapdragon PC? Pick ARM. Every other PC uses the first button.</code></div>
+      </article>
     </div>
   </div>
 </section>
@@ -754,15 +832,10 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
     }).catch(function () {});
   });
 
-  function tick() {
-    var d = new Date();
-    document.getElementById("clock").textContent = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
-  }
-  tick(); setInterval(tick, 30000);
 
   // The newest release's version, when GitHub answers (the repository has to be public).
   fetch("https://api.github.com/repos/giankbr/beanie-notch/releases/latest").then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
-    if (j && j.tag_name) document.getElementById("version").textContent = j.tag_name;
+    if (j && j.tag_name) { document.getElementById("version").textContent = j.tag_name; document.querySelectorAll(".ver").forEach(function (v) { v.textContent = j.tag_name; }); }
   }).catch(function () {});
 
 
@@ -877,7 +950,8 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
     main.href = main.href.replace("-x64.exe", "-arm64.exe");
     main.querySelector("span").textContent = "Download for Windows on ARM";
     other.href = other.href.replace("-arm64.exe", "-x64.exe");
-    other.querySelector("span").textContent = "Intel / AMD (x64)";
+    other.querySelector("span").textContent = "x64";
+    document.querySelectorAll(".win-dl").forEach(function (a) { a.href = a.href.replace("-x64.exe", "-arm64.exe"); });
   }).catch(function () {});
 })();
 
