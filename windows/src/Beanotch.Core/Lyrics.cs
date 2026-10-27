@@ -7,10 +7,14 @@ namespace Beanotch.Core;
 
 public sealed record LyricLine(TimeSpan Time, string Text);
 
+public sealed record LrcLibResponse([property: JsonPropertyName("syncedLyrics")] string? Synced);
+
+[JsonSerializable(typeof(LrcLibResponse))]
+internal sealed partial class LyricsJson : JsonSerializerContext;
+
 // Synced lyrics from LRCLIB: free, no key, and only the song's title, artist and length are sent.
 public sealed partial class Lyrics(HttpClient http)
 {
-    sealed record Response([property: JsonPropertyName("syncedLyrics")] string? Synced);
 
     public async Task<IReadOnlyList<LyricLine>> FetchAsync(string title, string artist, TimeSpan duration, CancellationToken cancel = default)
     {
@@ -22,7 +26,7 @@ public sealed partial class Lyrics(HttpClient http)
             request.Headers.UserAgent.ParseAdd("Beanotch-Windows (https://github.com/giankbr/beanie-notch)");
             using var response = await http.SendAsync(request, cancel);
             if (!response.IsSuccessStatusCode) return [];
-            var body = await response.Content.ReadFromJsonAsync<Response>(cancel);
+            var body = await response.Content.ReadFromJsonAsync(LyricsJson.Default.LrcLibResponse, cancel);
             return body?.Synced is string synced ? Parse(synced) : [];
         }
         catch (Exception e) when (e is HttpRequestException or TaskCanceledException or System.Text.Json.JsonException)
