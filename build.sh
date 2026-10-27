@@ -50,6 +50,6 @@ else
   mkdir "$work/dmg"
   cp -R "$app" "$work/dmg/"
   ln -s /Applications "$work/dmg/Applications"
-  hdiutil create -volname "Beanotch $version" -srcfolder "$work/dmg" -ov -format UDZO "$dist/Beanotch.dmg" > /dev/null
+  hdiutil create -volname "Beanotch $version" -srcfolder "$work/dmg" -ov -format ULMO "$dist/Beanotch.dmg" > /dev/null
 fi
 echo "built $app and $dist/Beanotch.dmg"

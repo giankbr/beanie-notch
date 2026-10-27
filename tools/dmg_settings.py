@@ -2,7 +2,8 @@
 import os
 
 app = defines['app']
-format = 'UDZO'
+# LZMA: about a quarter smaller than zlib (UDZO); opens on macOS 10.15 and later.
+format = 'ULMO'
 files = [app]
 symlinks = {'Applications': '/Applications'}
 background = defines['background']

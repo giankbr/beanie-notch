@@ -40,6 +40,9 @@ jobs:
         shell: pwsh
         run: |
           Get-ChildItem out/Beanotch -Recurse -Include *.pri, *.xbf, *.xaml | Format-Table FullName, Length -AutoSize | Out-String -Width 300
+          "{0:N1} MB in {1} files" -f ((Get-ChildItem out/Beanotch -Recurse -File | Measure-Object Length -Sum).Sum / 1MB), (Get-ChildItem out/Beanotch -Recurse -File).Count
+          Get-ChildItem out/Beanotch -Recurse -File | Sort-Object Length -Descending | Select-Object -First 45 | Format-Table @{n='KB';e={[int]($_.Length/1KB)}}, FullName -AutoSize | Out-String -Width 300
+          Get-ChildItem out/Beanotch -Directory | ForEach-Object { "{0,8} KB  {1}" -f [int]((Get-ChildItem $_.FullName -Recurse -File | Measure-Object Length -Sum).Sum / 1KB), $_.Name }
           Get-ChildItem obj -Recurse -Include *.pri -ErrorAction SilentlyContinue | Format-Table FullName, Length -AutoSize | Out-String -Width 300
           Get-ChildItem windows/src/Beanotch/obj -Recurse -Include *.pri | Format-Table FullName, Length -AutoSize | Out-String -Width 300
       # Runs the app on the build machine in its snapshot mode: it photographs the island and every page, then quits.
