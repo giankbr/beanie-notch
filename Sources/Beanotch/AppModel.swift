@@ -341,6 +341,7 @@ final class AppModel: ObservableObject {
                 while FileManager.default.fileExists(atPath: candidate.path) {
                     candidate = folder.appendingPathComponent("\(slug)-\(n)").appendingPathExtension(ext); n += 1
                 }
+                screenshots.ignore(candidate)
                 if (try? FileManager.default.moveItem(at: url, to: candidate)) != nil { target = candidate }
             }
         }

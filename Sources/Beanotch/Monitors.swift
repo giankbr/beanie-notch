@@ -196,6 +196,9 @@ final class ScreenshotWatcher {
         }
     }
 
+    // A file the app is about to create here itself (a screenshot it renamed), so it isn't taken for a new one.
+    func ignore(_ url: URL) { seen.insert(url.path) }
+
     private func scan(_ dir: URL) {
         for url in Self.files(in: dir) where !seen.contains(url.path) {
             seen.insert(url.path)
