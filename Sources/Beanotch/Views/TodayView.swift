@@ -32,7 +32,7 @@ struct TodayView: View {
     }
 }
 
-// Exchange rates and gold, in the local currency, three to a row.
+// Exchange rates, gold and, in Indonesia, fuel, in the local currency, three to a row.
 private struct RatesPanel: View {
     @EnvironmentObject var rates: Rates
 
@@ -46,6 +46,9 @@ private struct RatesPanel: View {
                         cell(code, value: rates.value(of: code), change: rates.change(code, now: rates.value(of: code)))
                     }
                     cell("Gold", value: rates.goldGram, change: rates.change("gold", now: rates.goldGram), unit: " / g")
+                    ForEach(Rates.fuels.filter { rates.fuel[$0] != nil }, id: \.self) { product in
+                        cell(product.capitalized, value: rates.fuel[product], change: rates.change(product, now: rates.fuel[product]), unit: " / L")
+                    }
                 }
             }
         }
@@ -54,7 +57,7 @@ private struct RatesPanel: View {
     }
 
     private func cell(_ code: String, value: Double?, change: Double?, unit: String = "") -> some View {
-        let tint = code == "Gold" ? Theme.amber : Theme.accent
+        let tint = code == "Gold" ? Theme.amber : Rates.fuels.contains(code.uppercased()) ? Theme.accent2 : Theme.accent
         return VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 4) {
                 Text(code + unit).font(.app(size: 8.5, weight: .bold)).foregroundStyle(tint)

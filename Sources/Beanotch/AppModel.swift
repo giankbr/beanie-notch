@@ -223,6 +223,11 @@ final class AppModel: ObservableObject {
         smartCopy.onNotice = notify
         clipboard.onText = { [weak self] text in self?.smartCopy.check(text) }
         settings.$smartCopy.sink { [weak self] on in self?.smartCopy.enabled = on }.store(in: &sinks)
+        // The prayer place's nearest listed city, for fuel prices by province.
+        rates.city = { [weak self] in
+            guard let place = self?.prayer.place else { return nil }
+            return PrayerTimes.cities.min { PrayerTimes.distance($0, place.lat, place.lng) < PrayerTimes.distance($1, place.lat, place.lng) }?.name
+        }
         quakes.onNotice = notify
         quakes.place = { [weak self] in self?.prayer.place }
         settings.$quakeAlerts.sink { [weak self] on in self?.quakes.setEnabled(on) }.store(in: &sinks)
