@@ -11,7 +11,7 @@
 <link rel="icon" href="landing-page-assets/beanotch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
 <style>
@@ -40,6 +40,8 @@
     --key-top: #2F2F2F; --key-bottom: #222222; --key-line: rgba(255,255,255,.08); --key-edge: rgba(0,0,0,.45); --key-shine: rgba(255,255,255,.1);
 }
 :root[data-font="sf"] { --font: -apple-system, "SF Pro Display", "SF Pro Text", system-ui, sans-serif; }
+:root[data-font="inter"] { --font: "Inter", system-ui, sans-serif; }
+:root[data-font="jakarta"] { --font: "Plus Jakarta Sans", system-ui, sans-serif; }
 
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -414,7 +416,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
 
 <header class="hero">
   <div class="wrap">
-    <a class="pill" href="https://github.com/giankbr/beanie-notch"><b>FREE</b>Open source · macOS 14+ · Universal <i data-lucide="arrow-right"></i></a>
+    <a class="pill" href="https://github.com/giankbr/beanie-notch"><b>FREE</b>Open source · macOS 14+ · Windows 10+ <i data-lucide="arrow-right"></i></a>
     <h1 id="headline">The notch,<br>finally earning its place.</h1>
     <p class="lead">Hover the notch or press ⌥ Space. System stats, your next meeting, prayer times, AI usage, a file shelf, clipboard history and synced lyrics — in a 3.6 MB native app that idles near 0% CPU.</p>
     <div class="cta-row">
@@ -423,8 +425,9 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
     </div>
     <div class="meta">
       <span><i data-lucide="code"></i>Swift + SwiftUI</span>
+      <span><i data-lucide="code"></i>C# + WinUI 3</span>
       <span><i data-lucide="package"></i>0 dependencies</span>
-      <span><i data-lucide="cpu"></i>Apple silicon &amp; Intel</span>
+      <span><i data-lucide="monitor"></i>macOS &amp; Windows</span>
       <span><i data-lucide="shield-check"></i>No tracking</span>
     </div>
   </div>
@@ -513,7 +516,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
       <p class="sub">Small, native, and polite about permissions.</p>
     </div>
     <div class="grid-3" style="margin-top:64px">
-      <article class="feature"><div><h3><span><i data-lucide="feather"></i></span>Native and tiny</h3><p>Swift and SwiftUI with no third-party dependencies. A 3.6 MB universal binary that idles near 0% CPU.</p></div></article>
+      <article class="feature"><div><h3><span><i data-lucide="feather"></i></span>Native and tiny</h3><p>Swift and SwiftUI on the Mac, C# and WinUI 3 on Windows, with no third-party dependencies. A 3.6 MB universal Mac app that idles near 0% CPU.</p></div></article>
       <article class="feature"><div><h3><span><i data-lucide="lock"></i></span>Private by default</h3><p>Prayer times are worked out on the Mac. No analytics, no tracking, no API keys.</p></div></article>
       <article class="feature"><div><h3><span><i data-lucide="key-round"></i></span>Asks only when needed</h3><p>Calendars, Location, Camera — macOS prompts the first time a feature actually needs access.</p></div></article>
       <article class="feature"><div><h3><span><i data-lucide="keyboard"></i></span>No Accessibility grant</h3><p>The global shortcut is a Carbon hot key, so ⌥ Space works without handing over input control.</p></div></article>
@@ -542,7 +545,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
         </div>
         <div><label>Accent</label><div class="dots" id="dots"></div></div>
         <div><label>Notch shape</label><div class="shapes" data-key="shape"><button data-s="drop" aria-pressed="true">Drop</button><button data-s="seamless">Seamless</button><button data-s="floating">Floating</button></div></div>
-        <div><label>Typeface</label><div class="seg" data-key="font"><button>SF Pro</button><button aria-pressed="true">Be Vietnam Pro</button></div></div>
+        <div><label>Typeface</label><div class="seg" data-key="font"><button>SF Pro</button><button aria-pressed="true">Be Vietnam</button><button>Inter</button><button>Jakarta</button></div></div>
         <div class="toggle-row"><div><strong>Lyrics in closed notch</strong><small>Synced, from 4 free sources</small></div><button class="switch" role="switch" aria-checked="true" aria-label="Lyrics in closed notch"></button></div>
       </div>
     </div>
@@ -604,7 +607,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
       <div class="left">
         <span class="eyebrow">Get Beanotch</span>
         <h2>Give your notch<em>a job.</em></h2>
-        <p class="sub">Free and open source. A 3.6 MB universal app for macOS 14 or later.</p>
+        <p class="sub">Free and open source. A 3.6 MB universal app for macOS 14 or later, and a beta for Windows 10 and 11.</p>
         <div class="cta-row" style="justify-content:flex-start">
           <a class="btn btn-primary dl" data-label="Download for Windows" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch.dmg"><i data-lucide="apple"></i>Download Beanotch.dmg</a>
           <a class="btn btn-ghost" href="https://github.com/giankbr/beanie-notch"><i data-lucide="github"></i>View on GitHub</a>
@@ -640,14 +643,14 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
       <div><h5>PRODUCT</h5><a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#features">AI usage <span class="new">New</span></a><a href="#customize">Customize</a><a href="https://github.com/giankbr/beanie-notch/releases">Releases</a></div>
       <div><h5>PROJECT</h5><a href="https://github.com/giankbr/beanie-notch">GitHub</a><a href="https://github.com/giankbr/beanie-notch#build">Build from source</a><a href="https://github.com/giankbr/beanie-notch/releases">Changelog</a><a href="https://github.com/giankbr/beanie-notch/issues">Report an issue</a></div>
       <div><h5>PRIVACY</h5><span>No tracking</span><span>Location stays on Mac</span><span>No API keys</span><a href="https://github.com/giankbr/beanie-notch#install">Permissions</a></div>
-      <div><h5>REQUIREMENTS</h5><span>macOS 14 or later</span><span>Apple silicon &amp; Intel</span><span>3.6 MB download</span><span id="version">v1.9.1</span></div>
+      <div><h5>REQUIREMENTS</h5><span>macOS 14 or later</span><span>Windows 10 or later (beta)</span><span>Apple silicon &amp; Intel</span><span>3.6 MB download</span><span id="version">v1.9.1</span></div>
     </div>
     <div class="credits">
       <div><span class="eyebrow">Credits</span><h4>Standing on open source.</h4><p>Ideas studied from these projects. Beanotch's code is written from scratch.</p></div>
       <div class="chips" id="chips"></div>
-      <div class="font-note"><i data-lucide="type"></i>Be Vietnam Pro © The Be Vietnam Pro Project Authors · SIL Open Font License</div>
+      <div class="font-note"><i data-lucide="type"></i>Be Vietnam Pro, Inter and Plus Jakarta Sans · SIL Open Font License</div>
     </div>
-    <div class="bottom"><span>© 2026 Beanotch</span><span>Made with Swift · no analytics</span></div>
+    <div class="bottom"><span>© 2026 Beanotch</span><span>Made with Swift &amp; C# · no analytics</span></div>
   </div>
   <div class="watermark" aria-hidden="true"><span>B</span><span>E</span><span>A</span><span>N</span><span>O</span><span>T</span><span>C</span><span>H</span></div>
 </footer>
@@ -670,7 +673,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
     return '<button style="--c:' + a[1] + '" aria-label="' + a[0] + '" aria-pressed="' + (i === 0) + '" data-name="' + a[0] + '"></button>';
   }).join("");
 
-  var state = { layout: "Studio", theme: "Dark", size: "M", accent: "Ocean", shape: "Drop", font: "Be Vietnam Pro" };
+  var state = { layout: "Studio", theme: "Dark", size: "M", accent: "Ocean", shape: "Drop", font: "Be Vietnam" };
   var sizes = { Mini: "Mini", S: "Small", M: "Medium", L: "Large" };
   // The previews are the app itself rendered in each look (in Ocean); other accents shift its hue.
   var layoutKeys = { Studio: "studio", Compact: "sidebar", "Top tabs": "tabs", Classic: "classic" };
@@ -727,7 +730,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
       group.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
       var key = group.dataset.key, value = b.textContent.trim();
       if (key === "theme") return setTheme(value === "Dark" ? "dark" : "light", true);
-      if (key === "font") { root.setAttribute("data-font", value === "SF Pro" ? "sf" : "vietnam"); }
+      if (key === "font") { root.setAttribute("data-font", { "SF Pro": "sf", "Inter": "inter", "Jakarta": "jakarta" }[value] || "vietnam"); }
       state[key] = value;
       label();
     });

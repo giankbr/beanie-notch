@@ -101,7 +101,9 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
                           tip: accent.ToString());
             swatches.Children.Add(b);
         }
-        return V(8, Group(Picker("Theme", "The island itself always stays black", theme), Picker("Accent", "Buttons, highlights and the mini player", swatches)));
+        var font = Segmented(["Segoe UI", "Be Vietnam", "Inter", "Jakarta"], (int)S0.Font, i => { S0.Font = (AppFont)i; Save(rebuild: true); });
+        return V(8, Group(Picker("Theme", "The island itself always stays black", theme), Picker("Accent", "Buttons, highlights and the mini player", swatches),
+                          Picker("Font", "Segoe UI is Windows' own; the others ship with Beanotch, as on the Mac", font)));
     }
 
     private FrameworkElement Pages()

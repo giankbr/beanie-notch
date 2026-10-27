@@ -175,9 +175,8 @@ struct SettingsView: View {
                 row("arrow.up.left.and.arrow.down.right", "Panel size", "How big the panel opens") {
                     Segmented(options: PanelSize.allCases.map(\.title), selection: index($settings.size, PanelSize.allCases))
                 }
-                row("textformat", "Font", "SF Pro matches the icons; Be Vietnam Pro is rounder") {
-                    Segmented(options: ["SF Pro", "Be Vietnam Pro"], selection: Binding(get: { settings.systemFont ? 0 : 1 },
-                                                                                      set: { settings.systemFont = $0 == 0 }))
+                pickerRow("Font", "SF Pro matches the icons; the others ship with Beanotch") {
+                    Segmented(options: AppFont.allCases.map(\.title), selection: index($settings.font, AppFont.allCases))
                 }
             }
         }

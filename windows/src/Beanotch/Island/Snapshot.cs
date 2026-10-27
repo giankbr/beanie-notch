@@ -54,6 +54,16 @@ public sealed partial class IslandWindow
             await Shot($"{index++:00}-light-{tab.ToString().ToLowerInvariant()}");
         }
 
+        model.Settings.Theme = ThemeMode.Dark;
+        foreach (var font in new[] { AppFont.BeVietnam, AppFont.Inter, AppFont.Jakarta })
+        {
+            model.Settings.Font = font;
+            shell.Rebuild();
+            root.Background = Theme.Brush(Theme.Background);
+            shell.Open(Tab.Home);
+            await Shot($"{index++:00}-font-{font.ToString().ToLowerInvariant()}");
+        }
+
         File.WriteAllLines(Path.Combine(dir, "snapshot.log"), log);
         Microsoft.UI.Xaml.Application.Current.Exit();
     }

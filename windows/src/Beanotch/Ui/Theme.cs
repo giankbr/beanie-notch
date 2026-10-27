@@ -5,6 +5,9 @@ namespace Beanotch.Ui;
 
 public enum ThemeMode { System, Light, Dark }
 
+// Segoe UI is Windows' own; the others ship with the app, as on the Mac (all under the SIL Open Font License).
+public enum AppFont { System, BeVietnam, Inter, Jakarta }
+
 public enum AccentChoice { Mint, Ocean, Sunset, Rose, Lime, Violet, Teal, Gold, Crimson, Graphite }
 
 // The Mac app's palette, so both look like the same product. Sizes on Windows are scaled up a little (see Ui.K):

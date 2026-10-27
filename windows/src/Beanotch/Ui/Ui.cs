@@ -16,8 +16,36 @@ public static class Ui
     public const double K = 1.3;
     public static double S(double v) => Math.Round(v * K, 1);
 
-    public static readonly FontFamily Font = new("Segoe UI Variable Text, Segoe UI");
-    public static readonly FontFamily Display = new("Segoe UI Variable Display, Segoe UI");
+    private static readonly FontFamily SystemText = new("Segoe UI Variable Text, Segoe UI");
+    private static readonly FontFamily SystemDisplay = new("Segoe UI Variable Display, Segoe UI");
+    private static readonly Dictionary<string, FontFamily> Faces = [];
+
+    public static AppFont AppFont { get; set; } = AppFont.System;
+
+    // A bundled font is one file per weight. Regular and Bold carry the plain family name; Medium and SemiBold carry
+    // their weight in it ("Inter SemiBold"), which is how Windows tells them apart.
+    public static FontFamily FontFor(FontWeight weight, bool display = false)
+    {
+        var (file, family) = AppFont switch
+        {
+            AppFont.BeVietnam => ("BeVietnamPro", "Be Vietnam Pro"),
+            AppFont.Inter => ("Inter", "Inter"),
+            AppFont.Jakarta => ("PlusJakartaSans", "Plus Jakarta Sans"),
+            _ => ("", ""),
+        };
+        if (file.Length == 0) return display ? SystemDisplay : SystemText;
+        var (face, suffix) = weight.Weight switch
+        {
+            >= 700 => ("Bold", ""),
+            >= 600 => ("SemiBold", " SemiBold"),
+            >= 500 => ("Medium", " Medium"),
+            _ => ("Regular", ""),
+        };
+        var key = file + face;
+        if (!Faces.TryGetValue(key, out var font))
+            Faces[key] = font = new FontFamily($"ms-appx:///Assets/Fonts/{file}-{face}.ttf#{family}{suffix}");
+        return font;
+    }
     public static readonly FontFamily Mono = new("Cascadia Mono, Consolas");
     public static readonly FontFamily Icons = new("Segoe Fluent Icons, Segoe MDL2 Assets");
 
@@ -28,7 +56,7 @@ public static class Ui
         {
             Text = text,
             FontSize = S(size),
-            FontFamily = mono ? Mono : display ? Display : Font,
+            FontFamily = mono ? Mono : FontFor(weight ?? FontWeights.Normal, display),
             FontWeight = weight ?? FontWeights.Normal,
             Foreground = Theme.Brush(color ?? Theme.Ink),
             TextTrimming = TextTrimming.CharacterEllipsis,

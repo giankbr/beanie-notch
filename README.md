@@ -112,7 +112,7 @@ Beanotch is written in Swift and SwiftUI with no third-party dependencies. The d
 - Three notch shapes: drop, seamless and floating.
 - Flat buttons that light up under the pointer, and segmented controls with a sliding thumb.
 - Settings in sections, with visual pickers for the theme, layout and notch shape.
-- SF Pro or Be Vietnam Pro.
+- SF Pro (Segoe UI on Windows), Be Vietnam Pro, Inter or Plus Jakarta Sans.
 
 ## Install
 
@@ -178,4 +178,4 @@ Commit messages follow [Conventional Commits](https://www.conventionalcommits.or
 Ideas came from studying these open-source projects; Beanotch's code is written from scratch:
 NotchDrop, DynamicNotchKit, Stats, Maccy, KeyboardShortcuts, Pearcleaner, LyricsX, Boring.notch, Atoll, Hidden Bar, MeetingBar, MonitorControl and Itsycal.
 
-The Be Vietnam Pro font is © The Be Vietnam Pro Project Authors and licensed under the [SIL Open Font License](Resources/Fonts/OFL.txt).
+The bundled fonts, Be Vietnam Pro (© The Be Vietnam Pro Project Authors), Inter (© The Inter Project Authors) and Plus Jakarta Sans (© The Plus Jakarta Sans Project Authors), are licensed under the SIL Open Font License 1.1; their licences are in `Resources/Fonts`. Inter is subset to Latin and Vietnamese to keep the download small.

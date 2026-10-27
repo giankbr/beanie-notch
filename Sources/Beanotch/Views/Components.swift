@@ -37,7 +37,7 @@ enum Theme {
     static let dim = ink.opacity(0.55)
     static let faint = ink.opacity(0.4)
     // SF Pro by default: it's drawn to sit with SF Symbols, which every icon here is.
-    nonisolated(unsafe) static var systemFont = true
+    nonisolated(unsafe) static var font = AppFont.system
 
     static func level(_ value: Double) -> Color {
         value < 0.7 ? good : value < 0.9 ? amber : red
@@ -413,14 +413,14 @@ extension Font {
     }
 
     static func app(size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        if Theme.systemFont { return .system(size: size, weight: weight) }
+        guard let prefix = Theme.font.prefix else { return .system(size: size, weight: weight) }
         let face = switch weight {
         case .bold, .heavy, .black: "Bold"
         case .semibold: "SemiBold"
         case .medium: "Medium"
         default: "Regular"
         }
-        return .custom("BeVietnamPro-\(face)", size: size)
+        return .custom("\(prefix)-\(face)", size: size)
     }
 }
 

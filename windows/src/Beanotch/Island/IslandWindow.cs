@@ -116,6 +116,7 @@ public sealed partial class IslandWindow : Window
     {
         var systemDark = new UISettings().GetColorValue(UIColorType.Background).R < 128;
         Theme.Apply(model.Settings.Theme, model.Settings.Accent, systemDark);
+        Ui.Ui.AppFont = model.Settings.Font;
         root.RequestedTheme = Theme.Dark ? ElementTheme.Dark : ElementTheme.Light;
         root.Background = Theme.Brush(model.Expanded ? Theme.Background : Theme.Black);
     }

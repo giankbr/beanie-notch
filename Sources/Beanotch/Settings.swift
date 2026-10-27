@@ -91,6 +91,30 @@ enum AccentChoice: String, CaseIterable {
     }
 }
 
+// SF Pro is the system's; the others ship in the app (all under the SIL Open Font License) and match the Windows app.
+enum AppFont: String, CaseIterable {
+    case system, beVietnam, inter, jakarta
+
+    var title: String {
+        switch self {
+        case .system: "SF Pro"
+        case .beVietnam: "Be Vietnam"
+        case .inter: "Inter"
+        case .jakarta: "Jakarta"
+        }
+    }
+
+    // The bundled files' PostScript name prefix, as in "Inter-SemiBold".
+    var prefix: String? {
+        switch self {
+        case .system: nil
+        case .beVietnam: "BeVietnamPro"
+        case .inter: "Inter"
+        case .jakarta: "PlusJakartaSans"
+        }
+    }
+}
+
 @MainActor
 final class Settings: ObservableObject {
     private static let defaults = UserDefaults.standard
@@ -115,10 +139,10 @@ final class Settings: ObservableObject {
     @Published private(set) var hotkeyLabel: String
     @Published var screenshotsToShelf: Bool { didSet { save(screenshotsToShelf, "screenshotsToShelf") } }
     @Published var lyrics: Bool { didSet { save(lyrics, "lyrics") } }
-    @Published var systemFont: Bool {
+    @Published var font: AppFont {
         didSet {
-            save(systemFont, "systemFont")
-            Theme.systemFont = systemFont
+            save(font.rawValue, "font")
+            Theme.font = font
         }
     }
     @Published var prayerCountdown: Bool { didSet { save(prayerCountdown, "prayerCountdown") } }
@@ -142,7 +166,7 @@ final class Settings: ObservableObject {
     @Published var stretchEvery: Int { didSet { save(stretchEvery, "stretchEvery") } }
 
     // Changes whenever the look changes, so the panel can rebuild with the new colors.
-    var styleKey: String { "\(theme.rawValue)-\(accent.rawValue)-\(layout.rawValue)-\(notchStyle.rawValue)-\(systemFont)" }
+    var styleKey: String { "\(theme.rawValue)-\(accent.rawValue)-\(layout.rawValue)-\(notchStyle.rawValue)-\(font.rawValue)" }
 
     init() {
         let d = Self.defaults
@@ -160,7 +184,8 @@ final class Settings: ObservableObject {
         hotkeyLabel = d.string(forKey: "hotkeyLabel") ?? "⌥ Space"
         screenshotsToShelf = d.object(forKey: "screenshotsToShelf") as? Bool ?? true
         lyrics = d.object(forKey: "lyrics") as? Bool ?? true
-        systemFont = d.object(forKey: "systemFont") as? Bool ?? true
+        // Earlier versions had a single switch between SF Pro and Be Vietnam Pro.
+        font = AppFont(rawValue: d.string(forKey: "font") ?? "") ?? ((d.object(forKey: "systemFont") as? Bool ?? true) ? .system : .beVietnam)
         prayerCountdown = d.object(forKey: "prayerCountdown") as? Bool ?? true
         notchStyle = NotchStyle(rawValue: d.string(forKey: "notchStyle") ?? "") ?? .drop
         hideInFullScreen = d.object(forKey: "hideInFullScreen") as? Bool ?? true
@@ -180,7 +205,7 @@ final class Settings: ObservableObject {
         eyeBreaks = d.bool(forKey: "eyeBreaks")
         stretchEvery = d.object(forKey: "stretchEvery") as? Int ?? 0
         applyAccent()
-        Theme.systemFont = systemFont
+        Theme.font = font
     }
 
     func setHotkey(code: Int, modifiers: Int, label: String) {

@@ -19,7 +19,7 @@ The same panels as the Mac app, in its Studio layout and palette:
 | AI | Claude Code's tokens and estimated API cost for today, the last 5 hours and the week, with a 7-day chart. |
 | Controls | Dark mode, keep awake, mic mute, taskbar auto-hide, desktop icons, hidden files; brightness for the built-in screen and external monitors (DDC/CI); battery; lock, sleep, snip, empty the bin. |
 | Tools | An uninstaller that also finds leftover folders, a large-file finder, and the camera. |
-| Settings | Theme and accent, which pages show, what the island shows, calendar and clocks, prayer, open at sign-in and updates. |
+| Settings | Theme, accent and font (Segoe UI, Be Vietnam Pro, Inter or Plus Jakarta Sans), which pages show, what the island shows, calendar and clocks, prayer, open at sign-in and updates. |
 
 **The closed island** shows volume, downloads, the current lyric line, the focus timer, meetings and prayers coming up, screenshots, and, in place of the Mac's AirPods card (Windows can't read AirPods' battery): an app starting to use the mic or camera, Bluetooth devices connecting, charging and low battery, and Caps Lock.
 
