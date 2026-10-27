@@ -326,6 +326,15 @@ final class AppModel: ObservableObject {
         volumeWatcher.nudge(by: delta)
     }
 
+    // The on-screen ruler; each measure is copied and shown in the notch.
+    func measure() {
+        expanded = false
+        ScreenRuler.shared.onMeasure = { [weak self] size in
+            self?.show(Notice(icon: "ruler", color: Theme.accent, left: "Copied", right: size, essential: true))
+        }
+        ScreenRuler.shared.show()
+    }
+
     // Samples a color anywhere on screen with the system loupe, then copies its hex code.
     func pickColor() {
         expanded = false

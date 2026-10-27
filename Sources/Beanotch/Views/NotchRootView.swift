@@ -445,6 +445,7 @@ private struct Header: View {
             HStack(spacing: 4) {
                 MessagesMenu()
                 KeepAwakeMenu()
+                IconButton(icon: "ruler") { model.measure() }.help("Measure anything on screen; the size is copied")
                 IconButton(icon: "eyedropper") { model.pickColor() }.help("Pick a color from the screen; its hex code is copied")
             }
             .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 4 }
