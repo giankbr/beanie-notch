@@ -3,13 +3,17 @@ using System.Text.Json;
 
 namespace Beanotch.Services;
 
-// Exchange rates against the US dollar from open.er-api.com and the gold price from gold-api.com (both free, no key),
-// kept for six hours, with yesterday's values remembered to show the change. As on the Mac.
+// Exchange rates against the US dollar from open.er-api.com, the gold price from gold-api.com (both free, no key) and,
+// in Indonesia, Pertamina's fuel prices for the province from the API behind MyPertamina's price page, kept for six
+// hours, with yesterday's values remembered to show the change. As on the Mac.
 public sealed class Rates(AppSettings settings)
 {
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(15) };
     public Dictionary<string, double> PerDollar { get; private set; } = [];
     public double? GoldOunce { get; private set; }
+    // Pertamina's prices per litre in the province, by product ("PERTALITE").
+    public Dictionary<string, double> Fuel { get; private set; } = [];
+    public static readonly string[] Fuels = ["PERTALITE", "PERTAMAX"];
     private DateTime updated;
     private bool loading;
 
@@ -25,7 +29,8 @@ public sealed class Rates(AppSettings settings)
     }
 
     public static string[] Watched =>
-        [.. (Local == "IDR" ? new[] { "USD", "SGD", "EUR", "SAR", "JPY" } : ["USD", "EUR", "GBP", "JPY", "CNY", "CHF"]).Where(c => c != Local).Take(5)];
+        // In Indonesia three currencies leave room for gold and fuel.
+        [.. (Local == "IDR" ? new[] { "USD", "SGD", "SAR" } : ["USD", "EUR", "GBP", "JPY", "CNY", "CHF"]).Where(c => c != Local).Take(5)];
 
     public async Task RefreshAsync()
     {
@@ -42,6 +47,7 @@ public sealed class Rates(AppSettings settings)
                 GoldOunce = g.RootElement.GetProperty("price").GetDouble();
             }
             catch (Exception) { }
+            if (Local == "IDR") Fuel = await FuelPrices(Province(settings.City));
             updated = DateTime.UtcNow;
             Remember();
         }
@@ -64,6 +70,7 @@ public sealed class Rates(AppSettings settings)
         var day = DateTime.Now.ToString("yyyy-MM-dd");
         var values = Watched.Select(c => (c, Value(c))).Where(p => p.Item2 is not null).ToDictionary(p => p.c, p => p.Item2!.Value);
         if (GoldGram is { } gram) values["gold"] = gram;
+        foreach (var (product, price) in Fuel) values[product] = price;
         if (settings.RatesDay != day)
         {
             if (settings.RatesToday.Count > 0) settings.RatesPrevious = settings.RatesToday;
@@ -72,6 +79,60 @@ public sealed class Rates(AppSettings settings)
         settings.RatesToday = values;
         settings.Save();
     }
+
+    private static async Task<Dictionary<string, double>> FuelPrices(string province)
+    {
+        var prices = new Dictionary<string, double>();
+        try
+        {
+            using var json = JsonDocument.Parse(await Http.GetStringAsync("https://api.web.mypertamina.id/price?limit=60&page=1"));
+            foreach (var row in json.RootElement.GetProperty("data").GetProperty("data").EnumerateArray())
+            {
+                if (row.GetProperty("province").GetString()?.EndsWith(province) != true) continue;
+                // Prices come as "16300" or "Rp 10.000"; 0 means not sold there.
+                foreach (var item in row.GetProperty("list_price").EnumerateArray())
+                    if (item.GetProperty("product").GetString() is { } product
+                        && double.TryParse(new string([.. (item.GetProperty("price").GetString() ?? "").Where(char.IsDigit)]), out var value) && value > 0)
+                        prices[product] = value;
+                break;
+            }
+        }
+        catch (Exception) { }
+        return prices;
+    }
+
+    // Pertamina lists prices by province, and Batam on its own as a free trade zone.
+    public static string Province(string city) => city switch
+    {
+        "Jakarta" => "DKI Jakarta",
+        "Bogor" or "Depok" or "Bekasi" or "Bandung" or "Cirebon" => "Jawa Barat",
+        "Tangerang" => "Banten",
+        "Semarang" or "Surakarta" => "Jawa Tengah",
+        "Yogyakarta" => "DI Yogyakarta",
+        "Surabaya" or "Malang" => "Jawa Timur",
+        "Denpasar" => "Bali",
+        "Mataram" => "Nusa Tenggara Barat",
+        "Kupang" => "Nusa Tenggara Timur",
+        "Banda Aceh" => "Aceh",
+        "Medan" => "Sumatera Utara",
+        "Padang" => "Sumatera Barat",
+        "Pekanbaru" => "Riau",
+        "Batam" => "(FTZ) Batam",
+        "Jambi" => "Jambi",
+        "Palembang" => "Sumatera Selatan",
+        "Bengkulu" => "Bengkulu",
+        "Bandar Lampung" => "Lampung",
+        "Pontianak" => "Kalimantan Barat",
+        "Banjarmasin" => "Kalimantan Selatan",
+        "Balikpapan" or "Samarinda" => "Kalimantan Timur",
+        "Makassar" => "Sulawesi Selatan",
+        "Palu" => "Sulawesi Tengah",
+        "Kendari" => "Sulawesi Tenggara",
+        "Manado" => "Sulawesi Utara",
+        "Ambon" => "Maluku",
+        "Jayapura" => "Papua",
+        _ => "DKI Jakarta",
+    };
 
     public static string Format(double amount, string currency)
     {

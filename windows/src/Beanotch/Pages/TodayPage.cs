@@ -86,8 +86,9 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
     {
         left.Children.Clear();
         var subtitle = leftMode switch { 0 => "Calendar · next 24 hours", 1 => "Saved on this PC", 2 => DateTime.Now.ToString("MMMM yyyy"), _ => "In " + Rates.Local };
-        var head = Columns(8, (V(2, Text(leftMode == 3 ? "Rates" : "Up next", 13, weight: FontWeights.SemiBold), Text(subtitle, 9, Theme.Faint)), 1),
-                           (Segmented(["Agenda", "Tasks", "Month", "Rates"], leftMode, i => { leftMode = i; Left(); }), null));
+        // Four tabs leave the title no room beside them, so they get a row of their own.
+        var head = V(8, Columns(8, (Text(leftMode == 3 ? "Rates" : "Up next", 13, weight: FontWeights.SemiBold), null), (Text(subtitle, 9, Theme.Faint), 1)),
+                     Segmented(["Agenda", "Tasks", "Month", "Rates"], leftMode, i => { leftMode = i; Left(); }));
         FrameworkElement body = leftMode switch { 0 => Agenda(), 1 => Tasks(), 2 => Month(), _ => RatesView() };
         left.Children.Add(Rows(10, (head, null), (body, 1)));
     }
@@ -103,7 +104,7 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
         }
         FrameworkElement Cell(string code, double? value, double? change, string unit = "")
         {
-            var tint = code == "Gold" ? Theme.Amber : Theme.Accent;
+            var tint = code == "Gold" ? Theme.Amber : Rates.Fuels.Contains(code.ToUpperInvariant()) ? Theme.Accent2 : Theme.Accent;
             var top = Columns(4, (Text(code + unit, 8.5, tint, FontWeights.Bold), 1),
                               (change is { } c ? Text((c >= 0 ? "▲" : "▼") + Math.Abs(c * 100).ToString("0.0") + "%", 8, c >= 0 ? Theme.Good : Theme.Red, FontWeights.SemiBold) : null, null));
             return new Border
@@ -115,7 +116,8 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
             };
         }
         var cells = Rates.Watched.Select(c => Cell(c, rates.Value(c), rates.Change(c, rates.Value(c))))
-            .Append(Cell("Gold", rates.GoldGram, rates.Change("gold", rates.GoldGram), " / g")).ToList();
+            .Append(Cell("Gold", rates.GoldGram, rates.Change("gold", rates.GoldGram), " / g"))
+            .Concat(Rates.Fuels.Where(rates.Fuel.ContainsKey).Select(f => Cell(f[..1] + f[1..].ToLowerInvariant(), rates.Fuel[f], rates.Change(f, rates.Fuel[f]), " / L"))).ToList();
         var grid = new Grid { ColumnSpacing = S(6), RowSpacing = S(6) };
         for (var c = 0; c < 3; c++) grid.ColumnDefinitions.Add(new ColumnDefinition());
         for (var r = 0; r < 2; r++) grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });

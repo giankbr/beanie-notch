@@ -103,6 +103,19 @@ public sealed partial class IslandWindow
             await Shot($"{index++:00}-{theme.ToString().ToLowerInvariant()}-{tab.ToString().ToLowerInvariant()}", theme == ThemeMode.Glass ? 5000 : 1500);
         }
 
+        // The ruler: the photographed screen with its crosshairs, rendered, then photographed on screen by CI.
+        try
+        {
+            RulerWindow.ShowRuler();
+            await Task.Delay(2500);
+            if (RulerWindow.Showing?.Content is UIElement ruler) await Save(ruler, Path.Combine(dir, $"{index++:00}-ruler.png"));
+            File.WriteAllText(Path.Combine(dir, "ruler.ready"), "");
+            await Task.Delay(5000);
+            RulerWindow.Showing?.Close();
+            log.Add("ok   ruler");
+        }
+        catch (Exception e) { log.Add($"FAIL ruler: {e.GetType().Name}: {e.Message}"); }
+
         File.WriteAllLines(Path.Combine(dir, "snapshot.log"), log);
         Microsoft.UI.Xaml.Application.Current.Exit();
     }

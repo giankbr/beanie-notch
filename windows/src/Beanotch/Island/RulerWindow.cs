@@ -18,6 +18,7 @@ namespace Beanotch.Island;
 public sealed partial class RulerWindow : Window
 {
     private static RulerWindow? open;
+    public static RulerWindow? Showing => open;
     private readonly Canvas overlay = new() { Background = Ui.Theme.Brush(Ui.Theme.Rgb(0, 0, 0, 0.06)) };
     private readonly Line across = new(), down = new();
     private readonly Rectangle box = new() { Visibility = Visibility.Collapsed };

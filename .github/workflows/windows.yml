@@ -73,6 +73,15 @@ jobs:
             [System.Drawing.Graphics]::FromImage($bmp).CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
             $bmp.Save((Join-Path $dir "00-desktop-glass.png"))
           }
+          $ready = Join-Path $dir "ruler.ready"
+          for ($i = 0; $i -lt 120 -and -not (Test-Path $ready); $i++) { Start-Sleep -Seconds 1 }
+          if (Test-Path $ready) {
+            Start-Sleep -Seconds 1
+            $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+            $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
+            [System.Drawing.Graphics]::FromImage($bmp).CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+            $bmp.Save((Join-Path $dir "00-desktop-ruler.png"))
+          }
           if (-not $app.WaitForExit(240000)) { Stop-Process $app -Force; "timed out" | Out-File (Join-Path $dir "timeout.txt") }
           "exit code: $($app.ExitCode)" | Out-File (Join-Path $dir "exit.txt")
           Get-ChildItem $dir | Format-Table Name, Length
