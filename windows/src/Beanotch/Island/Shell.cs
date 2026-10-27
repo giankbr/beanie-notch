@@ -106,7 +106,7 @@ public sealed class Shell
     public void Tick()
     {
         title.Text = Model.Title(model.Tab);
-        date.Text = DateTime.Now.ToString("dddd, d MMMM") + (model.Visible(Tab.Prayer) ? " · " + Model.Hijri : "");
+        date.Text = DateTime.Now.ToString("dddd, d MMMM") + (model.Visible(Tab.Prayer) ? " · " + model.Hijri : "");
         pills.Children.Clear();
         var next = model.NextPrayer;
         if (model.Visible(Tab.Prayer)) pills.Children.Add(Pill($"{next.Name} {Model.Clock(next.Time)}", Theme.Accent2, Glyphs.Moon));

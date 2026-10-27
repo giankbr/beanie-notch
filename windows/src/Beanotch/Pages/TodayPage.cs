@@ -20,9 +20,6 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
     private int leftMode, rightMode;
     private readonly TextBox taskInput = new() { PlaceholderText = "Add a task · \"call Budi 15.00\" sets a reminder" };
     private TextBlock? bigTime;
-    private Grid? focusBar;
-    private FontIcon? startGlyph;
-    private TextBlock? startLabel;
 
     protected override FrameworkElement Build()
     {
@@ -208,55 +205,115 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
         right.Children.Add(Rows(10, (tabs, null), (body, 1)));
     }
 
+    // A ring that fills as the stretch runs, with the time, what it's for and play/pause inside it; underneath, the lengths
+    // and a pill to jump between focus and a break. Focus burns orange to red, the break cools to blue, as on the Mac.
     private FrameworkElement FocusView()
     {
         var focus = Model.Focus;
-        bigTime = Text(Clock(focus.Left), 34, weight: FontWeights.Bold, display: true);
-        var mode = Text(focus.OnBreak ? "Break" : "Focus", 10, focus.OnBreak ? Theme.Good : Theme.Dim, FontWeights.SemiBold);
-        focusBar = new Grid { ColumnSpacing = S(2) };
-        startGlyph = Icon(focus.Running ? Glyphs.Pause : Glyphs.Play, 11, Theme.Background);
-        startLabel = Text(focus.Running ? "Pause" : "Start", 11, Theme.Background, FontWeights.SemiBold);
-        var start = Plain(Center(H(6, startGlyph, startLabel)), () => { focus.Toggle(); Right(); }, Theme.Accent, 10, new Thickness(0, S(8), 0, S(8)));
-        start.HorizontalAlignment = HorizontalAlignment.Stretch;
-        var presets = new ComboBox { ItemsSource = FocusPreset.All.Select(p => p.Label).ToList(), SelectedIndex = Array.IndexOf(FocusPreset.All, focus.Preset), FontSize = S(10) };
-        presets.SelectionChanged += (_, _) =>
+        var resting = focus.OnBreak;
+        bigTime = Text(Clock(focus.Left), 20, weight: FontWeights.Bold, display: true);
+        bigTime.HorizontalAlignment = HorizontalAlignment.Center;
+        var label = Text(resting ? "RELAX" : "FOCUS", 7.5, Theme.Dim, FontWeights.Medium);
+        label.CharacterSpacing = 150;
+        label.HorizontalAlignment = HorizontalAlignment.Center;
+        var emoji = new TextBlock
         {
-            if (presets.SelectedIndex < 0) return;
-            focus.Choose(FocusPreset.All[presets.SelectedIndex]);
-            Model.Settings.FocusPreset = presets.SelectedIndex;
-            Model.Settings.Save();
-            Right();
+            Text = resting ? "☕" : "🍅",
+            FontSize = S(12),
+            FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe UI Emoji"),
+            HorizontalAlignment = HorizontalAlignment.Center,
         };
-        var actions = Columns(6, (start, 1), (presets, null),
-                              (IconButton(Glyphs.Refresh, () => { focus.Reset(); Right(); }, 10, Theme.Dim, "Reset"), null),
-                              (IconButton(Glyphs.Next, () => { focus.Skip(); Right(); }, 10, Theme.Dim, "Skip"), null));
-        var rounds = Text(focus.Rounds == 0 ? "No rounds yet today" : $"{focus.Rounds} round{(focus.Rounds == 1 ? "" : "s")} done", 8.5, Theme.Faint);
+        var play = IconButton(focus.Running ? Glyphs.Pause : Glyphs.Play, () => { focus.Toggle(); Right(); }, 12, Theme.Ink,
+                              focus.Running ? "Pause" : "Start", 26);
+        play.HorizontalAlignment = HorizontalAlignment.Center;
+        var inside = V(0, emoji, bigTime, label, play);
+        inside.VerticalAlignment = VerticalAlignment.Center;
+
+        var (from, to) = resting ? (Theme.Rgb(0.3, 0.62, 1), Theme.Rgb(0.12, 0.4, 0.86)) : (Theme.Rgb(1, 0.5, 0.16), Theme.Rgb(0.9, 0.27, 0.16));
+        ring = new Microsoft.UI.Xaml.Shapes.Path
+        {
+            StrokeThickness = S(RingStroke),
+            StrokeStartLineCap = Microsoft.UI.Xaml.Media.PenLineCap.Round,
+            StrokeEndLineCap = Microsoft.UI.Xaml.Media.PenLineCap.Round,
+            Stroke = new Microsoft.UI.Xaml.Media.LinearGradientBrush
+            {
+                StartPoint = new Windows.Foundation.Point(0, 0),
+                EndPoint = new Windows.Foundation.Point(1, 1),
+                GradientStops = { new() { Color = from, Offset = 0 }, new() { Color = to, Offset = 1 } },
+            },
+        };
+        var track = new Microsoft.UI.Xaml.Shapes.Ellipse { Stroke = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.1)), StrokeThickness = S(RingStroke) };
+        var dial = new Grid { Width = S(RingSide), Height = S(RingSide), Children = { track, ring, inside }, HorizontalAlignment = HorizontalAlignment.Center };
+
+        // The lengths and a reset behind the gear, so the page fits short panels too.
+        var lengths = new MenuFlyout();
+        for (var i = 0; i < FocusPreset.All.Length; i++)
+        {
+            var index = i;
+            var p = FocusPreset.All[i];
+            var item = new ToggleMenuFlyoutItem { Text = $"{p.Work} min focus, {p.Rest} min break", IsChecked = p == focus.Preset };
+            item.Click += (_, _) =>
+            {
+                focus.Choose(FocusPreset.All[index]);
+                Model.Settings.FocusPreset = index;
+                Model.Settings.Save();
+                Right();
+            };
+            lengths.Items.Add(item);
+        }
+        lengths.Items.Add(new MenuFlyoutSeparator());
+        var reset = new MenuFlyoutItem { Text = "Reset" };
+        reset.Click += (_, _) => { focus.Reset(); Right(); };
+        lengths.Items.Add(reset);
+        var gear = new Button
+        {
+            Content = Icon(Glyphs.Settings, 11),
+            Width = S(26),
+            Height = S(26),
+            Padding = new Thickness(0),
+            CornerRadius = new CornerRadius(S(13)),
+            Background = Theme.Brush(Ui.Ui.Transparent),
+            BorderBrush = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.18)),
+            BorderThickness = new Thickness(1),
+            Flyout = lengths,
+        };
+        ToolTipService.SetToolTip(gear, "Lengths and reset");
+        var pill = Plain(Text(resting ? "POMODORO" : "BREAK", 9.5, weight: FontWeights.Medium), () => { focus.Skip(); Right(); },
+                         Theme.WithAlpha(Theme.Ink, 0.1), 13, new Thickness(S(18), S(5), S(18), S(5)), resting ? "Back to focus" : "Take a break now");
+        var bottom = H(8, gear, pill);
+        bottom.HorizontalAlignment = HorizontalAlignment.Center;
         FocusTick();
-        return Rows(8, (Columns(8, (bigTime, 1), (mode, null)), null), (focusBar, null), (rounds, null), (null, 1), (actions, null));
+        return Rows(8, (dial, 1), (bottom, null));
     }
+
+    private const double RingSide = 118, RingStroke = 5;
+    private Microsoft.UI.Xaml.Shapes.Path? ring;
 
     private void FocusTick()
     {
-        if (bigTime is null || focusBar is null) return;
+        if (bigTime is null || ring is null) return;
         var focus = Model.Focus;
         bigTime.Text = Clock(focus.Left);
-        const int segments = 20;
-        var filled = (int)Math.Round(focus.Progress * segments);
-        if (focusBar.Children.Count != segments)
+        ring.Data = Arc(Math.Clamp(focus.Progress, 0.002, 0.9999), S(RingSide), S(RingStroke));
+    }
+
+    // An arc from twelve o'clock, clockwise, for the share of the stretch that has passed.
+    private static Microsoft.UI.Xaml.Media.PathGeometry Arc(double share, double size, double stroke)
+    {
+        var r = (size - stroke) / 2;
+        var c = size / 2;
+        var angle = share * 2 * Math.PI;
+        var figure = new Microsoft.UI.Xaml.Media.PathFigure { StartPoint = new Windows.Foundation.Point(c, c - r), IsClosed = false };
+        figure.Segments.Add(new Microsoft.UI.Xaml.Media.ArcSegment
         {
-            focusBar.Children.Clear();
-            focusBar.ColumnDefinitions.Clear();
-            for (var i = 0; i < segments; i++)
-            {
-                focusBar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-                var seg = new Border { Height = S(8), CornerRadius = new CornerRadius(S(2)) };
-                Grid.SetColumn(seg, i);
-                focusBar.Children.Add(seg);
-            }
-        }
-        var color = focus.OnBreak ? Theme.Good : Theme.Accent;
-        for (var i = 0; i < segments; i++)
-            ((Border)focusBar.Children[i]).Background = Theme.Brush(i < filled ? color : Theme.WithAlpha(Theme.Ink, 0.08));
+            Point = new Windows.Foundation.Point(c + r * Math.Sin(angle), c - r * Math.Cos(angle)),
+            Size = new Windows.Foundation.Size(r, r),
+            SweepDirection = Microsoft.UI.Xaml.Media.SweepDirection.Clockwise,
+            IsLargeArc = share > 0.5,
+        });
+        var geometry = new Microsoft.UI.Xaml.Media.PathGeometry();
+        geometry.Figures.Add(figure);
+        return geometry;
     }
 
     private FrameworkElement TimerView()

@@ -44,6 +44,15 @@ public sealed partial class IslandWindow
             await Shot($"{index++:00}-dark-{tab.ToString().ToLowerInvariant()}", tab is Tab.Ai or Tab.Tools or Tab.Controls ? 4000 : 2000);
         }
 
+        model.Focus.Toggle();
+        shell.Open(Tab.Today);
+        await Shot($"{index++:00}-dark-focus-running", 2500);
+        model.Focus.Skip();
+        shell.Open(Tab.Home);
+        shell.Open(Tab.Today);
+        await Shot($"{index++:00}-dark-focus-break");
+        model.Focus.Reset();
+
         model.Settings.Theme = ThemeMode.Light;
         model.Settings.Accent = AccentChoice.Ocean;
         shell.Rebuild();

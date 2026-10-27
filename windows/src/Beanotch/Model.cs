@@ -114,16 +114,25 @@ public sealed class Model
     public PrayerEntry NextPrayer =>
         PrayerTimes.Next(DateTimeOffset.Now, DateOnly.FromDateTime(DateTime.Now), Settings.Place, Settings.Method);
 
-    // The Hijri date with the months' common English spellings, from .NET's Umm al-Qura calendar, as on the Mac.
-    public static string Hijri
+    // The Hijri date: in Indonesia with the months as Indonesians write them ("16 Jumadilawal 1448 H"), elsewhere with
+    // their common English spellings, as on the Mac.
+    public string Hijri
     {
         get
         {
             var cal = new UmAlQuraCalendar();
             var now = DateTime.Now;
-            string[] months = ["Muharram", "Safar", "Rabi al-Awwal", "Rabi al-Thani", "Jumada al-Ula", "Jumada al-Akhirah",
-                               "Rajab", "Shaban", "Ramadan", "Shawwal", "Dhu al-Qadah", "Dhu al-Hijjah"];
-            return $"{cal.GetDayOfMonth(now)} {months[cal.GetMonth(now) - 1]} {cal.GetYear(now)} AH";
+            var month = cal.GetMonth(now) - 1;
+            var place = Settings.Place;
+            if (place.Lat is >= -11.5 and <= 6.5 && place.Lng is >= 94.5 and <= 141.5)
+            {
+                string[] id = ["Muharam", "Safar", "Rabiulawal", "Rabiulakhir", "Jumadilawal", "Jumadilakhir",
+                               "Rajab", "Syakban", "Ramadan", "Syawal", "Zulkaidah", "Zulhijah"];
+                return $"{cal.GetDayOfMonth(now)} {id[month]} {cal.GetYear(now)} H";
+            }
+            string[] en = ["Muharram", "Safar", "Rabi al-Awwal", "Rabi al-Thani", "Jumada al-Ula", "Jumada al-Akhirah",
+                           "Rajab", "Shaban", "Ramadan", "Shawwal", "Dhu al-Qadah", "Dhu al-Hijjah"];
+            return $"{cal.GetDayOfMonth(now)} {en[month]} {cal.GetYear(now)} AH";
         }
     }
 

@@ -127,13 +127,25 @@ final class PrayerTimes: ObservableObject {
     private let locator = Locator()
     private var timer: Timer?
 
-    // The Hijri date with the months' common English spellings, the same on the Mac and Windows apps.
+    // The Hijri date: in Indonesia with the months as Indonesians write them ("16 Jumadilawal 1448 H"), elsewhere with
+    // their common English spellings. The Windows app does the same.
     static let hijriMonths = ["Muharram", "Safar", "Rabi al-Awwal", "Rabi al-Thani", "Jumada al-Ula", "Jumada al-Akhirah",
                               "Rajab", "Shaban", "Ramadan", "Shawwal", "Dhu al-Qadah", "Dhu al-Hijjah"]
+    static let hijriMonthsIndonesian = ["Muharam", "Safar", "Rabiulawal", "Rabiulakhir", "Jumadilawal", "Jumadilakhir",
+                                        "Rajab", "Syakban", "Ramadan", "Syawal", "Zulkaidah", "Zulhijah"]
+
+    // Roughly the box Indonesia's islands sit in.
+    static func inIndonesia(_ place: Place) -> Bool {
+        (-11.5...6.5).contains(place.lat) && (94.5...141.5).contains(place.lng)
+    }
 
     var hijri: String {
         let parts = Calendar(identifier: .islamicUmmAlQura).dateComponents([.day, .month, .year], from: Date())
-        return "\(parts.day ?? 1) \(Self.hijriMonths[max(0, (parts.month ?? 1) - 1)]) \(parts.year ?? 0) AH"
+        let month = max(0, (parts.month ?? 1) - 1)
+        if let place, Self.inIndonesia(place) {
+            return "\(parts.day ?? 1) \(Self.hijriMonthsIndonesian[month]) \(parts.year ?? 0) H"
+        }
+        return "\(parts.day ?? 1) \(Self.hijriMonths[month]) \(parts.year ?? 0) AH"
     }
 
     var isRamadan: Bool { Calendar(identifier: .islamicUmmAlQura).component(.month, from: Date()) == 9 }

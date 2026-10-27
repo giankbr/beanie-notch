@@ -227,53 +227,93 @@ private struct TimePanel: View {
     }
 }
 
+// A ring that fills as the stretch runs, with the time, what it's for and play/pause inside it; underneath, the lengths
+// and a pill to jump between focus and a break. Focus burns orange to red, the break cools to blue.
 private struct FocusPage: View {
     @EnvironmentObject var focus: FocusTimer
 
+    private var resting: Bool { focus.phase == .rest }
+
+    private var colors: [Color] {
+        resting ? [Color(red: 0.3, green: 0.62, blue: 1), Color(red: 0.12, green: 0.4, blue: 0.86)]
+                : [Color(red: 1, green: 0.5, blue: 0.16), Color(red: 0.9, green: 0.27, blue: 0.16)]
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            TimelineView(.periodic(from: .now, by: focus.isRunning ? 1 : 3600)) { context in
+        VStack(spacing: 8) {
+            // As large as the space allows in either direction, so it fits every panel size.
+            GeometryReader { geo in
+              let side = min(geo.size.width, geo.size.height)
+              TimelineView(.periodic(from: .now, by: focus.isRunning ? 1 : 3600)) { context in
                 let left = focus.left(at: context.date)
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(alignment: .center) {
+                let progress = min(1, max(0.002, 1 - left / max(focus.duration, 1)))
+                ZStack {
+                    Circle().stroke(Theme.ink.opacity(0.1), lineWidth: 5)
+                    Circle()
+                        .trim(from: 0, to: progress)
+                        .stroke(AngularGradient(colors: colors, center: .center, startAngle: .zero, endAngle: .degrees(360 * progress)),
+                                style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
+                        .animation(.linear(duration: 0.4), value: progress)
+                    VStack(spacing: 0) {
+                        Text(resting ? "☕️" : "🍅").font(.system(size: side * 0.12))
                         Text(formatClock(left))
-                            .font(.app(size: 28, weight: .bold))
+                            .font(.app(size: side * 0.21, weight: .bold))
                             .monospacedDigit()
-                            .foregroundStyle(focus.phase == .focus ? Theme.ink : Theme.accent2)
                             .contentTransition(.numericText())
-                        Spacer(minLength: 4)
-                        Text(focus.phase == .focus ? "Focus" : "Break").font(.app(size: 9.5, weight: .medium)).foregroundStyle(Theme.faint)
+                        Text(resting ? "RELAX" : "FOCUS").font(.app(size: 7.5, weight: .medium)).tracking(1.2).foregroundStyle(Theme.dim)
+                        Button { focus.toggle() } label: {
+                            Image(systemName: focus.isRunning ? "pause.fill" : "play.fill")
+                                .font(.system(size: side * 0.12, weight: .heavy))
+                                .foregroundStyle(Theme.ink)
+                                .frame(width: side * 0.3, height: side * 0.2)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(PressStyle())
+                        .help(focus.isRunning ? "Pause" : "Start")
+                        .padding(.top, 2)
                     }
-                    SegmentMeter(value: 1 - left / max(focus.duration, 1), color: focus.phase == .focus ? Theme.accent : Theme.accent2)
+                    .padding(side * 0.14)
                 }
+                .padding(3)
+                .frame(width: side, height: side)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+              }
             }
-            Spacer(minLength: 0)
-            HStack(spacing: 6) {
-                PrimaryButton(text: focus.isRunning ? "Pause" : "Start", icon: focus.isRunning ? "pause.fill" : "play.fill") {
-                    focus.toggle()
-                }
-                // The lengths as a small menu in the button row, so the page fits short panels too.
+            HStack(spacing: 8) {
+                // The lengths and a reset behind the gear, so the page fits short panels too.
                 Menu {
                     ForEach(FocusTimer.presets.indices, id: \.self) { i in
                         let p = FocusTimer.presets[i]
-                        Button("\(p.focus) min focus, \(p.rest) min break") { focus.choose(i) }
+                        Button("\(p.focus) min focus, \(p.rest) min break\(i == focus.preset ? "  ✓" : "")") { focus.choose(i) }
                     }
+                    Divider()
+                    Button("Reset") { focus.reset() }
                 } label: {
-                    let p = FocusTimer.presets[focus.preset]
-                    HStack(spacing: 3) {
-                        Text("\(p.focus)/\(p.rest)").font(.mono(size: 9, weight: .semibold))
-                        Image(systemName: "chevron.down").font(.system(size: 6, weight: .bold))
-                    }
-                    .foregroundStyle(Theme.dim)
-                    .padding(.horizontal, 6)
-                    .frame(height: 22)
-                    .buttonFace(RoundedRectangle(cornerRadius: 7, style: .continuous), Theme.ink.opacity(0.08))
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Theme.ink)
+                        .frame(width: 26, height: 26)
+                        .overlay(Circle().strokeBorder(Theme.ink.opacity(0.18)))
+                        .contentShape(Circle())
                 }
                 .menuStyle(.button)
                 .buttonStyle(.plain)
                 .menuIndicator(.hidden)
                 .fixedSize()
-                IconButton(icon: "arrow.counterclockwise") { focus.reset() }.help("Reset")
+                .help("Lengths and reset")
+                Button { focus.skip() } label: {
+                    Text(resting ? "POMODORO" : "BREAK")
+                        .font(.app(size: 9.5, weight: .medium))
+                        .tracking(0.6)
+                        .foregroundStyle(Theme.ink)
+                        .padding(.horizontal, 18)
+                        .frame(height: 26)
+                        .background(Capsule().fill(Theme.ink.opacity(0.1)))
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(PressStyle())
+                .help(resting ? "Back to focus" : "Take a break now")
             }
         }
     }
