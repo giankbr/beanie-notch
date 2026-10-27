@@ -24,6 +24,12 @@ windows/
   tests/Beanotch.Core.Tests xUnit tests for the shared code
 ```
 
+## Install
+
+Download `Beanotch-Setup-x64.exe` (or `-arm64` for Snapdragon laptops) and run it. It installs for your account only, so there's no admin prompt, and it can open Beanotch when you sign in. Nothing else is needed: the .NET runtime and the Windows App SDK come inside.
+
+The installer isn't code-signed yet, so SmartScreen may say "Windows protected your PC". Choose **More info › Run anyway**.
+
 ## Build
 
 Needs Windows 10 (19041) or later, the .NET 8 SDK, and the Windows App SDK workload that comes with Visual Studio 2022 ("Windows application development").
@@ -32,6 +38,7 @@ Needs Windows 10 (19041) or later, the .NET 8 SDK, and the Windows App SDK workl
 dotnet test windows/tests/Beanotch.Core.Tests
 dotnet publish windows/src/Beanotch/Beanotch.csproj -c Release -r win-x64 -p:Platform=x64 -o out/Beanotch
 out/Beanotch/Beanotch.exe
+iscc /DAppVersion=0.1.0 /DArch=x64 windows/installer/Beanotch.iss   # → out/Beanotch-Setup-x64.exe (Inno Setup 6)
 ```
 
 The shared code also builds and tests on macOS or Linux with just the .NET 8 SDK: `dotnet test windows/tests/Beanotch.Core.Tests`.

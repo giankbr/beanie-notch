@@ -23,10 +23,14 @@ jobs:
         run: dotnet test windows/tests/Beanotch.Core.Tests
       - name: Publish
         run: dotnet publish windows/src/Beanotch/Beanotch.csproj -c Release -r win-${{ matrix.arch }} -p:Platform=${{ matrix.arch }} -o out/Beanotch
-      - name: Zip
+      - name: Installer
         shell: pwsh
-        run: Compress-Archive -Path out/Beanotch/* -DestinationPath Beanotch-Windows-${{ matrix.arch }}.zip
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+          $version = ([xml](Get-Content windows/src/Beanotch/Beanotch.csproj)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          & $iscc /DAppVersion=$version /DArch=${{ matrix.arch }} windows/installer/Beanotch.iss
       - uses: actions/upload-artifact@v4
         with:
-          name: Beanotch-Windows-${{ matrix.arch }}
-          path: Beanotch-Windows-${{ matrix.arch }}.zip
+          name: Beanotch-Setup-${{ matrix.arch }}
+          path: out/Beanotch-Setup-${{ matrix.arch }}.exe
