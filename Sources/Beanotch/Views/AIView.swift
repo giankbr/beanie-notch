@@ -201,8 +201,11 @@ private struct ToolsCard: View {
 private struct AskView: View {
     @EnvironmentObject var settings: Settings
     @EnvironmentObject var claude: ClaudeBridge
+    @EnvironmentObject var model: AppModel
     @State private var question = ""
     @State private var answer: AIResult?
+    // What a file dropped on Ask AI says, once read; nil while reading.
+    @State private var fileText: String?
     @FocusState private var focused: Bool
 
     private var engine: Assistant.Engine { Assistant.Engine(rawValue: settings.aiEngine) ?? .onDevice }
@@ -212,7 +215,7 @@ private struct AskView: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 6) {
                     Image(systemName: "sparkles").font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accent)
-                    TextField("Ask anything, then press Return", text: $question)
+                    TextField(model.aiFile == nil ? "Ask anything, then press Return" : "Ask about this file, then press Return", text: $question)
                         .textFieldStyle(.plain).font(.app(size: 11.5)).focused($focused)
                         .onSubmit(send)
                     Menu {
@@ -234,6 +237,7 @@ private struct AskView: View {
                 .padding(.horizontal, 10)
                 .frame(height: 30)
                 .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Theme.ink.opacity(0.06)))
+                if let file = model.aiFile { fileBar(file) }
 
                 Group {
                     if let answer {
@@ -275,17 +279,61 @@ private struct AskView: View {
             SessionsCard().frame(width: settings.size == .compact || settings.size == .mini ? 190 : 220)
         }
         .onAppear { focused = true }
+        .task(id: model.aiFile) {
+            fileText = nil
+            answer = nil
+            guard let file = model.aiFile else { return }
+            fileText = await Assistant.contents(of: file)
+        }
+    }
+
+    // The dropped file, and what to do with it.
+    private func fileBar(_ file: URL) -> some View {
+        HStack(spacing: 6) {
+            Image(nsImage: NSWorkspace.shared.icon(forFile: file.path)).resizable().frame(width: 18, height: 18)
+            Text(file.lastPathComponent).font(.app(size: 10, weight: .semibold)).lineLimit(1).truncationMode(.middle)
+            Spacer(minLength: 4)
+            if fileText == nil {
+                ProgressView().controlSize(.small)
+                Text("Reading…").font(.app(size: 9)).foregroundStyle(Theme.faint)
+            } else if fileText?.isEmpty == true {
+                Text("No text found in this file").font(.app(size: 9)).foregroundStyle(Theme.amber)
+            } else {
+                PillButton(text: "Summarize", color: Theme.accent) { run(.summarize) }
+                PillButton(text: "Translate", color: Theme.accent) {
+                    run(Locale.current.language.languageCode?.identifier == "id" ? .indonesian : .english)
+                }
+                PillButton(text: "Text", color: Theme.accent) {
+                    answer = AIResult(id: UUID(), title: "Text", text: fileText, error: nil)
+                }
+            }
+            IconButton(icon: "xmark") { model.aiFile = nil }.help("Put the file away")
+        }
+    }
+
+    private func run(_ action: TextAction) {
+        guard let content = fileText, !content.isEmpty else { return }
+        ask(String(content.prefix(12000)), instructions: action.instructions, title: action.title)
     }
 
     private func send() {
         let text = question.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
+        if let content = fileText, !content.isEmpty, let file = model.aiFile {
+            ask("File \(file.lastPathComponent):\n\(content.prefix(12000))\n\nQuestion: \(text)",
+                instructions: "Answer the question about the file helpfully and briefly, in the language of the question.", title: text)
+        } else {
+            ask(text, instructions: "Answer helpfully and briefly, in the language of the question.", title: text)
+        }
+    }
+
+    private func ask(_ prompt: String, instructions: String, title: String) {
         let ticket = UUID()
-        answer = AIResult(id: ticket, title: text, text: nil, error: nil)
+        answer = AIResult(id: ticket, title: title, text: nil, error: nil)
         let engine = engine
         Task {
             do {
-                let reply = try await Assistant.respond(text, instructions: "Answer helpfully and briefly, in the language of the question.", engine: engine)
+                let reply = try await Assistant.respond(prompt, instructions: instructions, engine: engine)
                 if answer?.id == ticket { answer?.text = reply }
             } catch {
                 if answer?.id == ticket { answer?.error = error.localizedDescription }

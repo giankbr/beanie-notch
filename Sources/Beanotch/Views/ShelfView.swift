@@ -58,35 +58,9 @@ struct ShelfView: View {
                     }
                 }
             }
-            // While a file is dragged over the panel: the Shelf dims, and its right third becomes the AirDrop target.
+            // While a file is dragged over the panel: the Shelf dims, its left third becomes Ask AI and its right third AirDrop.
             .overlay {
-                if model.dropTargeted {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.background.opacity(0.94))
-                        HStack {
-                            VStack(spacing: 6) {
-                                Image(systemName: "tray.and.arrow.down").font(.system(size: 20, weight: .medium))
-                                Text("Keep on the Shelf").font(.app(size: 11, weight: .semibold))
-                            }
-                            .foregroundStyle(model.dropToAirDrop ? Theme.dim : Theme.accent)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            VStack(spacing: 6) {
-                                Image(systemName: "dot.radiowaves.left.and.right").font(.system(size: 20, weight: .medium))
-                                Text("AirDrop").font(.app(size: 11, weight: .semibold))
-                                Text("Drop here to send").font(.app(size: 9))
-                            }
-                            .foregroundStyle(model.dropToAirDrop ? Theme.accent2 : Theme.dim)
-                            .frame(width: max(120, model.openSize.width * 0.32 - 14))
-                            .frame(maxHeight: .infinity)
-                            .background(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(Theme.accent2.opacity(model.dropToAirDrop ? 0.22 : 0.08)))
-                            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .strokeBorder(Theme.accent2.opacity(model.dropToAirDrop ? 0.9 : 0.35), style: StrokeStyle(lineWidth: 1, dash: [5, 4])))
-                            .padding(6)
-                        }
-                    }
-                    .animation(.easeOut(duration: 0.12), value: model.dropToAirDrop)
-                }
+                if model.dropTargeted { DropTargets() }
             }
             .animation(.easeOut(duration: 0.15), value: model.dropTargeted)
             }
@@ -219,5 +193,53 @@ private struct PhoneDropPanel: View {
         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.stroke))
         .onAppear { drop.start() }
         .onDisappear { drop.stop() }
+    }
+}
+
+// The three places a dragged file can go, each a third of the Shelf. Where they sit is reported in the panel's
+// coordinates, so the drop lands where it's shown in every layout.
+private struct DropTargets: View {
+    @EnvironmentObject var model: AppModel
+
+    var body: some View {
+        GeometryReader { geo in
+            let side = geo.size.width * 0.3
+            ZStack {
+                RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.background)
+                HStack(spacing: 0) {
+                    zone(icon: "sparkles", title: "Ask AI", caption: "Summarize, translate, read", color: Theme.accent, on: model.dropToAI)
+                        .frame(width: side)
+                    VStack(spacing: 6) {
+                        Image(systemName: "tray.and.arrow.down").font(.system(size: 20, weight: .medium))
+                        Text("Keep on the Shelf").font(.app(size: 11, weight: .semibold))
+                    }
+                    .foregroundStyle(model.dropToAirDrop || model.dropToAI ? Theme.dim : Theme.accent)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    zone(icon: "dot.radiowaves.left.and.right", title: "AirDrop", caption: "Drop here to send", color: Theme.accent2, on: model.dropToAirDrop)
+                        .frame(width: side)
+                }
+            }
+            .onAppear {
+                let frame = geo.frame(in: .named("panel"))
+                let width = max(model.openSize.width, 1)
+                model.dropSplit = ((frame.minX + side) / width, (frame.maxX - side) / width)
+            }
+        }
+        .animation(.easeOut(duration: 0.12), value: model.dropToAirDrop)
+        .animation(.easeOut(duration: 0.12), value: model.dropToAI)
+    }
+
+    private func zone(icon: String, title: String, caption: String, color: Color, on: Bool) -> some View {
+        VStack(spacing: 6) {
+            Image(systemName: icon).font(.system(size: 20, weight: .medium))
+            Text(title).font(.app(size: 11, weight: .semibold))
+            Text(caption).font(.app(size: 9)).multilineTextAlignment(.center)
+        }
+        .foregroundStyle(on ? color : Theme.dim)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(color.opacity(on ? 0.22 : 0.08)))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .strokeBorder(color.opacity(on ? 0.9 : 0.35), style: StrokeStyle(lineWidth: 1, dash: [5, 4])))
+        .padding(6)
     }
 }

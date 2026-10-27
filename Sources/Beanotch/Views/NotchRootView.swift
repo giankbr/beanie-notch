@@ -43,6 +43,7 @@ struct NotchRootView: View {
             ExpandedView()
                 .id(settings.styleKey)
                 .frame(width: open.width, height: open.height)
+                .coordinateSpace(name: "panel")
                 // Materializes out of the notch: from blurred and squashed toward it, to sharp and full size.
                 .opacity(model.expanded ? 1 : 0)
                 .blur(radius: model.expanded ? 0 : 10)

@@ -79,6 +79,11 @@ final class AppModel: ObservableObject {
     @Published var pinned = false
     @Published var dropTargeted = false
     @Published var dropToAirDrop = false
+    @Published var dropToAI = false
+    // A file dropped on Ask AI, waiting on the AI page.
+    @Published var aiFile: URL?
+    // Where Ask AI ends and AirDrop starts, as shares of the panel's width; set by the Shelf while a file is dragged.
+    var dropSplit: (ai: CGFloat, airDrop: CGFloat) = (0.32, 0.68)
     @Published var tab: Tab = .home
     @Published var closedSize = CGSize(width: 190, height: 32)
     @Published private(set) var notice: Notice?

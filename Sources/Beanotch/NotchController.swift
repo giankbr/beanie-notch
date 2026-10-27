@@ -158,9 +158,11 @@ final class NotchController {
         let drops = DropHandlers(
             enter: { [weak self] in self?.dragEntered() },
             move: { [weak self] fraction in
-                // The right third of the panel sends what's dropped there by AirDrop.
-                let airDrop = fraction > 0.68
+                // The Shelf's left third hands what's dropped there to the AI, its right third sends it by AirDrop.
+                guard let split = self?.model.dropSplit else { return }
+                let airDrop = fraction > split.airDrop, ai = fraction < split.ai
                 if self?.model.dropToAirDrop != airDrop { self?.model.dropToAirDrop = airDrop }
+                if self?.model.dropToAI != ai { self?.model.dropToAI = ai }
             },
             exit: { [weak self] in self?.dragExited() },
             end: { [weak self] in self?.endDrag() },
@@ -301,13 +303,21 @@ final class NotchController {
     }
 
     private func dropped(_ urls: [URL]) {
-        if model.dropToAirDrop { model.shelf.airDrop(urls) } else { model.shelf.add(urls) }
+        if model.dropToAI, let file = urls.first {
+            model.aiFile = file
+            model.tab = .ai
+        } else if model.dropToAirDrop {
+            model.shelf.airDrop(urls)
+        } else {
+            model.shelf.add(urls)
+        }
         endDrag()
     }
 
     private func endDrag() {
         model.dropTargeted = false
         model.dropToAirDrop = false
+        model.dropToAI = false
         dropZone.setFrame(notchFrame, display: false)
     }
 

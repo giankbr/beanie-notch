@@ -1,4 +1,6 @@
 import AppKit
+import PDFKit
+import UniformTypeIdentifiers
 import Vision
 #if canImport(FoundationModels)
 import FoundationModels
@@ -124,6 +126,22 @@ enum Assistant {
             request.automaticallyDetectsLanguage = true
             try? VNImageRequestHandler(cgImage: image).perform([request])
             return (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }.joined(separator: " ")
+        }.value
+    }
+
+    // The words in a dropped file: read off an image, out of a PDF, or the text itself. Empty for anything else.
+    nonisolated static func contents(of url: URL) async -> String {
+        let type = UTType(filenameExtension: url.pathExtension) ?? .data
+        if type.conforms(to: .image) { return await text(in: url) }
+        return await Task.detached(priority: .utility) {
+            if type.conforms(to: .pdf) { return PDFDocument(url: url)?.string ?? "" }
+            if type.conforms(to: .text) || type.conforms(to: .sourceCode) || type.conforms(to: .json) {
+                return (try? String(contentsOf: url, encoding: .utf8)) ?? ""
+            }
+            if type.conforms(to: .rtf) || type.conforms(to: .html) || ["doc", "docx", "odt"].contains(url.pathExtension.lowercased()) {
+                return (try? NSAttributedString(url: url, options: [:], documentAttributes: nil))?.string ?? ""
+            }
+            return ""
         }.value
     }
 
