@@ -11,6 +11,7 @@ struct NotchRootView: View {
     @EnvironmentObject var calendar: CalendarFeed
     @EnvironmentObject var countdown: CountdownTimer
     @EnvironmentObject var claude: ClaudeBridge
+    @EnvironmentObject var devRuns: DevRuns
 
     private var size: CGSize {
         model.expanded ? model.openSize : CGSize(width: model.closedWidth, height: model.closedHeight)
@@ -126,6 +127,21 @@ struct NotchRootView: View {
                 .foregroundStyle(Color(red: 0.85, green: 0.47, blue: 0.34))
             } right: {
                 Text(session.project).font(.app(size: 10.5, weight: .semibold)).lineLimit(1).truncationMode(.middle).foregroundStyle(.white)
+            }
+            .transition(.emerge)
+        } else if let run = devRuns.current {
+            Ears {
+                HStack(spacing: 5) {
+                    Image(systemName: "terminal.fill").font(.system(size: 10, weight: .semibold))
+                        .symbolEffect(.pulse, options: .repeating)
+                    Text(run.name).font(.app(size: 10, weight: .semibold)).lineLimit(1).truncationMode(.middle)
+                }
+                .foregroundStyle(Theme.accent)
+            } right: {
+                TimelineView(.periodic(from: .now, by: 1)) { context in
+                    Text(DevRuns.duration(context.date.timeIntervalSince(run.started)))
+                        .font(.app(size: 10.5, weight: .semibold)).monospacedDigit().foregroundStyle(.white)
+                }
             }
             .transition(.emerge)
         } else if let download = downloads.current {

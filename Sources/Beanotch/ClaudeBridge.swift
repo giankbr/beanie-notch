@@ -98,10 +98,10 @@ final class ClaudeBridge: ObservableObject {
         self.listener = listener
     }
 
-    private struct HTTPRequest { let token: String; let body: Data }
+    struct HTTPRequest { let token: String; let body: Data }
 
     // Reads the headers, then as much body as Content-Length says.
-    nonisolated private static func receive(_ connection: NWConnection, buffer: Data, done: @escaping @Sendable (HTTPRequest) -> Void) {
+    nonisolated static func receive(_ connection: NWConnection, buffer: Data, done: @escaping @Sendable (HTTPRequest) -> Void) {
         connection.receive(minimumIncompleteLength: 1, maximumLength: 1 << 20) { data, _, complete, error in
             var buffer = buffer
             if let data { buffer.append(data) }
@@ -124,7 +124,7 @@ final class ClaudeBridge: ObservableObject {
         }
     }
 
-    nonisolated private static func reply(_ connection: NWConnection, body: String) {
+    nonisolated static func reply(_ connection: NWConnection, body: String) {
         let data = Data(body.utf8)
         let head = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: \(data.count)\r\nConnection: close\r\n\r\n"
         connection.send(content: Data(head.utf8) + data, completion: .contentProcessed { _ in connection.cancel() })

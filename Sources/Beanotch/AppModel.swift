@@ -121,6 +121,7 @@ final class AppModel: ObservableObject {
     let aiUsage = AIUsage()
     let messages = MessageBadges()
     let claude = ClaudeBridge()
+    let devRuns = DevRuns()
     // Set by the controller: opens the panel and keeps it open (a permission request is waiting).
     var openPanel: (() -> Void)?
     private let volumeWatcher = VolumeWatcher()
@@ -178,6 +179,8 @@ final class AppModel: ObservableObject {
             }
         }
         claude.onNotice = notify
+        devRuns.onNotice = notify
+        devRuns.start()
         claude.onRequest = { [weak self] in self?.openPanel?() }
         settings.$claudeBridge.sink { [weak self] on in self?.claude.setEnabled(on) }.store(in: &sinks)
         messages.onNew = { [weak self] badge in
@@ -303,7 +306,7 @@ final class AppModel: ObservableObject {
 
     var closedWidth: CGFloat {
         let extra: CGFloat = volume != nil ? 190 : notice.map(noticeWidth) ?? (focus.isRunning ? 110
-            : countdown.isRunning ? 110 : downloads.current != nil ? 240 : claude.working != nil ? 220 : calendar.meeting != nil ? 240 : showsPrayerCountdown ? 170
+            : countdown.isRunning ? 110 : downloads.current != nil ? 240 : claude.working != nil ? 220 : devRuns.current != nil ? 240 : calendar.meeting != nil ? 240 : showsPrayerCountdown ? 170
             : showsNotchLyrics ? 340 : showsMiniPlayer ? 64 : 0)
         return closedSize.width + extra
     }
@@ -358,6 +361,7 @@ extension View {
             .environmentObject(m.aiUsage)
             .environmentObject(m.messages)
             .environmentObject(m.claude)
+            .environmentObject(m.devRuns)
     }
 }
 

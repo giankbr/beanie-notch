@@ -8,6 +8,7 @@ struct SettingsView: View {
     @EnvironmentObject var updater: Updater
     @EnvironmentObject var model: AppModel
     @EnvironmentObject var messages: MessageBadges
+    @EnvironmentObject var devRuns: DevRuns
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var loginError: String?
 
@@ -230,6 +231,15 @@ struct SettingsView: View {
                 settings.claudeBridge ? "Status and permission requests show in the notch · hooks added to ~/.claude/settings.json"
                                       : "Adds hooks to ~/.claude/settings.json; switching off removes them") {
                 Toggle("", isOn: $settings.claudeBridge)
+            }
+            row("terminal", "Terminal commands",
+                devRuns.installedAt.map { "Run `beanotch run npm test` to follow it in the notch · in \($0)" }
+                    ?? "Adds a `beanotch` command: long builds and tests show in the notch, green or red when done") {
+                if devRuns.installedAt == nil {
+                    PillButton(text: "Install", color: Theme.accent) { devRuns.install() }
+                } else {
+                    PillButton(text: "Remove", color: Theme.dim) { devRuns.uninstall() }
+                }
             }
             row("camera.viewfinder", "Name screenshots", "Renames new screenshots after what they show, before they reach the Shelf") {
                 Toggle("", isOn: $settings.nameScreenshots)
