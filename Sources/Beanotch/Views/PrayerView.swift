@@ -73,8 +73,12 @@ private struct NextPanel: View {
                             Text(countdown(to: next.time, from: now)).font(.mono(size: 10, weight: .semibold)).foregroundStyle(Theme.dim)
                         }
                         SegmentMeter(value: min(1, now.timeIntervalSince(previous) / span), color: Theme.accent, segments: 30)
-                        Text(prayer.method.title + (prayer.hanafi ? " · Hanafi" : "") + " · since the last prayer")
-                            .font(.app(size: 9)).foregroundStyle(Theme.faint).lineLimit(1)
+                        if let fast = prayer.fasting(at: now) {
+                            Text(fast).font(.app(size: 9.5, weight: .semibold)).foregroundStyle(Theme.accent2).lineLimit(1)
+                        } else {
+                            Text(prayer.method.title + (prayer.hanafi ? " · Hanafi" : "") + " · since the last prayer")
+                                .font(.app(size: 9)).foregroundStyle(Theme.faint).lineLimit(1)
+                        }
                     }
                 }
             }

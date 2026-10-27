@@ -155,6 +155,21 @@ final class PrayerTimes: ObservableObject {
         isRamadan && entry.name == "Maghrib" ? "Iftar" : entry.name
     }
 
+    // In Ramadan: how the fast stands at `now`, for the Prayer page. Nil outside Ramadan.
+    func fasting(at now: Date) -> String? {
+        guard isRamadan,
+              let imsak = today.first(where: { $0.name == "Imsak" }),
+              let maghrib = today.first(where: { $0.name == "Maghrib" }) else { return nil }
+        func left(_ date: Date) -> String {
+            let m = max(0, Int(date.timeIntervalSince(now) / 60))
+            return m >= 60 ? "\(m / 60)h \(m % 60)m" : "\(m)m"
+        }
+        let iftar = maghrib.time.formatted(date: .omitted, time: .shortened)
+        if now < imsak.time { return "Sahur · Imsak in \(left(imsak.time))" }
+        if now < maghrib.time { return "Fasting · \(left(maghrib.time)) to iftar at \(iftar)" }
+        return tomorrowImsak.map { "Fast broken · Imsak tomorrow at \($0.time.formatted(date: .omitted, time: .shortened))" }
+    }
+
     var next: Entry? {
         let now = Date()
         return today.first { $0.isPrayer && $0.time > now } ?? tomorrowFajr
@@ -225,14 +240,27 @@ final class PrayerTimes: ObservableObject {
         let now = Date()
         var events: [(date: Date, notice: Notice?, sound: Bool)] = []
         if alerts {
+            let ramadan = isRamadan
             for e in today + [tomorrowFajr].compactMap({ $0 }) where e.isPrayer {
                 let time = e.time.formatted(date: .omitted, time: .shortened)
-                events.append((e.time, Notice(icon: "moon.fill", color: Theme.accent, left: e.name, right: time,
-                                              duration: 10, essential: true), true))
+                let breaksFast = ramadan && e.name == "Maghrib"
+                events.append((e.time, Notice(icon: breaksFast ? "fork.knife" : "moon.fill", color: Theme.accent,
+                                              left: breaksFast ? "Iftar · break the fast" : e.name, right: time,
+                                              duration: breaksFast ? 20 : 10, essential: true), true))
                 if reminder > 0 {
                     events.append((e.time.addingTimeInterval(Double(-reminder * 60)),
-                                   Notice(icon: "moon", color: Theme.amber, left: "\(e.name) in \(reminder) min",
+                                   Notice(icon: "moon", color: Theme.amber, left: "\(label(e)) in \(reminder) min",
                                           right: time, duration: 8, essential: true), false))
+                }
+            }
+            // In Ramadan the last call to eat before the fast, and the start of it.
+            if ramadan {
+                for imsak in (today + [tomorrowImsak].compactMap { $0 }) where imsak.name == "Imsak" {
+                    let time = imsak.time.formatted(date: .omitted, time: .shortened)
+                    events.append((imsak.time.addingTimeInterval(-15 * 60), Notice(icon: "takeoutbag.and.cup.and.straw.fill", color: Theme.amber,
+                                   left: "Imsak in 15 min", right: "Finish sahur · \(time)", duration: 10, essential: true), false))
+                    events.append((imsak.time, Notice(icon: "moon.stars.fill", color: Theme.accent,
+                                   left: "Imsak · the fast begins", right: time, duration: 12, essential: true), true))
                 }
             }
         }
