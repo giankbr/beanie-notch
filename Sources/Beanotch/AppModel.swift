@@ -304,6 +304,7 @@ final class AppModel: ObservableObject {
             return
         }
         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { notice = n }
+        if n.icon != "music.note" { pet.surprise() }
         DispatchQueue.main.asyncAfter(deadline: .now() + n.duration) { [weak self] in
             MainActor.assumeIsolated {
                 guard let self, self.notice?.id == n.id else { return }
@@ -381,8 +382,9 @@ final class AppModel: ObservableObject {
     var closedWidth: CGFloat {
         let extra: CGFloat = volume != nil ? 190 : notice.map(noticeWidth) ?? (meeting.inCall ? 200 : focus.isRunning ? 110
             : countdown.isRunning ? 110 : downloads.current != nil ? 240 : claude.working != nil ? 220 : devRuns.current != nil ? 240 : calendar.meeting != nil ? 240 : showsPrayerCountdown ? 170
-            : showsNotchLyrics ? 340 : showsMiniPlayer ? 64 : settings.notchPet ? 76 : 0)
-        return closedSize.width + extra
+            : showsNotchLyrics ? 340 : showsMiniPlayer ? 64 : 0)
+        // The pet keeps a corner of the right side whatever shows; both sides grow so the camera stays centred.
+        return closedSize.width + extra + (settings.notchPet ? NotchPet.slot * 2 : 0)
     }
 
     // Each side of the camera gets room for the longer of its two texts, so neither is cut short.

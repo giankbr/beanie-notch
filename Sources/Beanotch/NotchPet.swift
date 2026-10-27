@@ -1,11 +1,15 @@
 import AppKit
 import SwiftUI
 
-// A coffee bean that lives in the closed notch and reacts to the Mac: it dozes when nobody's there, sweats when the
-// processor is flat out, munches files put on the Shelf, wants water when it's time to drink, and bobs along to music.
+// A coffee bean that lives in the right corner of the closed notch, whatever else shows there, and reacts to the Mac:
+// it dozes when nobody's there, sweats when the processor is flat out, munches files put on the Shelf, wants water
+// when it's time to drink, bobs along to music, jumps at each alert and yawns when you're up past midnight.
 @MainActor
 final class NotchPet: ObservableObject {
-    enum Mood: Equatable { case happy, sleepy, panic, eating, thirsty, dancing }
+    enum Mood: Equatable { case happy, sleepy, panic, eating, thirsty, dancing, surprised, late }
+
+    // The room it takes beside the notch's content, in points.
+    static let slot: CGFloat = 38
 
     @Published private(set) var mood: Mood = .happy
     var stats: SystemStats?
@@ -13,6 +17,7 @@ final class NotchPet: ObservableObject {
     private var timer: Timer?
     private var fedUntil = Date.distantPast
     private var thirstyUntil = Date.distantPast
+    private var surprisedUntil = Date.distantPast
 
     func setEnabled(_ on: Bool) {
         timer?.invalidate()
@@ -32,6 +37,15 @@ final class NotchPet: ObservableObject {
         update()
     }
 
+    func surprise() {
+        guard timer != nil else { return }
+        surprisedUntil = Date().addingTimeInterval(2.5)
+        update()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.6) { [weak self] in
+            MainActor.assumeIsolated { self?.update() }
+        }
+    }
+
     func thirst() {
         thirstyUntil = Date().addingTimeInterval(60)
         update()
@@ -41,11 +55,14 @@ final class NotchPet: ObservableObject {
         let now = Date()
         stats?.refresh()
         let idle = CGEventSource.secondsSinceLastEventType(.combinedSessionState, eventType: CGEventType(rawValue: ~0)!)
-        let next: Mood = now < fedUntil ? .eating
+        let hour = Calendar.current.component(.hour, from: now)
+        let next: Mood = now < surprisedUntil ? .surprised
+            : now < fedUntil ? .eating
             : (stats?.cpu ?? 0) > 0.85 ? .panic
             : now < thirstyUntil ? .thirsty
             : idle > 180 ? .sleepy
             : playing?() == true ? .dancing
+            : hour < 4 ? .late
             : .happy
         if next != mood { mood = next }
     }
@@ -85,6 +102,7 @@ struct PetView: View {
         var dx: CGFloat = 0, dy: CGFloat = 2
         switch mood {
         case .dancing: dy = frame % 4 < 2 ? 1 : 3
+        case .surprised: dy = frame % 6 < 3 ? 0.5 : 1.5
         case .panic: dx = frame % 2 == 0 ? -0.5 : 0.5
         case .sleepy: dy = frame % 32 < 16 ? 2 : 2.5
         default: dy = frame % 24 < 12 ? 2 : 2.3
@@ -117,6 +135,14 @@ struct PetView: View {
             dot(3, 4, eye, h: 1.5); dot(8, 4, eye, h: 1.5)
             dot(4.5, 6.5, Self.shade, w: 2.5, h: frame % 4 < 2 ? 1.5 : 0.5)
             if frame % 4 < 2 { dot(-1, 7, .white.opacity(0.7), w: 0.7, h: 0.7) }
+        case .surprised:
+            dot(2.5, 3, eye, w: 2, h: 2); dot(7.5, 3, eye, w: 2, h: 2)
+            dot(3, 3.5, Self.shade); dot(8, 3.5, Self.shade)
+            dot(5, 6.5, Self.shade, w: 1.5, h: 1.5)
+            dot(13, 0.5, .white, h: 2.5); dot(13, 3.5, .white)
+        case .late:
+            dot(2.5, 4.5, eye, w: 2, h: 0.8); dot(7.5, 4.5, eye, w: 2, h: 0.8)
+            dot(4.5, 6.3, Self.shade, w: 2, h: frame % 32 < 12 ? 1.8 : 0.6)
         case .thirsty:
             dot(3, 4, eye, h: 1.5); dot(8, 4, eye, h: 1.5)
             dot(5, 6.5, Color(red: 1, green: 0.45, blue: 0.5), w: 1.5, h: 1)

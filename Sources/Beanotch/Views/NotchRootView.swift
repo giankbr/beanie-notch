@@ -55,6 +55,9 @@ struct NotchRootView: View {
             // Hidden while open, and out of the way of clicks too: it sits over the Mini tabs.
             closedContent
                 .frame(width: model.closedWidth, height: model.closedHeight)
+                .overlay(alignment: .trailing) {
+                    if settings.notchPet { PetView(mood: pet.mood).padding(.trailing, 8).allowsHitTesting(false) }
+                }
                 .opacity(model.expanded ? 0 : 1)
                 .allowsHitTesting(!model.expanded)
         }
@@ -213,10 +216,11 @@ struct NotchRootView: View {
         } else if model.showsMiniPlayer {
             MiniPlayer().transition(.emerge)
         } else if settings.notchPet {
+            // Nothing else to show: the pet's word on the left, the pet itself in its corner.
             Ears {
-                PetView(mood: pet.mood)
-            } right: {
                 Text(petLine).font(.app(size: 9.5, weight: .semibold)).foregroundStyle(.white.opacity(0.6)).lineLimit(1)
+            } right: {
+                EmptyView()
             }
             .transition(.emerge)
         }
@@ -233,6 +237,8 @@ extension NotchRootView {
         case .eating: "nom"
         case .thirsty: "water?"
         case .dancing: "♪"
+        case .surprised: "!"
+        case .late: "bed?"
         }
     }
 }
@@ -240,6 +246,7 @@ extension NotchRootView {
 // Content on both sides of the camera housing, which sits in the middle of the closed notch.
 private struct Ears<Left: View, Right: View>: View {
     @EnvironmentObject var model: AppModel
+    @EnvironmentObject var settings: Settings
     @ViewBuilder var left: Left
     @ViewBuilder var right: Right
 
@@ -247,7 +254,8 @@ private struct Ears<Left: View, Right: View>: View {
         HStack(spacing: 0) {
             left.frame(maxWidth: .infinity, alignment: .leading)
             Color.clear.frame(width: model.closedSize.width)
-            right.frame(maxWidth: .infinity, alignment: .trailing)
+            // Clear of the pet's corner.
+            right.frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, settings.notchPet ? NotchPet.slot : 0)
         }
         .padding(.horizontal, 12)
         .frame(height: model.closedSize.height)
@@ -296,6 +304,7 @@ private struct NotchLyrics: View {
 private struct MiniPlayer: View {
     @EnvironmentObject var model: AppModel
     @EnvironmentObject var media: MediaController
+    @EnvironmentObject var settings: Settings
 
     var body: some View {
         HStack {
@@ -309,7 +318,7 @@ private struct MiniPlayer: View {
             .frame(width: 16, height: 16)
             .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
             Spacer()
-            Equalizer(playing: true)
+            Equalizer(playing: true).padding(.trailing, settings.notchPet ? NotchPet.slot : 0)
         }
         .padding(.horizontal, 10)
         .frame(height: model.closedSize.height)
