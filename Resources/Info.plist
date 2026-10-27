@@ -5,15 +5,15 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Brow</string>
+	<string>Beanie</string>
 	<key>CFBundleName</key>
-	<string>Brow</string>
+	<string>Beanie</string>
 	<key>CFBundleExecutable</key>
-	<string>Brow</string>
+	<string>Beanie</string>
 	<key>CFBundleIconFile</key>
-	<string>Brow</string>
+	<string>Beanie</string>
 	<key>CFBundleIdentifier</key>
-	<string>id.morfotech.brow</string>
+	<string>id.morfotech.beanie</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
@@ -31,24 +31,24 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSAppleEventsUsageDescription</key>
-	<string>Brow reads and sets the sound volume.</string>
+	<string>Beanie reads and sets the sound volume.</string>
 	<key>NSLocationUsageDescription</key>
-	<string>Brow works out prayer times for where you are. Your location stays on this Mac.</string>
+	<string>Beanie works out prayer times for where you are. Your location stays on this Mac.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Brow works out prayer times for where you are. Your location stays on this Mac.</string>
+	<string>Beanie works out prayer times for where you are. Your location stays on this Mac.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>The mirror in Tools shows your camera so you can check how you look before a call. Nothing is recorded.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Phone drop receives files from your phone over this Wi-Fi.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>Brow shows your next meetings and reminds you 5 minutes before they start.</string>
+	<string>Beanie shows your next meetings and reminds you 5 minutes before they start.</string>
 	<key>NSCalendarsUsageDescription</key>
-	<string>Brow shows your next meetings and reminds you 5 minutes before they start.</string>
+	<string>Beanie shows your next meetings and reminds you 5 minutes before they start.</string>
 	<key>NSDownloadsFolderUsageDescription</key>
-	<string>Brow shows browser downloads in progress, and looks for large files and leftover installers you may want to remove.</string>
+	<string>Beanie shows browser downloads in progress, and looks for large files and leftover installers you may want to remove.</string>
 	<key>NSDesktopFolderUsageDescription</key>
-	<string>Brow looks for large files you may want to remove.</string>
+	<string>Beanie looks for large files you may want to remove.</string>
 	<key>NSDocumentsFolderUsageDescription</key>
-	<string>Brow looks for large files you may want to remove.</string>
+	<string>Beanie looks for large files you may want to remove.</string>
 </dict>
 </plist>

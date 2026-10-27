@@ -1,17 +1,17 @@
 #!/bin/bash
-# Builds dist/Brow.app (universal, ad-hoc signed) and dist/Brow.dmg.
+# Builds dist/Beanie.app (universal, ad-hoc signed) and dist/Beanie.dmg.
 set -euo pipefail
 cd "$(dirname "$0")"
 version="${VERSION:-1.0.0}"
 dist="dist"
-app="$dist/Brow.app"
+app="$dist/Beanie.app"
 
 swift build -c release --arch arm64 --arch x86_64 -Xswiftc -Osize -Xlinker -dead_strip
 
 rm -rf "$dist"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources" "$app/Contents/Frameworks"
-cp .build/apple/Products/Release/Brow "$app/Contents/MacOS/Brow"
-strip -x "$app/Contents/MacOS/Brow"
+cp .build/apple/Products/Release/Beanie "$app/Contents/MacOS/Beanie"
+strip -x "$app/Contents/MacOS/Beanie"
 
 # The Now Playing helper: plain clang against Xcode's SDK (the Command Line Tools one may lag the OS).
 dev="$(xcode-select -p)"
@@ -25,14 +25,14 @@ cp -R Resources/Fonts "$app/Contents/Resources/Fonts"
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
-# The icon is drawn in docs/landing-page.pen (Brow/App Icon) and exported to Resources/AppIcon.png.
+# The icon is drawn in docs/landing-page.pen (App Icon frame) and exported to Resources/AppIcon.png.
 cp Resources/AppIcon.png "$work/icon.png"
-mkdir "$work/Brow.iconset"
+mkdir "$work/Beanie.iconset"
 for s in 16 32 128 256 512; do
-  sips -z $s $s "$work/icon.png" --out "$work/Brow.iconset/icon_${s}x${s}.png" > /dev/null
-  sips -z $((s * 2)) $((s * 2)) "$work/icon.png" --out "$work/Brow.iconset/icon_${s}x${s}@2x.png" > /dev/null
+  sips -z $s $s "$work/icon.png" --out "$work/Beanie.iconset/icon_${s}x${s}.png" > /dev/null
+  sips -z $((s * 2)) $((s * 2)) "$work/icon.png" --out "$work/Beanie.iconset/icon_${s}x${s}@2x.png" > /dev/null
 done
-iconutil -c icns "$work/Brow.iconset" -o "$app/Contents/Resources/Brow.icns"
+iconutil -c icns "$work/Beanie.iconset" -o "$app/Contents/Resources/Beanie.icns"
 
 codesign --force --deep --sign - "$app"
 codesign --verify --deep --strict "$app"
@@ -45,11 +45,11 @@ fi
 if [ -x "$venv/bin/dmgbuild" ]; then
   swift tools/make_dmg_background.swift "$work/background.png"
   "$venv/bin/dmgbuild" -s tools/dmg_settings.py -D app="$app" -D background="$work/background.png" \
-    "Brow $version" "$dist/Brow.dmg" > /dev/null
+    "Beanie $version" "$dist/Beanie.dmg" > /dev/null
 else
   mkdir "$work/dmg"
   cp -R "$app" "$work/dmg/"
   ln -s /Applications "$work/dmg/Applications"
-  hdiutil create -volname "Brow $version" -srcfolder "$work/dmg" -ov -format UDZO "$dist/Brow.dmg" > /dev/null
+  hdiutil create -volname "Beanie $version" -srcfolder "$work/dmg" -ov -format UDZO "$dist/Beanie.dmg" > /dev/null
 fi
-echo "built $app and $dist/Brow.dmg"
+echo "built $app and $dist/Beanie.dmg"

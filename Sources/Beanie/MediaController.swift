@@ -38,7 +38,7 @@ final class MediaController: ObservableObject {
     private var keepAlive: Pipe?
     private var buffer = Data()
     private var restarts = 0
-    private let queue = DispatchQueue(label: "brow.media", qos: .utility)
+    private let queue = DispatchQueue(label: "beanie.media", qos: .utility)
 
     private static var library: String? {
         Bundle.main.privateFrameworksURL?.appendingPathComponent("libNowPlaying.dylib").path
@@ -63,10 +63,10 @@ final class MediaController: ObservableObject {
         guard let lib = Self.library, FileManager.default.fileExists(atPath: lib) else { return }
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/perl")
-        process.arguments = ["-e", Self.perl("brow_stream"), lib]
+        process.arguments = ["-e", Self.perl("beanie_stream"), lib]
         let output = Pipe(), input = Pipe()
         process.standardOutput = output
-        // The helper exits when this pipe closes, which happens when Brow quits for any reason.
+        // The helper exits when this pipe closes, which happens when Beanie quits for any reason.
         process.standardInput = input
         process.standardError = FileHandle.nullDevice
         output.fileHandleForReading.readabilityHandler = { [weak self] handle in
@@ -210,12 +210,12 @@ final class MediaController: ObservableObject {
     // MediaRemote command numbers: 1 pauses, 2 toggles play/pause, 4 is next track, 5 previous.
     private func send(_ command: String) {
         guard let lib = Self.library else { return }
-        let script = Self.perl("brow_send")
+        let script = Self.perl("beanie_send")
         queue.async {
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/usr/bin/perl")
             process.arguments = ["-e", script, lib]
-            process.environment = ["BROW_CMD": command]
+            process.environment = ["BEANIE_CMD": command]
             process.standardOutput = FileHandle.nullDevice
             process.standardError = FileHandle.nullDevice
             try? process.run()

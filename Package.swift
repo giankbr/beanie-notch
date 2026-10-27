@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "Brow",
+    name: "Beanie",
     platforms: [.macOS(.v14)],
     targets: [
         .target(name: "CSensors", path: "Sources/CSensors", linkerSettings: [.linkedFramework("IOKit")]),
-        // FoundationModels exists from macOS 26: weakly linked, so Brow still starts on 14 and 15.
-        .executableTarget(name: "Brow", dependencies: ["CSensors"], path: "Sources/Brow",
+        // FoundationModels exists from macOS 26: weakly linked, so Beanie still starts on 14 and 15.
+        .executableTarget(name: "Beanie", dependencies: ["CSensors"], path: "Sources/Beanie",
                           linkerSettings: [.unsafeFlags(["-Xlinker", "-weak_framework", "-Xlinker", "FoundationModels"])]),
     ]
 )

@@ -1,8 +1,8 @@
-# Brow
+# Beanie
 
 A small, native macOS app that turns the MacBook notch into a dashboard. Hover over the notch (or press ⌥ Space) to open it.
 
-Brow is written in Swift and SwiftUI with no third-party dependencies. The download is about 2.6 MB, and it uses close to 0% CPU when idle.
+Beanie is written in Swift and SwiftUI with no third-party dependencies. The download is about 3.6 MB, and it uses close to 0% CPU when idle.
 
 ![Overview](docs/overview.png)
 
@@ -59,7 +59,7 @@ Brow is written in Swift and SwiftUI with no third-party dependencies. The downl
   - **Ask:** one question at a time to Apple's on-device model (macOS 26+, offline and free), Claude Code, or a local Ollama model.
   - **Clipboard actions:** ✦ on copied text summarizes, translates (English ⇄ Indonesian), fixes grammar or explains it.
   - **Screenshot names:** new screenshots can be renamed after what they show ("invoice-oktober.png"), read and named on the Mac.
-  - **Claude Code in the notch:** while Claude works the notch shows the project; it tells you when Claude is done or waiting, and permission requests appear in the panel with Allow and Deny. Switch it on in Settings › AI: Brow adds hooks to `~/.claude/settings.json` (and removes them when switched off). If Brow isn't running, Claude Code asks in the terminal as usual.
+  - **Claude Code in the notch:** while Claude works the notch shows the project; it tells you when Claude is done or waiting, and permission requests appear in the panel with Allow and Deny. Switch it on in Settings › AI: Beanie adds hooks to `~/.claude/settings.json` (and removes them when switched off). If Beanie isn't running, Claude Code asks in the terminal as usual.
 - **Controls:**
   - Dark mode, Night Shift, keep awake, mic mute, Dock hiding and desktop icons.
   - Brightness sliders for every screen, including external monitors over DDC.
@@ -114,13 +114,13 @@ Brow is written in Swift and SwiftUI with no third-party dependencies. The downl
 
 ## Install
 
-1. Download `Brow.dmg` from [Releases](../../releases), open it, and drag Brow into Applications.
+1. Download `Beanie.dmg` from [Releases](../../releases), open it, and drag Beanie into Applications.
 
-   ![The Brow disk image](docs/install.png)
+   ![The Beanie disk image](docs/install.png)
 
 2. The app is ad-hoc signed, not notarized. On first launch, right-click it and choose **Open**, or run:
    ```bash
-   xattr -dr com.apple.quarantine /Applications/Brow.app
+   xattr -dr com.apple.quarantine /Applications/Beanie.app
    ```
 
 Requires macOS 14 or later, as a universal binary for Apple silicon and Intel. Brightness control for external monitors works on Apple silicon only.
@@ -143,7 +143,7 @@ macOS asks for access only when a feature needs it:
 The build needs Xcode, which provides the macOS SDK for the Now Playing helper.
 
 ```bash
-./build.sh                   # → dist/Brow.app and dist/Brow.dmg (laid out with dmgbuild, set up in .build/ on first run)
+./build.sh                   # → dist/Beanie.app and dist/Beanie.dmg (laid out with dmgbuild, set up in .build/ on first run)
 VERSION=1.2.0 ./build.sh     # set the version
 ```
 
@@ -157,8 +157,8 @@ Commit messages follow [Conventional Commits](https://www.conventionalcommits.or
   - Built-in brightness goes through DisplayServices, and Night Shift through CoreBrightness.
   - External monitors are reached over DDC/CI through IOAVService.
   - All of these are loaded at run time, so a missing symbol only switches that feature off.
-- **AI usage:** Brow reads the logs Claude Code and Codex already write (`~/.claude/projects`, `~/.codex/sessions`), and only the new lines on each pass. Costs are Anthropic API list prices for the same tokens, not what a subscription charges. Brow never reads or sends sign-in tokens, which is why Cursor and Antigravity, which keep usage on their servers, are listed but not measured.
-- **Messages:** read from the badges on Dock icons through Accessibility, every 2 seconds. Brow only sees the count on the icon, so the app has to be in the Dock (running or kept there). macOS keeps message contents to itself, so there is no sender or text.
+- **AI usage:** Beanie reads the logs Claude Code and Codex already write (`~/.claude/projects`, `~/.codex/sessions`), and only the new lines on each pass. Costs are Anthropic API list prices for the same tokens, not what a subscription charges. Beanie never reads or sends sign-in tokens, which is why Cursor and Antigravity, which keep usage on their servers, are listed but not measured.
+- **Messages:** read from the badges on Dock icons through Accessibility, every 2 seconds. Beanie only sees the count on the icon, so the app has to be in the Dock (running or kept there). macOS keeps message contents to itself, so there is no sender or text.
 - **Global shortcut:** registered through Carbon hot keys, so it needs no Accessibility permission.
 - **Network:**
   - Lyrics come from LRCLIB, NetEase, QQ Music and Kugou; only the title and artist are sent.
@@ -168,7 +168,7 @@ Commit messages follow [Conventional Commits](https://www.conventionalcommits.or
 
 ## Credits
 
-Ideas came from studying these open-source projects; Brow's code is written from scratch:
+Ideas came from studying these open-source projects; Beanie's code is written from scratch:
 NotchDrop, DynamicNotchKit, Stats, Maccy, KeyboardShortcuts, Pearcleaner, LyricsX, Boring.notch, Atoll, Hidden Bar, MeetingBar, MonitorControl and Itsycal.
 
 The Be Vietnam Pro font is © The Be Vietnam Pro Project Authors and licensed under the [SIL Open Font License](Resources/Fonts/OFL.txt).

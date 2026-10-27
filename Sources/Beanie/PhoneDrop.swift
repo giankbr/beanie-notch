@@ -3,7 +3,7 @@ import CoreImage.CIFilterBuiltins
 import Network
 
 // Phone to Shelf over the same Wi-Fi, with nothing to install on the phone: while the QR is on screen, a small
-// web server takes uploads at a one-time address. Files land in ~/Downloads/Brow and on the Shelf.
+// web server takes uploads at a one-time address. Files land in ~/Downloads/Beanie and on the Shelf.
 @MainActor
 final class PhoneDrop: ObservableObject {
     @Published private(set) var address: URL?
@@ -13,12 +13,12 @@ final class PhoneDrop: ObservableObject {
     var onFile: ((URL) -> Void)?
 
     private var listener: NWListener?
-    private let queue = DispatchQueue(label: "brow.phonedrop")
+    private let queue = DispatchQueue(label: "beanie.phonedrop")
 
     var running: Bool { listener != nil }
 
     static var folder: URL {
-        FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Downloads/Brow")
+        FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Downloads/Beanie")
     }
 
     func start() {
@@ -215,7 +215,7 @@ private final class DropConnection {
     private static let page = """
     <!doctype html><html lang="en"><head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Send to Brow</title>
+    <title>Send to Beanie</title>
     <style>
     body{margin:0;font:16px -apple-system,system-ui,sans-serif;background:#0b0b0d;color:#fff;display:flex;min-height:100vh;align-items:center;justify-content:center}
     main{width:min(92vw,420px);text-align:center}
@@ -223,7 +223,7 @@ private final class DropConnection {
     label{display:block;padding:28px;border:1.5px dashed #3a3a40;border-radius:18px;cursor:pointer}
     input{display:none}#status{margin-top:18px;color:#5be0bc;min-height:1.4em}
     </style></head><body><main>
-    <h1>Send to Brow</h1><p>Photos and files go straight to your Mac's Shelf.</p>
+    <h1>Send to Beanie</h1><p>Photos and files go straight to your Mac's Shelf.</p>
     <label>Choose files<input id="f" type="file" multiple></label>
     <div id="status"></div></main>
     <script>

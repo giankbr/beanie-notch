@@ -2,7 +2,7 @@ import AppKit
 import Network
 
 // Claude Code in the notch. Claude Code's hooks post each event to a small server on 127.0.0.1 here: what's
-// being worked on, when it's done or waiting, and permission requests, which Brow can answer. When Brow isn't
+// being worked on, when it's done or waiting, and permission requests, which Beanie can answer. When Beanie isn't
 // running, or no answer comes in time, the hook returns nothing and Claude Code asks in the terminal as usual.
 @MainActor
 final class ClaudeBridge: ObservableObject {
@@ -34,7 +34,7 @@ final class ClaudeBridge: ObservableObject {
     var working: Session? { sessions.first { $0.state == .working } }
 
     private static var supportFolder: URL {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Brow")
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Beanie")
     }
     private static var tokenURL: URL { supportFolder.appendingPathComponent("hook-token") }
     private static var settingsURL: URL { FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".claude/settings.json") }
@@ -56,12 +56,13 @@ final class ClaudeBridge: ObservableObject {
         if on {
             _ = token
             start()
+            if Self.hooksInstalled(Array(Self.markers.dropFirst())) { Self.removeHooks() }
             if !Self.hooksInstalled() { Self.installHooks() }
         } else {
             listener?.cancel()
             listener = nil
             answerAll(nil)
-            if Self.hooksInstalled() { Self.removeHooks() }
+            if Self.hooksInstalled(Self.markers) { Self.removeHooks() }
             sessions = []
         }
         installed = Self.hooksInstalled()
@@ -114,7 +115,7 @@ final class ClaudeBridge: ObservableObject {
                 let length = Int(fields["content-length"] ?? "") ?? 0
                 let body = buffer[end.upperBound...]
                 if body.count >= length || complete {
-                    done(HTTPRequest(token: fields["x-brow-token"] ?? "", body: Data(body.prefix(length))))
+                    done(HTTPRequest(token: fields["x-beanie-token"] ?? "", body: Data(body.prefix(length))))
                     return
                 }
             }
@@ -130,7 +131,7 @@ final class ClaudeBridge: ObservableObject {
     }
 
     nonisolated private static func decision(_ allow: Bool) -> String {
-        let decision: [String: Any] = allow ? ["behavior": "allow"] : ["behavior": "deny", "message": "Denied from Brow"]
+        let decision: [String: Any] = allow ? ["behavior": "allow"] : ["behavior": "deny", "message": "Denied from Beanie"]
         let output: [String: Any] = ["hookSpecificOutput": ["hookEventName": "PermissionRequest", "decision": decision]]
         return (try? JSONSerialization.data(withJSONObject: output)).map { String(decoding: $0, as: UTF8.self) } ?? ""
     }
@@ -191,11 +192,12 @@ final class ClaudeBridge: ObservableObject {
 
     // MARK: Hooks in ~/.claude/settings.json
 
-    private static let marker = "brow-hook"
+    nonisolated private static let marker = "beanie-hook"
+    private static let markers = [marker, "brow-hook"]
 
     private static func command(timeout: Int) -> String {
-        let token = "\"$HOME/Library/Application Support/Brow/hook-token\""
-        return "[ -n \"$BROW_SELF\" ] && exit 0; curl -s -m \(timeout) -H \"X-Brow-Token: $(cat \(token) 2>/dev/null)\" "
+        let token = "\"$HOME/Library/Application Support/Beanie/hook-token\""
+        return "[ -n \"$BEANIE_SELF\" ] && exit 0; curl -s -m \(timeout) -H \"X-Beanie-Token: $(cat \(token) 2>/dev/null)\" "
             + "--data-binary @- http://127.0.0.1:\(port)/\(marker) 2>/dev/null; exit 0"
     }
 
@@ -213,18 +215,23 @@ final class ClaudeBridge: ObservableObject {
         try? data.write(to: settingsURL, options: .atomic)
     }
 
-    static func hooksInstalled() -> Bool {
+    static func hooksInstalled(_ markers: [String] = [marker]) -> Bool {
         let hooks = readSettings()["hooks"] as? [String: Any] ?? [:]
         return hooks.values.contains { groups in
             (groups as? [[String: Any]] ?? []).contains { group in
-                (group["hooks"] as? [[String: Any]] ?? []).contains { ($0["command"] as? String)?.contains(marker) == true }
+                (group["hooks"] as? [[String: Any]] ?? []).contains { isOurs($0, markers) }
             }
         }
     }
 
-    // Adds Brow's entries next to whatever is there; the original is kept once as settings.json.brow-backup.
+    private static func isOurs(_ hook: [String: Any], _ markers: [String]) -> Bool {
+        guard let command = hook["command"] as? String else { return false }
+        return markers.contains { command.contains($0) }
+    }
+
+    // Adds Beanie's entries next to whatever is there; the original is kept once as settings.json.beanie-backup.
     private static func installHooks() {
-        let backup = settingsURL.appendingPathExtension("brow-backup")
+        let backup = settingsURL.appendingPathExtension("beanie-backup")
         if FileManager.default.fileExists(atPath: settingsURL.path), !FileManager.default.fileExists(atPath: backup.path) {
             try? FileManager.default.copyItem(at: settingsURL, to: backup)
         }
@@ -245,7 +252,7 @@ final class ClaudeBridge: ObservableObject {
         for (event, value) in hooks {
             let kept = (value as? [[String: Any]] ?? []).compactMap { group -> [String: Any]? in
                 var group = group
-                let commands = (group["hooks"] as? [[String: Any]] ?? []).filter { ($0["command"] as? String)?.contains(marker) != true }
+                let commands = (group["hooks"] as? [[String: Any]] ?? []).filter { !isOurs($0, markers) }
                 if commands.isEmpty { return nil }
                 group["hooks"] = commands
                 return group

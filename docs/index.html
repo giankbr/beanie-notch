@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Brow — The notch, finally earning its place</title>
-<meta name="description" content="Brow turns the MacBook notch into a dashboard: system stats, your next meeting, prayer times, AI usage, a file shelf, clipboard history and synced lyrics. Free, open source, 2.6 MB.">
-<meta property="og:title" content="Brow — The notch, finally earning its place">
+<title>Beanie — The notch, finally earning its place</title>
+<meta name="description" content="Beanie turns the MacBook notch into a dashboard: system stats, your next meeting, prayer times, AI usage, a file shelf, clipboard history and synced lyrics. Free, open source, 3.6 MB.">
+<meta property="og:title" content="Beanie — The notch, finally earning its place">
 <meta property="og:description" content="A tiny native macOS app that turns the notch into a dashboard. Free and open source.">
 <meta property="og:image" content="landing-page-assets/overview.png">
-<link rel="icon" href="landing-page-assets/brow-icon.png">
+<link rel="icon" href="landing-page-assets/beanie-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -239,7 +239,7 @@ footer { padding: 0; overflow: hidden; }
 .font-note { grid-column: 2; font-size: 12.5px; color: var(--text-3); display: flex; gap: 8px; justify-content: flex-start; align-items: center; }
 .bottom { display: flex; justify-content: space-between; padding: 22px 56px; background: var(--inner); border-top: 1px solid var(--border); border-radius: 0 0 28px 28px; font-size: 13.5px; color: var(--text-3); flex-wrap: wrap; gap: 8px; }
 /* The watermark: letters rise in once the footer shows, lift under the pointer, and an accent spotlight follows it. */
-.watermark { font-size: clamp(72px, 25vw, 360px); font-weight: 800; letter-spacing: -.035em; line-height: .78; text-align: center; margin-top: 30px; user-select: none; cursor: default; white-space: nowrap; padding-top: .06em; }
+.watermark { font-size: clamp(60px, 21vw, 300px); font-weight: 800; letter-spacing: -.035em; line-height: .78; text-align: center; margin-top: 30px; user-select: none; cursor: default; white-space: nowrap; padding-top: .06em; }
 .watermark span { display: inline-block; color: transparent; -webkit-background-clip: text; background-clip: text;
   background-image: radial-gradient(circle at var(--mx, -999px) var(--my, -999px), color-mix(in srgb, var(--accent) 85%, transparent) 0, transparent 0.9em), linear-gradient(180deg, var(--ui-3), transparent 92%);
   transform: translateY(var(--lift, 0)) scale(var(--grow, 1)); transform-origin: 50% 100%;
@@ -248,6 +248,8 @@ footer { padding: 0; overflow: hidden; }
 .watermark span:nth-child(2) { transition-delay: 0s, .08s; }
 .watermark span:nth-child(3) { transition-delay: 0s, .16s; }
 .watermark span:nth-child(4) { transition-delay: 0s, .24s; }
+.watermark span:nth-child(5) { transition-delay: 0s, .32s; }
+.watermark span:nth-child(6) { transition-delay: 0s, .40s; }
 .watermark span:hover { --lift: -.08em; --grow: 1.03; }
 
 /* Small screens */
@@ -375,26 +377,26 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
 
 <nav>
   <div class="wrap">
-    <a class="brand" href="#"><img src="landing-page-assets/brow-icon.png" alt="">Brow</a>
+    <a class="brand" href="#"><img src="landing-page-assets/beanie-icon.png" alt="">Beanie</a>
     <div class="nav-links">
       <a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#customize">Customize</a><a href="#windows">Windows</a><a href="#faq">FAQ</a>
     </div>
     <div class="nav-right">
       <button class="icon-btn" id="themeBtn" aria-label="Switch light or dark"><i data-lucide="moon"></i></button>
-      <a class="btn btn-ghost btn-sm" href="https://github.com/giankbr/brow"><i data-lucide="github"></i>Star on GitHub</a>
-      <a class="btn btn-primary btn-sm" href="https://github.com/giankbr/brow/releases/latest"><i data-lucide="apple"></i>Download</a>
+      <a class="btn btn-ghost btn-sm" href="https://github.com/giankbr/beanie-notch"><i data-lucide="github"></i>Star on GitHub</a>
+      <a class="btn btn-primary btn-sm" href="https://github.com/giankbr/beanie-notch/releases/latest"><i data-lucide="apple"></i>Get Beanie</a>
     </div>
   </div>
 </nav>
 
 <header class="hero">
   <div class="wrap">
-    <a class="pill" href="https://github.com/giankbr/brow"><b>FREE</b>Open source · macOS 14+ · Universal <i data-lucide="arrow-right"></i></a>
+    <a class="pill" href="https://github.com/giankbr/beanie-notch"><b>FREE</b>Open source · macOS 14+ · Universal <i data-lucide="arrow-right"></i></a>
     <h1 id="headline">The notch,<br>finally earning its place.</h1>
-    <p class="lead">Hover the notch or press ⌥ Space. System stats, your next meeting, prayer times, AI usage, a file shelf, clipboard history and synced lyrics — in a 2.6 MB native app that idles near 0% CPU.</p>
+    <p class="lead">Hover the notch or press ⌥ Space. System stats, your next meeting, prayer times, AI usage, a file shelf, clipboard history and synced lyrics — in a 3.6 MB native app that idles near 0% CPU.</p>
     <div class="cta-row">
-      <a class="btn btn-primary" href="https://github.com/giankbr/brow/releases/latest"><i data-lucide="apple"></i>Download for macOS</a>
-      <a class="btn btn-ghost" href="https://github.com/giankbr/brow">View source <i data-lucide="arrow-right"></i></a>
+      <a class="btn btn-primary" href="https://github.com/giankbr/beanie-notch/releases/latest"><i data-lucide="apple"></i>Download for macOS</a>
+      <a class="btn btn-ghost" href="https://github.com/giankbr/beanie-notch">View source <i data-lucide="arrow-right"></i></a>
     </div>
     <div class="meta">
       <span><i data-lucide="code"></i>Swift + SwiftUI</span>
@@ -403,13 +405,13 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
       <span><i data-lucide="shield-check"></i>No tracking</span>
     </div>
   </div>
-  <div class="stage"><div class="hero-shot"><img src="landing-page-assets/overview.png" alt="Brow's Overview panel open under the notch: health, CPU, memory, network, disk, cleanup and quick settings"></div></div>
+  <div class="stage"><div class="hero-shot"><img src="landing-page-assets/overview.png" alt="Beanie's Overview panel open under the notch: health, CPU, memory, network, disk, cleanup and quick settings"></div></div>
   <div style="position:relative;max-width:1200px;margin:0 auto"><div class="hero-glow"></div></div>
 </header>
 
 <div class="stats">
   <div class="wrap">
-    <div class="stat"><strong>2.6 MB</strong><span>download size</span></div>
+    <div class="stat"><strong>3.6 MB</strong><span>download size</span></div>
     <div class="stat"><strong>~0%</strong><span>CPU when idle</span></div>
     <div class="stat"><strong>19</strong><span>call services to Join</span></div>
     <div class="stat"><strong>4</strong><span>lyrics sources, no keys</span></div>
@@ -438,7 +440,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
           <div class="ui">
             <div class="drop"><i data-lucide="upload" style="margin:0 auto 6px;display:block"></i>Drop on the notch or <b>AirDrop</b><small>Right third sends by AirDrop</small></div>
             <div class="row"><i data-lucide="file-text" style="color:#E5484D"></i><div>Q3-Board-Report.pdf<small>4.2 MB</small></div><i data-lucide="x" class="r"></i></div>
-            <div class="row"><i data-lucide="image" style="color:#8E4EC6"></i><div>Screenshot 09.41.png<small>2.6 MB</small></div><i data-lucide="x" class="r"></i></div>
+            <div class="row"><i data-lucide="image" style="color:#8E4EC6"></i><div>Screenshot 09.41.png<small>3.6 MB</small></div><i data-lucide="x" class="r"></i></div>
           </div>
           <p>Drop files on the notch, drag them out later. Right third sends by AirDrop. Screenshots land here.</p>
         </article>
@@ -501,7 +503,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
       <p class="sub">Small, native, and polite about permissions.</p>
     </div>
     <div class="grid-3" style="margin-top:64px">
-      <article class="feature"><div><h3><span><i data-lucide="feather"></i></span>Native and tiny</h3><p>Swift and SwiftUI with no third-party dependencies. A 2.6 MB universal binary that idles near 0% CPU.</p></div></article>
+      <article class="feature"><div><h3><span><i data-lucide="feather"></i></span>Native and tiny</h3><p>Swift and SwiftUI with no third-party dependencies. A 3.6 MB universal binary that idles near 0% CPU.</p></div></article>
       <article class="feature"><div><h3><span><i data-lucide="lock"></i></span>Private by default</h3><p>Prayer times are worked out on the Mac. No analytics, no tracking, no API keys.</p></div></article>
       <article class="feature"><div><h3><span><i data-lucide="key-round"></i></span>Asks only when needed</h3><p>Calendars, Location, Camera — macOS prompts the first time a feature actually needs access.</p></div></article>
       <article class="feature"><div><h3><span><i data-lucide="keyboard"></i></span>No Accessibility grant</h3><p>The global shortcut is a Carbon hot key, so ⌥ Space works without handing over input control.</p></div></article>
@@ -518,7 +520,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
     <p class="sub">Layouts, themes, accents, sizes and notch shapes. Every choice previews live, right where it will sit. Try it here: this page follows along.</p>
     <div class="card custom">
       <div class="preview">
-        <img id="previewImg" src="landing-page-assets/preview/studio-regular-dark-drop.webp" alt="Brow's Controls panel in the chosen look" width="1400" height="474">
+        <img id="previewImg" src="landing-page-assets/preview/studio-regular-dark-drop.webp" alt="Beanie's Controls panel in the chosen look" width="1400" height="474">
         <div class="live" id="liveLabel">Live preview · Studio · Dark · Blue · Medium · Drop</div>
       </div>
       <div class="settings">
@@ -541,8 +543,8 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
   <div class="wrap win">
     <div>
       <span class="soon">Coming to Windows</span>
-      <h2>Brow for Windows.<em>Without a notch.</em></h2>
-      <p class="sub">Windows laptops don't have a notch, so Brow becomes a small island at the top centre of the screen: the same panels, built natively for Windows 11 rather than ported.</p>
+      <h2>Beanie for Windows.<em>Without a notch.</em></h2>
+      <p class="sub">Windows laptops don't have a notch, so Beanie becomes a small island at the top centre of the screen: the same panels, built natively for Windows 11 rather than ported.</p>
       <div class="plan">
         <div><i data-lucide="check"></i>Now playing &amp; synced lyrics</div>
         <div><i data-lucide="check"></i>Clipboard history</div>
@@ -553,8 +555,8 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
         <div class="later"><i data-lucide="minus"></i>AirDrop and Night Shift stay on Mac</div>
       </div>
       <div class="cta-row" style="justify-content:flex-start">
-        <a class="btn btn-primary" href="https://github.com/giankbr/brow/subscription"><i data-lucide="bell"></i>Watch for the release</a>
-        <a class="btn btn-ghost" href="https://github.com/giankbr/brow/issues/new?title=Windows%3A%20"><i data-lucide="message-square"></i>Ask for a feature</a>
+        <a class="btn btn-primary" href="https://github.com/giankbr/beanie-notch/subscription"><i data-lucide="bell"></i>Watch for the release</a>
+        <a class="btn btn-ghost" href="https://github.com/giankbr/beanie-notch/issues/new?title=Windows%3A%20"><i data-lucide="message-square"></i>Ask for a feature</a>
       </div>
       <p class="win-note">On GitHub, choose Watch › Custom › Releases to get an email when it ships.</p>
     </div>
@@ -571,14 +573,14 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
     <div>
       <span class="eyebrow">FAQ</span>
       <h2>Questions,<em>answered.</em></h2>
-      <p class="sub">Brow is free, open and tiny. If something isn't covered here, <a href="https://github.com/giankbr/brow/issues" style="color:var(--accent)">open an issue on GitHub</a>.</p>
+      <p class="sub">Beanie is free, open and tiny. If something isn't covered here, <a href="https://github.com/giankbr/beanie-notch/issues" style="color:var(--accent)">open an issue on GitHub</a>.</p>
     </div>
     <div>
-      <details><summary>Does it work on a Mac without a notch?<i data-lucide="chevron-down"></i></summary><p>Yes. On Macs without a notch, Brow draws a notch-like strip at the top centre of the screen. Pick the floating shape in Settings if you prefer it detached.</p></details>
-      <details open><summary>Why does macOS say the app can't be opened?<i data-lucide="chevron-down"></i></summary><p>Brow is ad-hoc signed, not notarized. Right-click the app and choose Open once, or run <code>xattr -dr com.apple.quarantine /Applications/Brow.app</code>.</p></details>
+      <details><summary>Does it work on a Mac without a notch?<i data-lucide="chevron-down"></i></summary><p>Yes. On Macs without a notch, Beanie draws a notch-like strip at the top centre of the screen. Pick the floating shape in Settings if you prefer it detached.</p></details>
+      <details open><summary>Why does macOS say the app can't be opened?<i data-lucide="chevron-down"></i></summary><p>Beanie is ad-hoc signed, not notarized. Right-click the app and choose Open once, or run <code>xattr -dr com.apple.quarantine /Applications/Beanie.app</code>.</p></details>
       <details><summary>Is my location sent anywhere?<i data-lucide="chevron-down"></i></summary><p>Prayer times are worked out on your Mac. For the weather, only your place's coordinates go to Open-Meteo, with no account, no key and no tracking. Lyrics lookups send just the song title and artist.</p></details>
       <details><summary>Does it need Accessibility permission?<i data-lucide="chevron-down"></i></summary><p>Only for Messages, to read the unread badges on Dock icons (just the numbers). Everything else, including the ⌥ Space shortcut, works without it.</p></details>
-      <details><summary>Can I use it on Intel Macs?<i data-lucide="chevron-down"></i></summary><p>Yes. Brow is a universal app for Apple silicon and Intel on macOS 14 or later. Brightness for external monitors over DDC works on Apple silicon only.</p></details>
+      <details><summary>Can I use it on Intel Macs?<i data-lucide="chevron-down"></i></summary><p>Yes. Beanie is a universal app for Apple silicon and Intel on macOS 14 or later. Brightness for external monitors over DDC works on Apple silicon only.</p></details>
     </div>
   </div>
 </section>
@@ -587,15 +589,15 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
   <div class="wrap">
     <div class="card cta">
       <div class="left">
-        <span class="eyebrow">Get Brow</span>
+        <span class="eyebrow">Get Beanie</span>
         <h2>Give your notch<em>a job.</em></h2>
-        <p class="sub">Free and open source. A 2.6 MB universal app for macOS 14 or later.</p>
+        <p class="sub">Free and open source. A 3.6 MB universal app for macOS 14 or later.</p>
         <div class="cta-row" style="justify-content:flex-start">
-          <a class="btn btn-primary" href="https://github.com/giankbr/brow/releases/latest"><i data-lucide="apple"></i>Download Brow.dmg</a>
-          <a class="btn btn-ghost" href="https://github.com/giankbr/brow"><i data-lucide="github"></i>View on GitHub</a>
+          <a class="btn btn-primary" href="https://github.com/giankbr/beanie-notch/releases/latest"><i data-lucide="apple"></i>Download Beanie.dmg</a>
+          <a class="btn btn-ghost" href="https://github.com/giankbr/beanie-notch"><i data-lucide="github"></i>View on GitHub</a>
         </div>
         <div class="steps">
-          <div><span>1</span><strong>Open the DMG</strong><p>Drag Brow into Applications.</p></div>
+          <div><span>1</span><strong>Open the DMG</strong><p>Drag Beanie into Applications.</p></div>
           <div><span>2</span><strong>First launch</strong><p>It's ad-hoc signed, so right-click and choose Open once.</p></div>
           <div><span>3</span><strong>Hover the notch</strong><p>Or press ⌥ Space. That's it.</p></div>
         </div>
@@ -603,8 +605,8 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
       <div class="right">
         <div class="menubar"><i data-lucide="apple" style="width:13px;height:13px"></i><span id="clock">09:41</span></div>
         <img class="notch" src="landing-page-assets/notch-download-crop.png" alt="">
-        <img class="window" src="landing-page-assets/install-window.png" alt="The Brow disk image: drag Brow into Applications">
-        <div class="term"><span>$</span><code id="cmd">xattr -dr com.apple.quarantine /Applications/Brow.app</code><button id="copy" aria-label="Copy command"><i data-lucide="copy"></i></button></div>
+        <img class="window" src="landing-page-assets/install-window.png" alt="The Beanie disk image: drag Beanie into Applications">
+        <div class="term"><span>$</span><code id="cmd">xattr -dr com.apple.quarantine /Applications/Beanie.app</code><button id="copy" aria-label="Copy command"><i data-lucide="copy"></i></button></div>
       </div>
     </div>
   </div>
@@ -614,27 +616,27 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
   <div class="foot">
     <div class="running">Running locally · 0.1% CPU</div>
     <div class="foot-top">
-      <img src="landing-page-assets/brow-icon.png" alt="">
-      <div><h4>Brow</h4><p>The notch, finally earning its place.</p></div>
+      <img src="landing-page-assets/beanie-icon.png" alt="">
+      <div><h4>Beanie</h4><p>The notch, finally earning its place.</p></div>
       <div class="cta-row">
-        <a class="btn btn-ghost" href="https://github.com/giankbr/brow"><i data-lucide="github"></i>Star on GitHub</a>
-        <a class="btn btn-primary" href="https://github.com/giankbr/brow/releases/latest"><i data-lucide="apple"></i>Download Brow.dmg</a>
+        <a class="btn btn-ghost" href="https://github.com/giankbr/beanie-notch"><i data-lucide="github"></i>Star on GitHub</a>
+        <a class="btn btn-primary" href="https://github.com/giankbr/beanie-notch/releases/latest"><i data-lucide="apple"></i>Download Beanie.dmg</a>
       </div>
     </div>
     <div class="cols">
-      <div><h5>PRODUCT</h5><a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#features">AI usage <span class="new">New</span></a><a href="#customize">Customize</a><a href="https://github.com/giankbr/brow/releases">Releases</a></div>
-      <div><h5>PROJECT</h5><a href="https://github.com/giankbr/brow">GitHub</a><a href="https://github.com/giankbr/brow#build">Build from source</a><a href="https://github.com/giankbr/brow/releases">Changelog</a><a href="https://github.com/giankbr/brow/issues">Report an issue</a></div>
-      <div><h5>PRIVACY</h5><span>No tracking</span><span>Location stays on Mac</span><span>No API keys</span><a href="https://github.com/giankbr/brow#install">Permissions</a></div>
-      <div><h5>REQUIREMENTS</h5><span>macOS 14 or later</span><span>Apple silicon &amp; Intel</span><span>2.6 MB download</span><span id="version">v1.5.3</span></div>
+      <div><h5>PRODUCT</h5><a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#features">AI usage <span class="new">New</span></a><a href="#customize">Customize</a><a href="https://github.com/giankbr/beanie-notch/releases">Releases</a></div>
+      <div><h5>PROJECT</h5><a href="https://github.com/giankbr/beanie-notch">GitHub</a><a href="https://github.com/giankbr/beanie-notch#build">Build from source</a><a href="https://github.com/giankbr/beanie-notch/releases">Changelog</a><a href="https://github.com/giankbr/beanie-notch/issues">Report an issue</a></div>
+      <div><h5>PRIVACY</h5><span>No tracking</span><span>Location stays on Mac</span><span>No API keys</span><a href="https://github.com/giankbr/beanie-notch#install">Permissions</a></div>
+      <div><h5>REQUIREMENTS</h5><span>macOS 14 or later</span><span>Apple silicon &amp; Intel</span><span>3.6 MB download</span><span id="version">v1.8.0</span></div>
     </div>
     <div class="credits">
-      <div><span class="eyebrow">Credits</span><h4>Standing on open source.</h4><p>Ideas studied from these projects. Brow's code is written from scratch.</p></div>
+      <div><span class="eyebrow">Credits</span><h4>Standing on open source.</h4><p>Ideas studied from these projects. Beanie's code is written from scratch.</p></div>
       <div class="chips" id="chips"></div>
       <div class="font-note"><i data-lucide="type"></i>Be Vietnam Pro © The Be Vietnam Pro Project Authors · SIL Open Font License</div>
     </div>
-    <div class="bottom"><span>© 2026 Brow</span><span>Made with Swift · no analytics</span></div>
+    <div class="bottom"><span>© 2026 Beanie</span><span>Made with Swift · no analytics</span></div>
   </div>
-  <div class="watermark" aria-hidden="true"><span>B</span><span>R</span><span>O</span><span>W</span></div>
+  <div class="watermark" aria-hidden="true"><span>B</span><span>E</span><span>A</span><span>N</span><span>I</span><span>E</span></div>
 </footer>
 
 <script>
@@ -743,7 +745,7 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
   tick(); setInterval(tick, 30000);
 
   // The newest release's version, when GitHub answers (the repository has to be public).
-  fetch("https://api.github.com/repos/giankbr/brow/releases/latest").then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+  fetch("https://api.github.com/repos/giankbr/beanie-notch/releases/latest").then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
     if (j && j.tag_name) document.getElementById("version").textContent = j.tag_name;
   }).catch(function () {});
 

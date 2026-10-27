@@ -166,7 +166,7 @@ final class AppModel: ObservableObject {
                               left: ok ? "Shortcut done" : "Shortcut failed", right: name))
         }
         updater.onNewVersion = { [weak self] version in
-            self?.show(Notice(icon: "arrow.down.app.fill", color: Theme.accent2, left: "Update", right: "Brow \(version) is out", duration: 6))
+            self?.show(Notice(icon: "arrow.down.app.fill", color: Theme.accent2, left: "Update", right: "Beanie \(version) is out", duration: 6))
         }
         // AirPods and other Bluetooth headphones: their charge follows the "Connected" notice once it's known.
         audio.onBluetooth = { [weak self] name in

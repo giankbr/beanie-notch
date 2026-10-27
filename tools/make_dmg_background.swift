@@ -1,7 +1,7 @@
 import AppKit
 
 // The DMG window's background, 640×400 points: graphite like the icon, a notch at the top, and a mint arrow
-// from where Brow sits (x 170) to Applications (x 470). Written at 1× and 2× next to the given path.
+// from where Beanie sits (x 170) to Applications (x 470). Written at 1× and 2× next to the given path.
 let size = NSSize(width: 640, height: 400)
 let mint = NSColor(srgbRed: 0.33, green: 0.9, blue: 0.74, alpha: 1)
 
@@ -50,7 +50,7 @@ func render(scale: CGFloat, to url: URL) {
                                                          .foregroundColor: color, .paragraphStyle: style]
         NSAttributedString(string: string, attributes: attributes).draw(in: NSRect(x: 0, y: y, width: size.width, height: points * 1.5))
     }
-    text("Drag Brow into Applications", size: 15, weight: .semibold, color: NSColor(white: 0.92, alpha: 1), y: 76)
+    text("Drag Beanie into Applications", size: 15, weight: .semibold, color: NSColor(white: 0.92, alpha: 1), y: 76)
     text("Then open it from Applications. The first time, right-click it and choose Open.", size: 11, weight: .regular,
          color: NSColor(white: 0.6, alpha: 1), y: 54)
 

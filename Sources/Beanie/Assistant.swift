@@ -67,10 +67,10 @@ enum Assistant {
         throw Failure("Apple Intelligence isn't available on this Mac")
     }
 
-    // `claude -p` answers once and exits. BROW_SELF tells Brow's own hooks to ignore this session.
+    // `claude -p` answers once and exits. BEANIE_SELF tells Beanie's own hooks to ignore this session.
     private static func claude(_ prompt: String, instructions: String) async throws -> String {
         guard let path = claudePath else { throw Failure("Claude Code isn't installed") }
-        return try await run(path, ["-p", instructions + "\n\n" + prompt], extraEnvironment: ["BROW_SELF": "1"], timeout: 180)
+        return try await run(path, ["-p", instructions + "\n\n" + prompt], extraEnvironment: ["BEANIE_SELF": "1"], timeout: 180)
     }
 
     private static func ollama(_ prompt: String, instructions: String) async throws -> String {

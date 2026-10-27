@@ -18560,7 +18560,7 @@
       "id": "GqaQY",
       "x": 3240,
       "y": 3260,
-      "name": "Threads — Promo",
+      "name": "Get Beanie",
       "fill": "#D9D9D5",
       "cornerRadius": 24,
       "gap": 60,
@@ -18603,14 +18603,14 @@
                     {
                       "type": "frame",
                       "id": "YPwtQ",
-                      "name": "Brow Logo",
+                      "name": "Beanie Logo",
                       "clip": true,
                       "width": 44,
                       "height": 44,
                       "fill": {
                         "type": "image",
                         "enabled": true,
-                        "url": "landing-page-assets/brow-logo.png",
+                        "url": "landing-page-assets/beanie-logo.png",
                         "mode": "cover"
                       },
                       "cornerRadius": 11
@@ -18620,7 +18620,7 @@
                       "id": "y52d0",
                       "name": "Text",
                       "fill": "$text-1",
-                      "content": "Brow",
+                      "content": "Beanie",
                       "fontFamily": "Be Vietnam Pro",
                       "fontSize": 32,
                       "fontWeight": "700"
@@ -18893,7 +18893,7 @@
                           "y": 1.5
                         }
                       },
-                      "content": "Download Brow.dmg",
+                      "content": "Download Beanie.dmg",
                       "fontFamily": "Be Vietnam Pro",
                       "fontSize": 28,
                       "fontWeight": "600"
@@ -18951,14 +18951,14 @@
                     {
                       "type": "frame",
                       "id": "J7Im7",
-                      "name": "Brow Logo",
+                      "name": "Beanie Logo",
                       "clip": true,
                       "width": 44,
                       "height": 44,
                       "fill": {
                         "type": "image",
                         "enabled": true,
-                        "url": "landing-page-assets/brow-logo.png",
+                        "url": "landing-page-assets/beanie-logo.png",
                         "mode": "cover"
                       },
                       "cornerRadius": 11
@@ -18968,7 +18968,7 @@
                       "id": "Xtgk8",
                       "name": "Text",
                       "fill": "$text-1",
-                      "content": "Brow",
+                      "content": "Beanie",
                       "fontFamily": "Be Vietnam Pro",
                       "fontSize": 32,
                       "fontWeight": "700"
@@ -19574,7 +19574,7 @@
                           "y": 1.5
                         }
                       },
-                      "content": "Download Brow.dmg",
+                      "content": "Download Beanie.dmg",
                       "fontFamily": "Be Vietnam Pro",
                       "fontSize": 28,
                       "fontWeight": "600"
@@ -19632,14 +19632,14 @@
                     {
                       "type": "frame",
                       "id": "ltiq2",
-                      "name": "Brow Logo",
+                      "name": "Beanie Logo",
                       "clip": true,
                       "width": 44,
                       "height": 44,
                       "fill": {
                         "type": "image",
                         "enabled": true,
-                        "url": "landing-page-assets/brow-logo.png",
+                        "url": "landing-page-assets/beanie-logo.png",
                         "mode": "cover"
                       },
                       "cornerRadius": 11
@@ -19649,7 +19649,7 @@
                       "id": "V4rDFz",
                       "name": "Text",
                       "fill": "$text-1",
-                      "content": "Brow",
+                      "content": "Beanie",
                       "fontFamily": "Be Vietnam Pro",
                       "fontSize": 32,
                       "fontWeight": "700"
@@ -19766,7 +19766,7 @@
               "fill": "$text-2",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "Subuh sampai Isya, arah kiblat, tanggal Hijriah, dan countdown sebelum tiap sholat. Dihitung di Mac lo, metode Kemenag.",
+              "content": "Subuh sampai Isya, arah kiblat, tanggal Hijriah, plus countdown sebelum adzan. Tinggal lirik ke atas, gak perlu buka HP.",
               "lineHeight": 1.45,
               "fontFamily": "Be Vietnam Pro",
               "fontSize": 30,
@@ -19998,7 +19998,7 @@
                           "y": 1.5
                         }
                       },
-                      "content": "Download Brow.dmg",
+                      "content": "Download Beanie.dmg",
                       "fontFamily": "Be Vietnam Pro",
                       "fontSize": 28,
                       "fontWeight": "600"
@@ -20056,14 +20056,14 @@
                     {
                       "type": "frame",
                       "id": "pv799",
-                      "name": "Brow Logo",
+                      "name": "Beanie Logo",
                       "clip": true,
                       "width": 44,
                       "height": 44,
                       "fill": {
                         "type": "image",
                         "enabled": true,
-                        "url": "landing-page-assets/brow-logo.png",
+                        "url": "landing-page-assets/beanie-logo.png",
                         "mode": "cover"
                       },
                       "cornerRadius": 11
@@ -20073,7 +20073,7 @@
                       "id": "B04fAz",
                       "name": "Text",
                       "fill": "$text-1",
-                      "content": "Brow",
+                      "content": "Beanie",
                       "fontFamily": "Be Vietnam Pro",
                       "fontSize": 32,
                       "fontWeight": "700"
@@ -20262,7 +20262,7 @@
                           "id": "N1BqoA",
                           "name": "Text",
                           "fill": "$text-1",
-                          "content": "Brow",
+                          "content": "Beanie",
                           "fontFamily": "Be Vietnam Pro",
                           "fontSize": 36,
                           "fontWeight": "700"
@@ -20848,7 +20848,7 @@
                           "y": 1.5
                         }
                       },
-                      "content": "Download Brow.dmg",
+                      "content": "Download Beanie.dmg",
                       "fontFamily": "Be Vietnam Pro",
                       "fontSize": 28,
                       "fontWeight": "600"
@@ -20906,14 +20906,14 @@
                     {
                       "type": "frame",
                       "id": "LJTpk",
-                      "name": "Brow Logo",
+                      "name": "Beanie Logo",
                       "clip": true,
                       "width": 44,
                       "height": 44,
                       "fill": {
                         "type": "image",
                         "enabled": true,
-                        "url": "landing-page-assets/brow-logo.png",
+                        "url": "landing-page-assets/beanie-logo.png",
                         "mode": "cover"
                       },
                       "cornerRadius": 11
@@ -20923,7 +20923,7 @@
                       "id": "fqhzY",
                       "name": "Text",
                       "fill": "$text-1",
-                      "content": "Brow",
+                      "content": "Beanie",
                       "fontFamily": "Be Vietnam Pro",
                       "fontSize": 32,
                       "fontWeight": "700"
@@ -21393,7 +21393,7 @@
                           "y": 1.5
                         }
                       },
-                      "content": "Download Brow.dmg",
+                      "content": "Download Beanie.dmg",
                       "fontFamily": "Be Vietnam Pro",
                       "fontSize": 28,
                       "fontWeight": "600"

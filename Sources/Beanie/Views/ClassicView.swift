@@ -1,6 +1,6 @@
 import SwiftUI
 
-// The first Brow look: a greeting on top, a six-card overview, and the tabs as a dock along the bottom.
+// The first Beanie look: a greeting on top, a six-card overview, and the tabs as a dock along the bottom.
 
 struct GreetingHeader: View {
     @EnvironmentObject var model: AppModel

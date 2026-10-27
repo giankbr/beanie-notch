@@ -4,7 +4,7 @@ import CoreAudio
 import IOKit.pwr_mgt
 
 // Keeps the Mac and its display awake, like `caffeinate -d`, for a while or until turned off. The assertion
-// belongs to this process, so quitting Brow always lets the Mac sleep again.
+// belongs to this process, so quitting Beanie always lets the Mac sleep again.
 @MainActor
 final class KeepAwake: ObservableObject {
     @Published private(set) var active = false
@@ -17,7 +17,7 @@ final class KeepAwake: ObservableObject {
         stop()
         guard IOPMAssertionCreateWithName(kIOPMAssertPreventUserIdleDisplaySleep as CFString,
                                           IOPMAssertionLevel(kIOPMAssertionLevelOn),
-                                          "Brow keep awake" as CFString, &assertion) == kIOReturnSuccess else { return }
+                                          "Beanie keep awake" as CFString, &assertion) == kIOReturnSuccess else { return }
         active = true
         guard minutes > 0 else { return }
         until = Date().addingTimeInterval(Double(minutes) * 60)

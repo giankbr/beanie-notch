@@ -1,4 +1,4 @@
-# dmgbuild settings: Brow and an Applications link over the drawn background (tools/make_dmg_background.swift).
+# dmgbuild settings: Beanie and an Applications link over the drawn background (tools/make_dmg_background.swift).
 import os
 
 app = defines['app']

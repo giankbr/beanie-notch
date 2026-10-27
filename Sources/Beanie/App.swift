@@ -18,15 +18,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var controller: NotchController!
     private var statusItem: NSStatusItem!
 
+    // Settings saved under the app's earlier bundle id come along once.
+    private static func carryOverSettings() {
+        let defaults = UserDefaults.standard
+        guard let id = Bundle.main.bundleIdentifier, defaults.persistentDomain(forName: id)?.isEmpty ?? true,
+              let old = defaults.persistentDomain(forName: "id.morfotech.brow"), !old.isEmpty else { return }
+        defaults.setPersistentDomain(old, forName: id)
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         Font.registerAppFonts()
+        Self.carryOverSettings()
         model = AppModel()
         controller = NotchController(model: model)
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        statusItem.button?.image = NSImage(systemSymbolName: "rectangle.topthird.inset.filled", accessibilityDescription: "Brow")
+        statusItem.button?.image = NSImage(systemSymbolName: "rectangle.topthird.inset.filled", accessibilityDescription: "Beanie")
         let menu = NSMenu()
-        let open = NSMenuItem(title: "Open Brow", action: #selector(openNotch), keyEquivalent: "")
+        let open = NSMenuItem(title: "Open Beanie", action: #selector(openNotch), keyEquivalent: "")
         open.target = self
         menu.addItem(open)
         let clean = NSMenuItem(title: "Full System Clean", action: #selector(fullClean), keyEquivalent: "")
@@ -36,7 +45,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         color.target = self
         menu.addItem(color)
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Quit Brow", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        menu.addItem(withTitle: "Quit Beanie", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         statusItem.menu = menu
     }
 

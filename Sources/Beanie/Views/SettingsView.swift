@@ -74,7 +74,7 @@ struct SettingsView: View {
                 }
                 Spacer(minLength: 6)
                 if settings.size != .mini {
-                    Text("Brow \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev")")
+                    Text("Beanie \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev")")
                         .font(.mono(size: 8.5)).foregroundStyle(Theme.faint).padding(.leading, 8)
                     Button { NSApp.terminate(nil) } label: {
                         Label("Quit", systemImage: "power").font(.app(size: 9.5, weight: .semibold)).foregroundStyle(Theme.red)
@@ -358,7 +358,7 @@ struct SettingsView: View {
 
     private var system: some View {
         card {
-            row("power", "Open at login", loginError ?? "Start Brow when you log in") {
+            row("power", "Open at login", loginError ?? "Start Beanie when you log in") {
                 Toggle("", isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { _, on in setLaunchAtLogin(on) }
             }
@@ -418,7 +418,7 @@ struct SettingsView: View {
 
     private var updateCaption: String {
         if updater.failed { return "Couldn't reach GitHub (the repository must be public)" }
-        if updater.updateAvailable { return "Brow \(updater.latest ?? "") is out, you have \(updater.current)" }
+        if updater.updateAvailable { return "Beanie \(updater.latest ?? "") is out, you have \(updater.current)" }
         if updater.latest != nil { return "Up to date (\(updater.current))" }
         return "Looks for a new release on GitHub once a day"
     }
@@ -451,7 +451,7 @@ struct SettingsView: View {
             if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
             loginError = nil
         } catch {
-            loginError = "Move Brow to Applications first"
+            loginError = "Move Beanie to Applications first"
             launchAtLogin = SMAppService.mainApp.status == .enabled
         }
     }
