@@ -329,21 +329,15 @@ public static class Ui
         visual.StartAnimation("Translation", move);
     }
 
-    // CRT lines for the Retro theme: a dark rule every third pixel.
-    public static LinearGradientBrush Scanlines() => new()
+    // CRT lines for the Retro theme: a dark rule every third pixel, drawn as real lines since a repeating gradient
+    // isn't something WinUI's brushes do. Taller than needed; the parent clips the rest.
+    public static FrameworkElement Scanlines(int lines = 220)
     {
-        MappingMode = BrushMappingMode.Absolute,
-        SpreadMethod = GradientSpreadMethod.Repeat,
-        StartPoint = new Windows.Foundation.Point(0, 0),
-        EndPoint = new Windows.Foundation.Point(0, 3),
-        GradientStops =
-        {
-            new() { Color = Theme.Rgb(0, 0, 0, 0), Offset = 0 },
-            new() { Color = Theme.Rgb(0, 0, 0, 0), Offset = 0.66 },
-            new() { Color = Theme.Rgb(0, 0, 0, 0.22), Offset = 0.66 },
-            new() { Color = Theme.Rgb(0, 0, 0, 0.22), Offset = 1 },
-        },
-    };
+        var stack = new StackPanel { IsHitTestVisible = false, VerticalAlignment = VerticalAlignment.Top };
+        var line = Theme.Brush(Theme.Rgb(0, 0, 0, 0.22));
+        for (var i = 0; i < lines; i++) stack.Children.Add(new Border { Height = 1, Margin = new Thickness(0, 0, 0, 2), Background = line });
+        return new Grid { IsHitTestVisible = false, Children = { stack } };
+    }
 
     public static Border Divider() => new() { Height = 1, Background = Theme.Brush(Theme.Stroke) };
 

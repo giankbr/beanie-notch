@@ -194,7 +194,12 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
         lines.Margin = new Thickness(S(7), S(7), 0, 0);
         Grid.SetColumnSpan(lines, 2);
         g.Children.Add(lines);
-        if (retro) g.Children.Add(new Border { Background = Scanlines(), IsHitTestVisible = false });
+        if (retro)
+        {
+            var crt = Scanlines(20);
+            Grid.SetColumnSpan(crt, 2);
+            g.Children.Add(crt);
+        }
         return g;
     }
 

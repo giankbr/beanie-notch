@@ -25,7 +25,7 @@ public sealed partial class IslandWindow : Window
     // The open panel at each size, a little taller than the Mac's since Windows sets text larger.
     private (double Width, double Height) Open => model.Settings.Size switch
     {
-        PanelSize.Compact => (600, 300),
+        PanelSize.Compact => (630, 300),
         PanelSize.Large => (780, 390),
         _ => (680, 336),
     };
@@ -33,7 +33,7 @@ public sealed partial class IslandWindow : Window
     private readonly Model model;
     private readonly nint hwnd;
     private readonly Grid root = new();
-    private readonly Border scanlines = Scanlines();
+    private readonly FrameworkElement scanlines = Ui.Ui.Scanlines();
     private readonly ClosedView closed;
     private readonly Shell shell;
     private readonly DispatcherQueueTimer collapseTimer, tick, statsTimer, dataTimer;
@@ -135,7 +135,6 @@ public sealed partial class IslandWindow : Window
     }
 
     // The Retro theme's CRT lines: a dark rule every third pixel over the open panel, never in the way of the pointer.
-    private static Border Scanlines() => new() { IsHitTestVisible = false, Background = Ui.Ui.Scanlines() };
 
     private void ShowScanlines() =>
         scanlines.Visibility = model.Expanded && Theme.Retro is not null ? Visibility.Visible : Visibility.Collapsed;
