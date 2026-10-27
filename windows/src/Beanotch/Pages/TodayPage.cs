@@ -205,31 +205,30 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
         right.Children.Add(Rows(10, (tabs, null), (body, 1)));
     }
 
-    // A ring that fills as the stretch runs, with the time, what it's for and play/pause inside it; underneath, the lengths
-    // and a pill to jump between focus and a break. Focus burns orange to red, the break cools to blue, as on the Mac.
+    // The ring on the left fills as the stretch runs, with play/pause in its middle; beside it the time, the phase and
+    // when it ends, then the lengths and a jump between focus and a break. Focus burns orange to red, the break cools
+    // to blue, as on the Mac.
     private FrameworkElement FocusView()
     {
         var focus = Model.Focus;
         var resting = focus.OnBreak;
-        bigTime = Text(Clock(focus.Left), 16, weight: FontWeights.Bold, display: true);
-        bigTime.HorizontalAlignment = HorizontalAlignment.Center;
-        var label = Text(resting ? "RELAX" : "FOCUS", 6.5, Theme.Dim, FontWeights.Medium);
-        label.CharacterSpacing = 150;
-        label.HorizontalAlignment = HorizontalAlignment.Center;
-        var emoji = new TextBlock
+        bigTime = Text(Clock(focus.Left), 24, weight: FontWeights.Bold, display: true);
+        var phase = resting ? "Break" : "Focus";
+        var state = focus.Running ? "ends " + (DateTime.Now + focus.Left).ToString("t")
+                  : focus.Left < focus.Total ? "paused" : $"{(int)focus.Total.TotalMinutes} min";
+        var play = new Button
         {
-            Text = resting ? "☕" : "🍅",
-            FontSize = S(10),
-            FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Segoe UI Emoji"),
-            // Colour emoji can't take the phosphor tint, so the Retro screen leaves them out.
-            Visibility = Theme.Retro is null ? Visibility.Visible : Visibility.Collapsed,
-            HorizontalAlignment = HorizontalAlignment.Center,
+            Content = Icon(focus.Running ? Glyphs.Pause : Glyphs.Play, 14, Theme.Ink),
+            Width = S(40),
+            Height = S(40),
+            Padding = new Thickness(0),
+            CornerRadius = new CornerRadius(S(20)),
+            Background = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.08)),
+            BorderThickness = new Thickness(0),
         };
-        var play = IconButton(focus.Running ? Glyphs.Pause : Glyphs.Play, () => { focus.Toggle(); Right(); }, 10, Theme.Ink,
-                              focus.Running ? "Pause" : "Start", 20);
-        play.HorizontalAlignment = HorizontalAlignment.Center;
-        var inside = V(0, emoji, bigTime, label, play);
-        inside.VerticalAlignment = VerticalAlignment.Center;
+        play.Click += (_, _) => { focus.Toggle(); Right(); };
+        ToolTipService.SetToolTip(play, focus.Running ? "Pause" : "Start");
+        var inside = Center(play);
 
         var (from, to) = resting ? (Theme.Rgb(0.3, 0.62, 1), Theme.Rgb(0.12, 0.4, 0.86)) : (Theme.Rgb(1, 0.5, 0.16), Theme.Rgb(0.9, 0.27, 0.16));
         ring = new Microsoft.UI.Xaml.Shapes.Path
@@ -245,7 +244,7 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
             },
         };
         var track = new Microsoft.UI.Xaml.Shapes.Ellipse { Stroke = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.1)), StrokeThickness = S(RingStroke) };
-        var dial = new Grid { Width = S(RingSide), Height = S(RingSide), Children = { track, ring, inside }, HorizontalAlignment = HorizontalAlignment.Center };
+        var dial = new Grid { Width = S(RingSide), Height = S(RingSide), Children = { track, ring, inside }, VerticalAlignment = VerticalAlignment.Center };
 
         // The lengths and a reset behind the gear, so the page fits short panels too.
         var lengths = new MenuFlyout();
@@ -270,22 +269,23 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
         var gear = new Button
         {
             Content = Icon(Glyphs.Settings, 11),
-            Width = S(26),
-            Height = S(26),
+            Width = S(24),
+            Height = S(24),
             Padding = new Thickness(0),
-            CornerRadius = new CornerRadius(S(13)),
+            CornerRadius = new CornerRadius(S(12)),
             Background = Theme.Brush(Ui.Ui.Transparent),
             BorderBrush = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.18)),
             BorderThickness = new Thickness(1),
             Flyout = lengths,
         };
         ToolTipService.SetToolTip(gear, "Lengths and reset");
-        var pill = Plain(Text(resting ? "POMODORO" : "BREAK", 9.5, weight: FontWeights.Medium), () => { focus.Skip(); Right(); },
-                         Theme.WithAlpha(Theme.Ink, 0.1), 13, new Thickness(S(18), S(5), S(18), S(5)), resting ? "Back to focus" : "Take a break now");
-        var bottom = H(8, gear, pill);
-        bottom.HorizontalAlignment = HorizontalAlignment.Center;
+        var pill = Plain(Text(resting ? "Focus" : "Break", 9.5, weight: FontWeights.SemiBold), () => { focus.Skip(); Right(); },
+                         Theme.WithAlpha(Theme.Ink, 0.1), 12, new Thickness(S(12), S(4), S(12), S(4)), resting ? "Back to focus" : "Take a break now");
+        var dot = new Microsoft.UI.Xaml.Shapes.Ellipse { Width = S(6), Height = S(6), Fill = Theme.Brush(from), VerticalAlignment = VerticalAlignment.Center };
+        var status = H(5, dot, Text($"{phase} · {state}", 8.5, Theme.Dim, FontWeights.Medium));
+        var side = Rows(2, (bigTime, null), (status, null), (null, 1), (H(6, gear, pill), null));
         FocusTick();
-        return Rows(8, (dial, 1), (bottom, null));
+        return Columns(12, (dial, null), (side, 1));
     }
 
     private const double RingSide = 94, RingStroke = 4.5;
