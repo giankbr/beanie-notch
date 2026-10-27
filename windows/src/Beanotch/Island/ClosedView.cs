@@ -21,12 +21,12 @@ public sealed class ClosedView
 
     public FrameworkElement View { get; }
 
-    public ClosedView(Model model)
+    public ClosedView(Model model, Func<(Windows.Foundation.Point At, double Scale)?> petAnchor)
     {
         this.model = model;
         left.Foreground = Theme.Brush(Theme.Rgb(1, 1, 1));
         level.Width = S(56);
-        pet = new PetView(() => model.Mood);
+        pet = new PetView(() => model.Mood, () => model.Settings.PetKind, petAnchor);
         row = Columns(8, (icon, null), (left, 1), (level, null), (right, null), (pet.View, null));
         row.Padding = new Thickness(S(13), 0, S(13), 0);
         row.VerticalAlignment = VerticalAlignment.Center;

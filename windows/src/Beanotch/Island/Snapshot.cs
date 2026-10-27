@@ -40,6 +40,13 @@ public sealed partial class IslandWindow
         Show(new Notice(Glyphs.Screenshot, Theme.Accent2, "Screenshot", "On the Shelf", TimeSpan.FromSeconds(10)));
         await Shot("03c-closed-pet-notice", 600);
         notice = null;
+        foreach (var kind in new[] { PetKind.Cat, PetKind.Frog, PetKind.Ghost })
+        {
+            model.Settings.PetKind = kind;
+            Update();
+            await Shot($"03d-closed-pet-{kind.ToString().ToLowerInvariant()}", 700);
+        }
+        model.Settings.PetKind = PetKind.Bean;
         model.Settings.NotchPet = false;
         Update();
 

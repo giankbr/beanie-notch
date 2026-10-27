@@ -213,8 +213,17 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
     private FrameworkElement Island()
     {
         UIElement Toggle(string title, string caption, bool on, Action<bool> set) => Row(null, title, caption, Switch(on, v => { set(v); Save(); }));
-        return V(8, Group(Toggle("Time when idle", "Otherwise the notch stays empty and black", S0.IdleClock, v => S0.IdleClock = v),
-                          Toggle("Notch pet", "A coffee bean that naps, sweats, eats and dances", S0.NotchPet, v => S0.NotchPet = v)),
+        var idle = new List<UIElement>
+        {
+            Toggle("Time when idle", "Otherwise the notch stays empty and black", S0.IdleClock, v => S0.IdleClock = v),
+            Toggle("Notch pet", "Lives in the island's corner, watches the pointer and reacts to the PC", S0.NotchPet, v => { S0.NotchPet = v; Refresh(); }),
+        };
+        if (S0.NotchPet)
+            idle.Add(Picker("Pet", "Who lives in the island", Cells(Enum.GetValues<Island.PetKind>().Select(kind =>
+                Choice(kind.ToString(), S0.PetKind == kind,
+                       new Grid { Background = Theme.Brush(Theme.Black), Children = { Center(new Island.PetView(() => Model.PetMood.Happy, () => kind, still: true).View) } },
+                       () => { S0.PetKind = kind; Save(); Refresh(); })))));
+        return V(8, Group([.. idle]),
             Group(
             Toggle("Lyrics", "The line being sung, while music plays", S0.Lyrics, v => S0.Lyrics = v),
             Toggle("Volume", "Level when it changes", S0.VolumeHud, v => S0.VolumeHud = v),

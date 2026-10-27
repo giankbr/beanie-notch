@@ -53,7 +53,7 @@ public sealed partial class IslandWindow : Window
         Pages.ShelfPage.Hwnd = hwnd;
         ApplyTheme();
 
-        closed = new ClosedView(model);
+        closed = new ClosedView(model, PetAnchor);
         shell = new Shell(model, ApplyTheme);
         root.Children.Add(closed.View);
         root.Children.Add(shell.View);
@@ -161,6 +161,15 @@ public sealed partial class IslandWindow : Window
                 _ = SnapshotAsync(dir);
             };
         }
+    }
+
+    // The pet's eyes, in screen pixels: near the island's right end, a little below the top edge.
+    private (Windows.Foundation.Point, double)? PetAnchor()
+    {
+        if (model.Expanded) return null;
+        var scale = Native.GetDpiForWindow(hwnd) / 96.0 * Ui.Ui.K;
+        var at = AppWindow.Position;
+        return (new Windows.Foundation.Point(at.X + AppWindow.Size.Width - 34 * scale, at.Y + 15 * scale), scale);
     }
 
     private async Task CheckForUpdate()
