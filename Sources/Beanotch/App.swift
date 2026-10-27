@@ -4,6 +4,12 @@ import SwiftUI
 @main
 enum Main {
     static func main() {
+        // One notch at a time: opened again while it runs (from Launchpad, at login, after an update), it leaves the
+        // running copy be.
+        if let id = Bundle.main.bundleIdentifier,
+           NSRunningApplication.runningApplications(withBundleIdentifier: id).contains(where: { $0 != .current }) {
+            return
+        }
         let app = NSApplication.shared
         let delegate = AppDelegate()
         app.delegate = delegate
