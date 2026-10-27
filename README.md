@@ -119,7 +119,6 @@ Brow is written in Swift and SwiftUI with no third-party dependencies. The downl
 
 Requires macOS 14 or later, as a universal binary for Apple silicon and Intel. Brightness control for external monitors works on Apple silicon only.
 
-**Coming from Notchy?** Brow is the same app under a new name. Your settings, pins and Shelf come along on first launch. Turn **Open at login** on again in Settings, then delete Notchy.app.
 
 macOS asks for access only when a feature needs it:
 

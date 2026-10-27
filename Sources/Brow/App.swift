@@ -20,7 +20,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         Font.registerAppFonts()
-        Self.migrateFromNotchy()
         model = AppModel()
         controller = NotchController(model: model)
 
@@ -39,16 +38,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quit Brow", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         statusItem.menu = menu
-    }
-
-    // The app was called Notchy: its settings, pins and Shelf come along the first time Brow opens.
-    private static func migrateFromNotchy() {
-        let defaults = UserDefaults.standard
-        guard let id = Bundle.main.bundleIdentifier, !defaults.bool(forKey: "migratedFromNotchy") else { return }
-        if let old = defaults.persistentDomain(forName: "id.morfotech.notchy"), !old.isEmpty {
-            defaults.setPersistentDomain(old.merging(defaults.persistentDomain(forName: id) ?? [:]) { $1 }, forName: id)
-        }
-        defaults.set(true, forKey: "migratedFromNotchy")
     }
 
     @objc private func openNotch() { controller.expand(pinned: true) }
