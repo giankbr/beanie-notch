@@ -8,10 +8,12 @@ final class NotchPanel: NSPanel {
         isOpaque = false
         backgroundColor = .clear
         hasShadow = false
-        level = .statusBar
         collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
         isMovable = false
         isFloatingPanel = true
+        // After isFloatingPanel, which resets the level to .floating (below the menu bar). Above the menu bar
+        // and its status items, so the Mini tabs that sit in that row take the clicks.
+        level = NSWindow.Level(rawValue: NSWindow.Level.mainMenu.rawValue + 3)
         becomesKeyOnlyIfNeeded = true
         ignoresMouseEvents = true
     }
@@ -167,7 +169,7 @@ final class NotchController {
         zone.drops = drops
         host.drops = drops
         dropZone.contentView = zone
-        dropZone.level = .statusBar + 1
+        dropZone.level = NSWindow.Level(rawValue: NSWindow.Level.mainMenu.rawValue + 4)
         dropZone.ignoresMouseEvents = false
 
         layout()
@@ -316,8 +318,9 @@ final class NotchController {
         let s = model.openSize, h = model.closedSize.height
         let body = NSRect(x: screenFrame.midX - s.width / 2, y: screenFrame.maxY - s.height,
                           width: s.width, height: s.height - h).insetBy(dx: -8, dy: -8)
-        let neck = NSRect(x: screenFrame.midX - model.closedSize.width / 2, y: screenFrame.maxY - h,
-                          width: model.closedSize.width, height: h + 1)
+        // Mini's tabs fill the menu bar row, so the whole width of that row counts.
+        let neckWidth = model.settings.size == .mini ? s.width : model.closedSize.width
+        let neck = NSRect(x: screenFrame.midX - neckWidth / 2, y: screenFrame.maxY - h, width: neckWidth, height: h + 1)
         return body.contains(p) || neck.contains(p)
     }
 

@@ -46,9 +46,11 @@ struct NotchRootView: View {
                 .allowsHitTesting(model.expanded)
                 .mask(alignment: .top) { shape.frame(width: size.width, height: size.height) }
 
+            // Hidden while open, and out of the way of clicks too: it sits over the Mini tabs.
             closedContent
                 .frame(width: model.closedWidth, height: model.closedHeight)
                 .opacity(model.expanded ? 0 : 1)
+                .allowsHitTesting(!model.expanded)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .animation(model.expanded ? .bouncy(duration: 0.4) : .smooth(duration: 0.4), value: model.expanded)
@@ -765,7 +767,9 @@ private struct EarTabs: View {
         HStack(spacing: 2) {
             ForEach(tabs) { tab in
                 let active = model.tab == tab
-                Button { withAnimation(.snappy(duration: 0.2)) { model.tab = tab } } label: {
+                Button {
+                    withAnimation(.snappy(duration: 0.2)) { model.tab = tab }
+                } label: {
                     TabIcon(name: tab.icon, size: 10.5, weight: .semibold)
                         .foregroundStyle(active ? Theme.accent : Color.white.opacity(0.55))
                         .frame(width: 26, height: 22)
