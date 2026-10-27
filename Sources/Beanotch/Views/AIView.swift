@@ -236,7 +236,7 @@ private struct AskView: View {
                 }
                 .padding(.horizontal, 10)
                 .frame(height: 30)
-                .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Theme.ink.opacity(0.06)))
+                .background(RoundedRectangle(cornerRadius: Theme.round(9), style: .continuous).fill(Theme.ink.opacity(0.06)))
                 if let file = model.aiFile { fileBar(file) }
 
                 Group {

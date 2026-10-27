@@ -604,8 +604,8 @@ private struct StudioSidebar: View {
         .padding(5)
         .frame(width: 132)
         .frame(maxHeight: .infinity)
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.surface))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.stroke))
+        .background(RoundedRectangle(cornerRadius: Theme.round(14), style: .continuous).fill(Theme.surface))
+        .overlay(RoundedRectangle(cornerRadius: Theme.round(14), style: .continuous).strokeBorder(Theme.stroke))
     }
 
     private func group(_ title: String) -> some View {
@@ -718,8 +718,8 @@ private struct TopTabs: View {
             }
         }
         .padding(3)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.surface))
-        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.stroke))
+        .background(RoundedRectangle(cornerRadius: Theme.round(10), style: .continuous).fill(Theme.surface))
+        .overlay(RoundedRectangle(cornerRadius: Theme.round(10), style: .continuous).strokeBorder(Theme.stroke))
         .fixedSize()
     }
 }
@@ -753,8 +753,8 @@ private struct Rail: View {
         .padding(.vertical, 6)
         .frame(width: 42)
         .frame(maxHeight: .infinity)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.surface))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Theme.stroke))
+        .background(RoundedRectangle(cornerRadius: Theme.round(12), style: .continuous).fill(Theme.surface))
+        .overlay(RoundedRectangle(cornerRadius: Theme.round(12), style: .continuous).strokeBorder(Theme.stroke))
     }
 }
 

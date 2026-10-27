@@ -24,10 +24,10 @@ struct MusicView: View {
             .padding(16)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
             .background {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                RoundedRectangle(cornerRadius: Theme.round(18), style: .continuous)
                     .fill(LinearGradient(colors: [tint.opacity(0.2), tint.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing))
             }
-            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(tint.opacity(0.18)))
+            .overlay(RoundedRectangle(cornerRadius: Theme.round(18), style: .continuous).strokeBorder(tint.opacity(0.18)))
             .animation(.easeInOut(duration: 0.35), value: media.tint)
             .animation(.easeInOut(duration: 0.25), value: showsLyrics)
         } else {
@@ -347,7 +347,7 @@ private struct CompactPlayer: View {
         }
         .padding(10)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous)
+        .background(RoundedRectangle(cornerRadius: Theme.round(16), style: .continuous)
             .fill(LinearGradient(colors: [tint.opacity(0.2), tint.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing)))
     }
 

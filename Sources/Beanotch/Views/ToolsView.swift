@@ -25,7 +25,7 @@ struct ToolsView: View {
                 // The spinner sits behind the preview and disappears once the first frames cover it.
                 CameraMirror()
                     .background { LoadingView(text: "Starting camera…") }
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.round(14), style: .continuous))
                     .overlay(alignment: .bottomLeading) {
                         Pill(text: "Camera on while this shows", color: .white, dot: true).padding(10)
                     }
@@ -60,7 +60,7 @@ private struct UninstallerView: View {
                                 }
                                 .padding(.horizontal, 8)
                                 .frame(height: 26)
-                                .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(active ? Theme.accent.opacity(0.14) : .clear))
+                                .background(RoundedRectangle(cornerRadius: Theme.round(7), style: .continuous).fill(active ? Theme.accent.opacity(0.14) : .clear))
                                 .contentShape(Rectangle())
                                 .onTapGesture { uninstaller.select(app) }
                             }
@@ -166,7 +166,7 @@ private struct LargeFilesView: View {
                         }
                         .padding(.horizontal, 8)
                         .frame(height: 34)
-                        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.surface))
+                        .background(RoundedRectangle(cornerRadius: Theme.round(8), style: .continuous).fill(Theme.surface))
                     }
                 }
             }

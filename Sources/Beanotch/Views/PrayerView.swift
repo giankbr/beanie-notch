@@ -153,9 +153,9 @@ private struct Timeline: View {
                     }
                     .padding(10)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                    .background(RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .background(RoundedRectangle(cornerRadius: Theme.round(11), style: .continuous)
                         .fill(isNext ? Theme.accent.opacity(0.14) : Theme.surface))
-                    .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .overlay(RoundedRectangle(cornerRadius: Theme.round(11), style: .continuous)
                         .strokeBorder(isNext ? Theme.accent.opacity(0.55) : Theme.stroke))
                     .opacity(past && !isNext ? 0.6 : 1)
                 }

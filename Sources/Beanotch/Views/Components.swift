@@ -18,6 +18,7 @@ enum Theme {
         switch mode {
         case .midnight: .black
         case .glass: Color(white: 0.09)
+        case .pixel: Pixel.background
         default: baseBackground
         }
     }
@@ -28,12 +29,18 @@ enum Theme {
         switch mode {
         case .midnight: .white.opacity(0.035)
         case .glass: .white.opacity(0.07)
+        case .pixel: Pixel.card
         default: baseSurface
         }
     }
     static var stroke: Color { mode == .glass ? .white.opacity(0.1) : baseStroke }
     // Keycap: every button, tab and switch is a raised key, lit from above with a bevel along its bottom edge.
     static var keycap: Bool { mode == .keycap }
+    // Pixel: 8-bit, like the notch pet. Square faces with a dark outline and a hard bevel, and a pixel font for
+    // titles and big figures.
+    static var pixel: Bool { mode == .pixel }
+    // Corners: square in Pixel, as given everywhere else.
+    static func round(_ radius: CGFloat) -> CGFloat { pixel ? 0 : radius }
     static var thumb: Color { baseThumb }
     static var dim: Color { ink.opacity(0.55) }
     static var faint: Color { ink.opacity(0.4) }
@@ -86,7 +93,7 @@ struct Pill: View {
         .foregroundStyle(color)
         .padding(.horizontal, 7)
         .padding(.vertical, 3)
-        .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(color.opacity(0.12)))
+        .background(RoundedRectangle(cornerRadius: Theme.pixel ? 0 : 5, style: .continuous).fill(color.opacity(0.12)))
     }
 }
 
@@ -107,6 +114,8 @@ private struct ButtonFace<S: InsettableShape>: ViewModifier {
             .background {
                 if Theme.keycap && shown {
                     KeyFace(shape: shape, base: solid ? color : nil, tint: solid ? nil : color, lit: hovered)
+                } else if Theme.pixel && shown {
+                    PixelFace(base: solid ? color : nil, tint: solid ? nil : color, lit: hovered)
                 } else {
                     shape.fill(shown ? color : .clear)
                         .overlay(shape.fill(Theme.ink.opacity(hovered ? 0.06 : 0)))
@@ -190,7 +199,7 @@ struct PillButton: View {
             .foregroundStyle(color)
             .padding(.horizontal, 8)
             .padding(.vertical, 3.5)
-            .buttonFace(RoundedRectangle(cornerRadius: 6, style: .continuous), color.opacity(0.16))
+            .buttonFace(RoundedRectangle(cornerRadius: Theme.round(6), style: .continuous), color.opacity(0.16))
         }
         .buttonStyle(PressStyle())
     }
@@ -207,7 +216,7 @@ struct IconButton: View {
                 .font(.system(size: 10, weight: .semibold))
                 .foregroundStyle(active ? Theme.ink : Theme.dim)
                 .frame(width: 24, height: 22)
-                .buttonFace(RoundedRectangle(cornerRadius: 7, style: .continuous), Theme.ink.opacity(active ? 0.14 : 0.08), quiet: !active)
+                .buttonFace(RoundedRectangle(cornerRadius: Theme.round(7), style: .continuous), Theme.ink.opacity(active ? 0.14 : 0.08), quiet: !active)
                 .contentShape(Rectangle())
         }
         .buttonStyle(PressStyle())
@@ -226,7 +235,7 @@ struct OutlineButton: View {
                 .foregroundStyle(color)
                 .padding(.horizontal, 10)
                 .frame(height: 22)
-                .buttonFace(RoundedRectangle(cornerRadius: 7, style: .continuous), Theme.ink.opacity(0.08))
+                .buttonFace(RoundedRectangle(cornerRadius: Theme.round(7), style: .continuous), Theme.ink.opacity(0.08))
                 .contentShape(Rectangle())
         }
         .buttonStyle(PressStyle())
@@ -247,7 +256,7 @@ struct PrimaryButton: View {
             .foregroundStyle(.black)
             .frame(maxWidth: .infinity)
             .frame(height: 30)
-            .buttonFace(RoundedRectangle(cornerRadius: 9, style: .continuous), Theme.accent, solid: true)
+            .buttonFace(RoundedRectangle(cornerRadius: Theme.round(9), style: .continuous), Theme.accent, solid: true)
             .contentShape(Rectangle())
         }
         .buttonStyle(PressStyle())
@@ -282,14 +291,18 @@ extension View {
     func card(radius: CGFloat = 12) -> some View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
         return background {
-            if Theme.keycap {
+            if Theme.pixel {
+                PixelWell(fill: Pixel.card, edge: Pixel.edge, shade: nil)
+            } else if Theme.keycap {
                 shape.fill(LinearGradient(colors: [Color(white: 0.105), Color(white: 0.08)], startPoint: .top, endPoint: .bottom))
             } else {
                 shape.fill(Theme.surface)
             }
         }
         .overlay {
-            if Theme.keycap {
+            if Theme.pixel {
+                EmptyView()
+            } else if Theme.keycap {
                 shape.strokeBorder(LinearGradient(colors: [.white.opacity(0.09), .white.opacity(0.04), .black.opacity(0.5)],
                                                   startPoint: .top, endPoint: .bottom), lineWidth: 1)
             } else {
@@ -315,8 +328,8 @@ struct Panel<Content: View>: View {
         }
         .padding(11)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.surface))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Theme.stroke))
+        .background(RoundedRectangle(cornerRadius: Theme.round(12), style: .continuous).fill(Theme.surface))
+        .overlay(RoundedRectangle(cornerRadius: Theme.round(12), style: .continuous).strokeBorder(Theme.stroke))
     }
 }
 
@@ -499,6 +512,10 @@ extension Font {
     }
 
     static func app(size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        // Silkscreen is wide: smaller, and only where text is big enough to stay readable.
+        if Theme.pixel && size >= 14 {
+            return .custom("Silkscreen-Regular", size: (size * 0.85).rounded())
+        }
         guard let prefix = Theme.font.prefix else { return .system(size: size, weight: weight) }
         let face = switch weight {
         case .bold, .heavy, .black: "Bold"
@@ -534,7 +551,7 @@ struct SearchField: View {
         }
         .padding(.horizontal, 10)
         .frame(height: 26)
-        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.ink.opacity(0.06)))
+        .background(RoundedRectangle(cornerRadius: Theme.round(8), style: .continuous).fill(Theme.ink.opacity(0.06)))
     }
 }
 
@@ -583,12 +600,14 @@ struct Segmented: View {
                             if selected {
                                 Group {
                                     if Theme.keycap {
-                                        KeyFace(shape: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                                        KeyFace(shape: RoundedRectangle(cornerRadius: Theme.round(6), style: .continuous))
+                                    } else if Theme.pixel {
+                                        PixelFace()
                                     } else {
-                                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                        RoundedRectangle(cornerRadius: Theme.round(6), style: .continuous)
                                             .fill(Theme.thumb)
                                             .shadow(color: .black.opacity(0.12), radius: 1, y: 0.5)
-                                            .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(Theme.stroke, lineWidth: 0.5))
+                                            .overlay(RoundedRectangle(cornerRadius: Theme.round(6), style: .continuous).strokeBorder(Theme.stroke, lineWidth: 0.5))
                                     }
                                 }
                                 .matchedGeometryEffect(id: "thumb", in: thumb)
@@ -602,9 +621,11 @@ struct Segmented: View {
         .padding(2)
         .background {
             if Theme.keycap {
-                KeyWell(shape: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                KeyWell(shape: RoundedRectangle(cornerRadius: Theme.round(8), style: .continuous))
+            } else if Theme.pixel {
+                PixelWell()
             } else {
-                RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.ink.opacity(0.055))
+                RoundedRectangle(cornerRadius: Theme.round(8), style: .continuous).fill(Theme.ink.opacity(0.055))
             }
         }
     }
@@ -661,7 +682,12 @@ struct AccentSwitchStyle: ToggleStyle {
     func makeBody(configuration: Configuration) -> some View {
         Button { configuration.isOn.toggle() } label: {
             Group {
-                if Theme.keycap {
+                if Theme.pixel {
+                    ZStack {
+                        PixelWell()
+                        Theme.accent.padding(Pixel.step * 2).opacity(configuration.isOn ? 1 : 0)
+                    }
+                } else if Theme.keycap {
                     // The track is a well, lit with the accent when on; the knob is a little white key.
                     ZStack {
                         KeyWell(shape: Capsule())
@@ -676,7 +702,9 @@ struct AccentSwitchStyle: ToggleStyle {
                 .frame(width: 30, height: 18)
                 .overlay(alignment: configuration.isOn ? .trailing : .leading) {
                     Group {
-                        if Theme.keycap {
+                        if Theme.pixel {
+                            PixelFace(base: Color(white: 0.93))
+                        } else if Theme.keycap {
                             KeyFace(shape: Circle(), base: Color(white: 0.93))
                         } else {
                             Circle().fill(.white).shadow(color: .black.opacity(0.25), radius: 1, y: 1)
@@ -721,7 +749,7 @@ struct ShortcutRecorder: View {
                 .padding(.horizontal, 10)
                 .frame(minWidth: 70)
                 .frame(height: 22)
-                .buttonFace(RoundedRectangle(cornerRadius: 7, style: .continuous), Theme.ink.opacity(recording ? 0.14 : 0.08))
+                .buttonFace(RoundedRectangle(cornerRadius: Theme.round(7), style: .continuous), Theme.ink.opacity(recording ? 0.14 : 0.08))
         }
         .buttonStyle(PressStyle())
         .onDisappear { stop() }
@@ -764,5 +792,87 @@ struct ShortcutRecorder: View {
             109: "F10", 103: "F11", 111: "F12",
         ]
         return named[event.keyCode] ?? (event.charactersIgnoringModifiers ?? "?").uppercased()
+    }
+}
+
+// The Pixel theme's palette, from the 8-bit design: ink-blue greys under the app's own text colors.
+enum Pixel {
+    static let step: CGFloat = 2
+    static let background = Color(red: 0.043, green: 0.043, blue: 0.051)
+    static let card = Color(red: 0.102, green: 0.102, blue: 0.141)
+    static let edge = Color(red: 0.227, green: 0.227, blue: 0.322)
+    static let well = Color(red: 0.059, green: 0.059, blue: 0.086)
+    static let pit = Color(red: 0.027, green: 0.027, blue: 0.043)
+}
+
+// A rectangle with each corner pixel knocked out, the way 8-bit games draw a box.
+struct PixelRect: InsettableShape {
+    var step = Pixel.step
+    var inset: CGFloat = 0
+
+    func path(in rect: CGRect) -> Path {
+        let r = rect.insetBy(dx: inset, dy: inset), s = step
+        return Path { p in
+            p.addLines([
+                CGPoint(x: r.minX + s, y: r.minY), CGPoint(x: r.maxX - s, y: r.minY), CGPoint(x: r.maxX - s, y: r.minY + s),
+                CGPoint(x: r.maxX, y: r.minY + s), CGPoint(x: r.maxX, y: r.maxY - s), CGPoint(x: r.maxX - s, y: r.maxY - s),
+                CGPoint(x: r.maxX - s, y: r.maxY), CGPoint(x: r.minX + s, y: r.maxY), CGPoint(x: r.minX + s, y: r.maxY - s),
+                CGPoint(x: r.minX, y: r.maxY - s), CGPoint(x: r.minX, y: r.minY + s), CGPoint(x: r.minX + s, y: r.minY + s),
+            ])
+            p.closeSubpath()
+        }
+    }
+
+    func inset(by amount: CGFloat) -> PixelRect {
+        var copy = self
+        copy.inset += amount
+        return copy
+    }
+}
+
+// An 8-bit button: a dark outline, then a hard bevel, light along the top and left, dark along the bottom and right.
+// A solid one takes its color (the accent); a plain one is slate with an optional tint.
+struct PixelFace: View {
+    var base: Color?
+    var tint: Color?
+    var lit = false
+
+    var body: some View {
+        let face = base ?? Pixel.edge
+        let light = base.map { $0.blend(.white, 0.4) } ?? Color(red: 0.333, green: 0.333, blue: 0.478)
+        let dark = base.map { $0.blend(.black, 0.35) } ?? Color(red: 0.149, green: 0.149, blue: 0.227)
+        let s = Pixel.step
+        ZStack {
+            PixelRect().fill(Color.black)
+            ZStack(alignment: .topLeading) {
+                dark
+                light.padding(.trailing, s).padding(.bottom, s)
+                face.overlay(tint ?? .clear).padding(s)
+            }
+            .padding(s)
+        }
+        .brightness(lit ? 0.05 : 0)
+    }
+}
+
+// A sunken 8-bit box: an outline, a dark floor and a shadow along its top and left. Cards use it without the shadow.
+struct PixelWell: View {
+    var fill = Pixel.well
+    var edge = Pixel.edge
+    var shade: Color? = Pixel.pit
+
+    var body: some View {
+        let s = Pixel.step
+        ZStack(alignment: .topLeading) {
+            PixelRect().fill(edge)
+            ZStack(alignment: .topLeading) {
+                fill
+                if let shade {
+                    shade.frame(height: s).frame(maxWidth: .infinity)
+                    shade.frame(width: s).frame(maxHeight: .infinity)
+                }
+            }
+            .padding(s)
+        }
     }
 }

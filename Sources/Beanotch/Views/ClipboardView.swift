@@ -46,7 +46,7 @@ private struct HistoryView: View {
                 }
                 .padding(.horizontal, 10)
                 .frame(height: 26)
-                .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.ink.opacity(0.06)))
+                .background(RoundedRectangle(cornerRadius: Theme.round(8), style: .continuous).fill(Theme.ink.opacity(0.06)))
                 Pill(text: "\(clipboard.entries.count) items")
                 PillButton(text: "Clear") { clipboard.clear() }
             }
@@ -134,7 +134,7 @@ private struct HistoryView: View {
         }
         .padding(.horizontal, 10)
         .frame(height: 32)
-        .background(RoundedRectangle(cornerRadius: 8, style: .continuous)
+        .background(RoundedRectangle(cornerRadius: Theme.round(8), style: .continuous)
             .fill(active ? Theme.accent.opacity(0.14) : Theme.ink.opacity(entry.pinned ? 0.08 : 0.045)))
         .contentShape(Rectangle())
         .onTapGesture {
@@ -266,7 +266,7 @@ struct AIResultCard: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.background))
+        .background(RoundedRectangle(cornerRadius: Theme.round(12), style: .continuous).fill(Theme.background))
         .card()
         .shadow(color: .black.opacity(0.25), radius: 14, y: 6)
     }

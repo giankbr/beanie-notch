@@ -105,7 +105,7 @@ struct SettingsView: View {
             }
             .padding(.horizontal, 8)
             .frame(height: settings.size == .mini ? 18 : 21)
-            .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(active ? Theme.ink.opacity(0.08) : .clear))
+            .background(RoundedRectangle(cornerRadius: Theme.round(7), style: .continuous).fill(active ? Theme.ink.opacity(0.08) : .clear))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -446,8 +446,8 @@ struct SettingsView: View {
                 preview()
                     .frame(maxWidth: .infinity)
                     .frame(height: 40)
-                    .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.round(7), style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: Theme.round(7), style: .continuous)
                         .strokeBorder(selected ? Theme.accent : Theme.stroke, lineWidth: selected ? 1.5 : 1))
                 Text(title).font(.app(size: 9.5, weight: selected ? .semibold : .regular))
                     .foregroundStyle(selected ? Theme.ink : Theme.dim).lineLimit(1)
@@ -471,9 +471,9 @@ struct SettingsView: View {
 
     private func card(@ViewBuilder _ rows: () -> some View) -> some View {
         VStack(spacing: 0) { rows() }
-            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.surface))
-            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Theme.stroke))
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .background(RoundedRectangle(cornerRadius: Theme.round(12), style: .continuous).fill(Theme.surface))
+            .overlay(RoundedRectangle(cornerRadius: Theme.round(12), style: .continuous).strokeBorder(Theme.stroke))
+            .clipShape(RoundedRectangle(cornerRadius: Theme.round(12), style: .continuous))
     }
 
     private func row(_ icon: String, _ title: String, _ caption: String,
@@ -518,8 +518,13 @@ private struct ThemeSwatch: View {
                 case .keycap:
                     ZStack(alignment: .bottomTrailing) {
                         dark
-                        KeyFace(shape: RoundedRectangle(cornerRadius: 4, style: .continuous), base: Theme.accent)
+                        KeyFace(shape: RoundedRectangle(cornerRadius: Theme.round(4), style: .continuous), base: Theme.accent)
                             .frame(width: 22, height: 12).padding(6)
+                    }
+                case .pixel:
+                    ZStack(alignment: .bottomTrailing) {
+                        Pixel.card
+                        PixelFace(base: Theme.accent).frame(width: 22, height: 12).padding(6)
                     }
                 case .glass:
                     LinearGradient(colors: [Color(red: 0.45, green: 0.55, blue: 0.85), Color(red: 0.75, green: 0.5, blue: 0.7)],

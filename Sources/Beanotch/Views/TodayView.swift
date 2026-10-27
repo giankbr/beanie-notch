@@ -73,7 +73,7 @@ private struct RatesPanel: View {
         .padding(.horizontal, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(height: 40)
-        .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(tint.opacity(0.06)))
+        .background(RoundedRectangle(cornerRadius: Theme.round(9), style: .continuous).fill(tint.opacity(0.06)))
     }
 }
 
@@ -159,7 +159,7 @@ private struct TasksPanel: View {
             }
             .padding(.horizontal, 10)
             .frame(height: 26)
-            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.ink.opacity(0.06)))
+            .background(RoundedRectangle(cornerRadius: Theme.round(8), style: .continuous).fill(Theme.ink.opacity(0.06)))
 
             if tasks.items.isEmpty {
                 Text("Type a task above and press Return").font(.app(size: 9.5)).foregroundStyle(Theme.faint).padding(.top, 2)
@@ -222,7 +222,7 @@ private struct CalendarPanel: View {
                 }
             }
             .padding(10)
-            .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Theme.ink.opacity(0.04)))
+            .background(RoundedRectangle(cornerRadius: Theme.round(9), style: .continuous).fill(Theme.ink.opacity(0.04)))
         } else if calendar.items.isEmpty {
             Text("Nothing in the next 24 hours").font(.app(size: 10)).foregroundStyle(Theme.faint).padding(.top, 2)
         } else {

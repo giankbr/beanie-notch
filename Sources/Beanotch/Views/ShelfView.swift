@@ -29,12 +29,12 @@ struct ShelfView: View {
                 PhoneDropPanel()
             } else {
             ZStack {
-                RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.ink.opacity(0.04))
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: Theme.round(14), style: .continuous).fill(Theme.ink.opacity(0.04))
+                RoundedRectangle(cornerRadius: Theme.round(14), style: .continuous)
                     .strokeBorder(model.dropTargeted ? Theme.accent : Theme.stroke,
                                   style: StrokeStyle(lineWidth: model.dropTargeted ? 1.5 : 1, dash: model.dropTargeted ? [5, 4] : []))
                 if model.dropTargeted {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.accent.opacity(0.08))
+                    RoundedRectangle(cornerRadius: Theme.round(14), style: .continuous).fill(Theme.accent.opacity(0.08))
                 }
                 if shelf.items.isEmpty {
                     VStack(spacing: 6) {
@@ -83,7 +83,7 @@ private struct ShelfTile: View {
             FileThumb(url: url)
                 .frame(height: 62)
                 .frame(maxWidth: .infinity)
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .clipShape(RoundedRectangle(cornerRadius: Theme.round(8), style: .continuous))
                 .overlay(alignment: .topLeading) {
                     if !url.pathExtension.isEmpty {
                         Pill(text: url.pathExtension.uppercased(), color: .white).padding(4)
@@ -105,8 +105,8 @@ private struct ShelfTile: View {
             }
         }
         .padding(7)
-        .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(Theme.surface))
-        .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(Theme.stroke))
+        .background(RoundedRectangle(cornerRadius: Theme.round(11), style: .continuous).fill(Theme.surface))
+        .overlay(RoundedRectangle(cornerRadius: Theme.round(11), style: .continuous).strokeBorder(Theme.stroke))
         .onDrag { NSItemProvider(contentsOf: url) ?? NSItemProvider() }
     }
 }
@@ -128,7 +128,7 @@ private struct ShelfRow: View {
             IconButton(icon: "xmark") { shelf.remove(url) }
         }
         .padding(6)
-        .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Theme.ink.opacity(0.05)))
+        .background(RoundedRectangle(cornerRadius: Theme.round(9), style: .continuous).fill(Theme.ink.opacity(0.05)))
         .onDrag { NSItemProvider(contentsOf: url) ?? NSItemProvider() }
     }
 }
@@ -163,7 +163,7 @@ private struct PhoneDropPanel: View {
     var body: some View {
         HStack(spacing: 18) {
             ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.white)
+                RoundedRectangle(cornerRadius: Theme.round(12), style: .continuous).fill(.white)
                 if let qr = drop.qr {
                     Image(nsImage: qr).interpolation(.none).resizable().padding(8)
                 } else {
@@ -190,8 +190,8 @@ private struct PhoneDropPanel: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.surface))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.stroke))
+        .background(RoundedRectangle(cornerRadius: Theme.round(14), style: .continuous).fill(Theme.surface))
+        .overlay(RoundedRectangle(cornerRadius: Theme.round(14), style: .continuous).strokeBorder(Theme.stroke))
         .onAppear {
             drop.offered = shelf.items.filter { !$0.hasDirectoryPath }
             drop.start()
@@ -210,7 +210,7 @@ private struct DropTargets: View {
         GeometryReader { geo in
             let side = geo.size.width * 0.3
             ZStack {
-                RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.background)
+                RoundedRectangle(cornerRadius: Theme.round(14), style: .continuous).fill(Theme.background)
                 HStack(spacing: 0) {
                     zone(icon: "sparkles", title: "Ask AI", caption: "Summarize, translate, read", color: Theme.accent, on: model.dropToAI)
                         .frame(width: side)
@@ -242,8 +242,8 @@ private struct DropTargets: View {
         }
         .foregroundStyle(on ? color : Theme.dim)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(color.opacity(on ? 0.22 : 0.08)))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+        .background(RoundedRectangle(cornerRadius: Theme.round(12), style: .continuous).fill(color.opacity(on ? 0.22 : 0.08)))
+        .overlay(RoundedRectangle(cornerRadius: Theme.round(12), style: .continuous)
             .strokeBorder(color.opacity(on ? 0.9 : 0.35), style: StrokeStyle(lineWidth: 1, dash: [5, 4])))
         .padding(6)
     }

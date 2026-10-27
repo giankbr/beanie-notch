@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 enum ThemeMode: String, CaseIterable {
-    case system, light, dark, midnight, glass, keycap
+    case system, light, dark, midnight, glass, keycap, pixel
 
     var title: String { rawValue.capitalized }
 
@@ -10,7 +10,7 @@ enum ThemeMode: String, CaseIterable {
         switch self {
         case .system: nil
         case .light: NSAppearance(named: .aqua)
-        case .dark, .midnight, .glass, .keycap: NSAppearance(named: .darkAqua)
+        case .dark, .midnight, .glass, .keycap, .pixel: NSAppearance(named: .darkAqua)
         }
     }
 }

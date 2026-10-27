@@ -64,8 +64,8 @@ private struct ToggleRow: View {
             }
             .padding(settings.size == .compact ? 7 : 9)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(on ? color.opacity(0.13) : Theme.surface))
-            .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).strokeBorder(on ? color.opacity(0.5) : Theme.stroke))
+            .background(RoundedRectangle(cornerRadius: Theme.round(11), style: .continuous).fill(on ? color.opacity(0.13) : Theme.surface))
+            .overlay(RoundedRectangle(cornerRadius: Theme.round(11), style: .continuous).strokeBorder(on ? color.opacity(0.5) : Theme.stroke))
             .contentShape(Rectangle())
             .animation(.easeOut(duration: 0.15), value: on)
         }
@@ -173,7 +173,7 @@ private struct ShortcutsCard: View {
             }
             .padding(.horizontal, 8)
             .frame(height: 22)
-            .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(Theme.ink.opacity(0.06)))
+            .background(RoundedRectangle(cornerRadius: Theme.round(7), style: .continuous).fill(Theme.ink.opacity(0.06)))
             if !shortcuts.loaded {
                 LoadingView(text: "Loading shortcuts…")
             } else if shortcuts.names.isEmpty {
@@ -198,7 +198,7 @@ private struct ShortcutsCard: View {
                                 }
                                 .padding(.horizontal, 6)
                                 .frame(height: 22)
-                                .buttonFace(RoundedRectangle(cornerRadius: 6, style: .continuous), Theme.ink.opacity(0.05), quiet: true)
+                                .buttonFace(RoundedRectangle(cornerRadius: Theme.round(6), style: .continuous), Theme.ink.opacity(0.05), quiet: true)
                                 .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)

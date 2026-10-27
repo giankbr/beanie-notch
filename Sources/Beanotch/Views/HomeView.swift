@@ -61,8 +61,8 @@ private struct StatStrip: View {
             cell("Disk", color: Theme.level(stats.disk), value: "\(Int(stats.disk * 100))%",
                  caption: stats.diskFree > 0 ? "\(formatBytes(stats.diskFree)) free" : "used")
         }
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.surface))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Theme.stroke))
+        .background(RoundedRectangle(cornerRadius: Theme.round(12), style: .continuous).fill(Theme.surface))
+        .overlay(RoundedRectangle(cornerRadius: Theme.round(12), style: .continuous).strokeBorder(Theme.stroke))
     }
 
     private var divider: some View {
@@ -142,8 +142,8 @@ private struct CleanupCard: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.surface))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Theme.stroke))
+        .background(RoundedRectangle(cornerRadius: Theme.round(12), style: .continuous).fill(Theme.surface))
+        .overlay(RoundedRectangle(cornerRadius: Theme.round(12), style: .continuous).strokeBorder(Theme.stroke))
     }
 
     private func row(bar: Color, title: String, tag: String?, tagColor: Color, detail: String, figure: String?,
@@ -164,7 +164,7 @@ private struct CleanupCard: View {
                     .fixedSize()
                     .padding(.horizontal, 7)
                     .frame(height: 20)
-                    .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Theme.ink.opacity(0.06)))
+                    .background(RoundedRectangle(cornerRadius: Theme.round(6), style: .continuous).fill(Theme.ink.opacity(0.06)))
             }
             if busy {
                 ProgressView().controlSize(.small).frame(width: 52)
@@ -204,8 +204,8 @@ private struct QuickSettingsCard: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.surface))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Theme.stroke))
+        .background(RoundedRectangle(cornerRadius: Theme.round(12), style: .continuous).fill(Theme.surface))
+        .overlay(RoundedRectangle(cornerRadius: Theme.round(12), style: .continuous).strokeBorder(Theme.stroke))
     }
 
     private func toggle(_ title: String, _ detail: String, _ isOn: Binding<Bool>) -> some View {
