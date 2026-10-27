@@ -13,6 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.454.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
 <style>
 :root {
   --bg: #FAFAF8; --surface: #FFFFFF; --surface-2: #EEEEEB; --inner: #F5F5F2; --border: #E3E3DF; --border-strong: #CFCFCA;
@@ -42,6 +43,9 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
 body { margin: 0; background: var(--bg); color: var(--text-1); font-family: var(--font); -webkit-font-smoothing: antialiased; transition: background .25s, color .25s; }
 img { display: block; max-width: 100%; }
 a { color: inherit; text-decoration: none; }
@@ -126,6 +130,7 @@ h2 em { font-style: normal; color: var(--title-2); display: block; }
 .mini { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
 .mini h3 { margin: 0; font-size: 19px; font-weight: 600; }
 .mini .ui { background: var(--inner); border: 1px solid var(--border); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-height: 196px; font-size: 13.5px; }
+.mini .ui-shot { width: 100%; height: auto; border-radius: 14px; border: 1px solid var(--border); background: #0F0F10; }
 .drop { border: 1px solid var(--border-strong); border-radius: 12px; background: var(--surface-2); padding: 14px; text-align: center; font-weight: 500; }
 .drop small { display: block; color: var(--text-3); font-size: 11.5px; margin-top: 4px; font-weight: 400; }
 .drop b { color: var(--accent); font-weight: 500; }
@@ -449,30 +454,17 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
       <div class="grid-3" style="margin-top:22px">
         <article class="card mini">
           <h3>Shelf</h3>
-          <div class="ui">
-            <div class="drop"><i data-lucide="upload" style="margin:0 auto 6px;display:block"></i>Drop on the notch or <b>AirDrop</b><small>Right third sends by AirDrop</small></div>
-            <div class="row"><i data-lucide="file-text" style="color:#E5484D"></i><div>Q3-Board-Report.pdf<small>4.2 MB</small></div><i data-lucide="x" class="r"></i></div>
-            <div class="row"><i data-lucide="image" style="color:#8E4EC6"></i><div>Screenshot 09.41.png<small>3.6 MB</small></div><i data-lucide="x" class="r"></i></div>
-          </div>
+          <img class="ui-shot" src="landing-page-assets/also-shelf.webp" alt="Beanie Shelf with files kept at hand" width="1160" height="600" loading="lazy">
           <p>Drop files on the notch, drag them out later. Right third sends by AirDrop. Screenshots land here.</p>
         </article>
         <article class="card mini">
           <h3>Clipboard</h3>
-          <div class="ui">
-            <div class="chip"><i data-lucide="search"></i>invoice</div>
-            <div class="row"><i data-lucide="type"></i>INV-2026-0142 · Rp 4.800.000<span class="r">2m</span></div>
-            <div class="row"><i data-lucide="image"></i>invoice_oct.png (OCR)<span class="r">1h</span></div>
-            <div class="row"><i data-lucide="pin" style="color:var(--accent)"></i>Invoice terms — net 14<span class="r">Pinned</span></div>
-          </div>
+          <img class="ui-shot" src="landing-page-assets/also-clipboard.webp" alt="Beanie clipboard history with a pinned item" width="1160" height="600" loading="lazy">
           <p>Text, image and file history with fuzzy search and on-device OCR. Passwords are skipped.</p>
         </article>
         <article class="card mini">
           <h3>Tools</h3>
-          <div class="ui">
-            <div class="app-row"><span class="ico"><i data-lucide="box"></i></span><div><strong>OldEditor.app</strong><small style="display:block;color:var(--text-3);font-size:11.5px">14 leftovers found</small></div><span class="size">2.3 GB</span></div>
-            <div class="row"><i data-lucide="folder"></i>~/Library/Caches/oldeditor<span class="r">1.9 GB</span></div>
-            <div class="row"><i data-lucide="folder"></i>~/Library/Application Support<span class="r">412 MB</span></div>
-          </div>
+          <img class="ui-shot" src="landing-page-assets/also-tools.webp" alt="Beanie uninstaller showing an app and its leftovers" width="1160" height="600" loading="lazy">
           <p>An uninstaller that finds the leftovers, a large-file finder and a camera mirror. Nothing is recorded.</p>
         </article>
       </div>
@@ -843,6 +835,24 @@ nav.scrolled { box-shadow: 0 1px 0 var(--border); }
   frame();
 
   if (window.lucide) lucide.createIcons();
+})();
+
+// Smooth, eased wheel scrolling; anchor links glide to their section below the sticky nav.
+(function () {
+  if (!window.Lenis || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var lenis = new Lenis({ duration: 1.15, easing: function (t) { return Math.min(1, 1.001 - Math.pow(2, -10 * t)); } });
+  function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+  requestAnimationFrame(raf);
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    var id = a.getAttribute("href"), target = id === "#" ? 0 : document.querySelector(id);
+    if (target === null) return;
+    e.preventDefault();
+    var nav = document.querySelector("nav");
+    lenis.scrollTo(target, { offset: target === 0 ? 0 : -((nav ? nav.offsetHeight : 0) + 12) });
+    if (id !== "#") history.replaceState(null, "", id);
+  });
 })();
 </script>
 </body>
