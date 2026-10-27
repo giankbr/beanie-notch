@@ -123,6 +123,7 @@ final class AppModel: ObservableObject {
     let claude = ClaudeBridge()
     let devRuns = DevRuns()
     let meeting = MeetingWatcher()
+    let ambient = Ambient()
     // Set by the controller: opens the panel and keeps it open (a permission request is waiting).
     var openPanel: (() -> Void)?
     private let volumeWatcher = VolumeWatcher()
@@ -202,6 +203,11 @@ final class AppModel: ObservableObject {
             self?.show(Notice(icon: "arrow.down.circle.fill", color: Theme.accent, left: "Downloaded", right: url.lastPathComponent))
         }
         settings.$downloadsInNotch.sink { [weak self] on in self?.downloads.setEnabled(on) }.store(in: &sinks)
+        // The focus sound plays through focus stretches only: not on breaks, and not while paused.
+        focus.$endDate.combineLatest(focus.$phase, settings.$focusSound).sink { [weak self] end, phase, name in
+            guard let self else { return }
+            if end != nil, phase == .focus, let sound = Ambient.Sound(rawValue: name) { ambient.play(sound) } else { ambient.stop() }
+        }.store(in: &sinks)
         settings.$meetingMode.sink { [weak self] on in self?.meeting.setEnabled(on) }.store(in: &sinks)
         meeting.onEnd = { [weak self] length in
             guard let self else { return }

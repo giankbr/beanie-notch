@@ -231,6 +231,7 @@ private struct TimePanel: View {
 // when it ends, then the lengths and a jump between focus and a break. Focus burns orange to red, the break cools to blue.
 private struct FocusPage: View {
     @EnvironmentObject var focus: FocusTimer
+    @EnvironmentObject var settings: Settings
 
     private var resting: Bool { focus.phase == .rest }
 
@@ -280,6 +281,13 @@ private struct FocusPage: View {
                 ForEach(FocusTimer.presets.indices, id: \.self) { i in
                     let p = FocusTimer.presets[i]
                     Button("\(p.focus) min focus, \(p.rest) min break\(i == focus.preset ? "  ✓" : "")") { focus.choose(i) }
+                }
+                Divider()
+                Menu("Sound while focusing") {
+                    Button("None\(settings.focusSound.isEmpty ? "  ✓" : "")") { settings.focusSound = "" }
+                    ForEach(Ambient.Sound.allCases) { sound in
+                        Button("\(sound.title)\(settings.focusSound == sound.rawValue ? "  ✓" : "")") { settings.focusSound = sound.rawValue }
+                    }
                 }
                 Divider()
                 Button("Reset") { focus.reset() }
