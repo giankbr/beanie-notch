@@ -53,7 +53,7 @@ public sealed class Shell
         var header = Columns(8, (H(8, title, date), 1), (pills, null));
         header.Height = S(26);
 
-        host = new Grid();
+        host = new Grid { ChildrenTransitions = Arrive() };
         var right = Rows(8, (header, null), (host, 1));
         var layout = Columns(12, (side, null), (right, 1));
         layout.Padding = new Thickness(S(12), S(10), S(12), S(12));

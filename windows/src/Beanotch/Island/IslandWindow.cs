@@ -9,6 +9,7 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.Graphics;
 using Windows.Storage;
 using Windows.UI.ViewManagement;
+using static Beanotch.Ui.Ui;
 
 namespace Beanotch.Island;
 
@@ -19,8 +20,15 @@ public sealed partial class IslandWindow : Window
     // Mac points; scaled by Ui.K and then by the monitor's DPI.
     // Mac points, as in the Mac app: the closed notch, the open panel, and the shoulders where the notch meets the top
     // edge of the screen.
-    private const double ClosedHeight = 30, ClosedRadius = 10, ClosedEar = 6, OpenWidth = 680, OpenHeight = 336, OpenRadius = 22,
-                         OpenEar = 14;
+    private const double ClosedHeight = 30, ClosedRadius = 10, ClosedEar = 6, OpenRadius = 22, OpenEar = 14;
+
+    // The open panel at each size, a little taller than the Mac's since Windows sets text larger.
+    private (double Width, double Height) Open => model.Settings.Size switch
+    {
+        PanelSize.Compact => (600, 300),
+        PanelSize.Large => (780, 390),
+        _ => (680, 336),
+    };
 
     private readonly Model model;
     private readonly nint hwnd;
@@ -62,6 +70,7 @@ public sealed partial class IslandWindow : Window
         presenter.IsMinimizable = false;
         presenter.SetBorderAndTitleBar(false, false);
         AppWindow.SetPresenter(presenter);
+        Native.Frameless(hwnd);
         AppWindow.IsShownInSwitchers = false;
         AppWindow.Title = "Beanotch";
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "Beanotch.ico"));
@@ -122,27 +131,11 @@ public sealed partial class IslandWindow : Window
         root.RequestedTheme = Theme.Dark ? ElementTheme.Dark : ElementTheme.Light;
         root.Background = Theme.Brush(model.Expanded ? Theme.Background : Theme.Black);
         ShowScanlines();
+        if (model.Expanded) Place(Open.Width, Open.Height, OpenRadius, OpenEar);
     }
 
     // The Retro theme's CRT lines: a dark rule every third pixel over the open panel, never in the way of the pointer.
-    private static Border Scanlines() => new()
-    {
-        IsHitTestVisible = false,
-        Background = new Microsoft.UI.Xaml.Media.LinearGradientBrush
-        {
-            MappingMode = Microsoft.UI.Xaml.Media.BrushMappingMode.Absolute,
-            SpreadMethod = Microsoft.UI.Xaml.Media.GradientSpreadMethod.Repeat,
-            StartPoint = new Windows.Foundation.Point(0, 0),
-            EndPoint = new Windows.Foundation.Point(0, 3),
-            GradientStops =
-            {
-                new() { Color = Theme.Rgb(0, 0, 0, 0), Offset = 0 },
-                new() { Color = Theme.Rgb(0, 0, 0, 0), Offset = 0.66 },
-                new() { Color = Theme.Rgb(0, 0, 0, 0.22), Offset = 0.66 },
-                new() { Color = Theme.Rgb(0, 0, 0, 0.22), Offset = 1 },
-            },
-        },
-    };
+    private static Border Scanlines() => new() { IsHitTestVisible = false, Background = Ui.Ui.Scanlines() };
 
     private void ShowScanlines() =>
         scanlines.Visibility = model.Expanded && Theme.Retro is not null ? Visibility.Visible : Visibility.Collapsed;
@@ -168,7 +161,8 @@ public sealed partial class IslandWindow : Window
         root.Background = Theme.Brush(Theme.Background);
         ShowScanlines();
         shell.Shown();
-        Place(OpenWidth, OpenHeight, OpenRadius, OpenEar);
+        Place(Open.Width, Open.Height, OpenRadius, OpenEar);
+        FadeIn(shell.View);
     }
 
     private void Collapse()
@@ -185,6 +179,7 @@ public sealed partial class IslandWindow : Window
         root.Background = Theme.Brush(Theme.Black);
         ShowScanlines();
         Update();
+        FadeIn(closed.View, 3);
     }
 
     // Always hangs from the very top of the screen, centred, like the MacBook notch. The panel narrows on small screens

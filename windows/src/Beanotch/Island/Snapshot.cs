@@ -74,6 +74,14 @@ public sealed partial class IslandWindow
         }
 
         model.Settings.Font = AppFont.System;
+        foreach (var size in new[] { PanelSize.Compact, PanelSize.Large })
+        {
+            model.Settings.Size = size;
+            shell.Rebuild();
+            shell.Open(Tab.Home);
+            await Shot($"{index++:00}-size-{size.ToString().ToLowerInvariant()}");
+        }
+        model.Settings.Size = PanelSize.Regular;
         model.Settings.Theme = ThemeMode.Retro;
         foreach (var (phosphor, tab) in new[] { (Phosphor.Green, Tab.Home), (Phosphor.Green, Tab.Settings), (Phosphor.Amber, Tab.Today), (Phosphor.Amber, Tab.Prayer) })
         {

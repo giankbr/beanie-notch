@@ -4,6 +4,7 @@ using Beanotch.Ui;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Windows.UI;
 using static Beanotch.Ui.Ui;
 
 namespace Beanotch.Pages;
@@ -14,14 +15,16 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
     private enum Section { Appearance, Pages, Island, Today, Prayer, System }
 
     private readonly StackPanel sections = V(1);
-    private readonly Grid content = new();
+    private readonly Grid content = new() { ChildrenTransitions = Arrive() };
+    private readonly Grid footer = new();
     private Section section = Section.Appearance;
 
     protected override FrameworkElement Build()
     {
         sections.Width = S(124);
+        footer.Width = S(124);
         var divider = new Border { Width = 1, Background = Theme.Brush(Theme.Stroke) };
-        return Columns(12, (sections, null), (divider, null), (content, 1));
+        return Columns(12, (Rows(0, (sections, 1), (footer, null)), null), (divider, null), (content, 1));
     }
 
     public override void Refresh()
@@ -44,9 +47,15 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
             b.HorizontalAlignment = HorizontalAlignment.Stretch;
             sections.Children.Add(b);
         }
+        // Quit sits under the sections, as on the Mac, so it's never more than a click away.
         var version = Text($"Beanotch {updater.Current}", 8.5, Theme.Faint, mono: true);
-        version.Margin = new Thickness(S(8), S(8), 0, 0);
-        sections.Children.Add(version);
+        var quit = IconButton(Glyphs.Power, () => Application.Current.Exit(), 10, Theme.Red, "Quit Beanotch", 22);
+        footer.Children.Clear();
+        var bottom = Columns(4, (version, 1), (quit, null));
+        bottom.Padding = new Thickness(S(8), S(6), S(2), 0);
+        bottom.BorderBrush = Theme.Brush(Theme.Stroke);
+        bottom.BorderThickness = new Thickness(0, 1, 0, 0);
+        footer.Children.Add(bottom);
 
         content.Children.Clear();
         FrameworkElement page = section switch
@@ -87,27 +96,106 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
 
     private FrameworkElement Appearance()
     {
-        var theme = Segmented(["System", "Light", "Dark", "Retro"], (int)S0.Theme, i => { S0.Theme = (ThemeMode)i; Save(rebuild: true); });
-        var swatches = H(4);
-        foreach (var accent in Enum.GetValues<AccentChoice>())
+        var themes = Cells(Enum.GetValues<ThemeMode>().Select(mode =>
+            Choice(mode.ToString(), S0.Theme == mode, ThemeSwatch(mode), () => { S0.Theme = mode; Save(rebuild: true); })));
+
+        UIElement tint;
+        if (S0.Theme == ThemeMode.Retro)
         {
-            var on = S0.Accent == accent;
-            var dot = new Border
-            {
-                Width = S(14), Height = S(14), CornerRadius = new CornerRadius(S(7)), Background = Theme.Brush(Theme.Primary(accent)),
-                BorderBrush = Theme.Brush(on ? Theme.Ink : Ui.Ui.Transparent), BorderThickness = new Thickness(on ? 2 : 0),
-            };
-            var b = Plain(new Grid { Width = S(22), Height = S(22), Children = { Center(dot) } }, () => { S0.Accent = accent; Save(rebuild: true); }, radius: 11,
-                          tip: accent.ToString());
-            swatches.Children.Add(b);
+            tint = Picker("Phosphor", "The screen's glow in the Retro theme; it stands in for the accent",
+                          Segmented(["Green", "Amber"], (int)S0.Phosphor, i => { S0.Phosphor = (Phosphor)i; Save(rebuild: true); }));
         }
-        var font = Segmented(["Segoe UI", "Be Vietnam", "Inter", "Jakarta"], (int)S0.Font, i => { S0.Font = (AppFont)i; Save(rebuild: true); });
-        var phosphor = Segmented(["Green", "Amber"], (int)S0.Phosphor, i => { S0.Phosphor = (Phosphor)i; Save(rebuild: true); });
-        var tint = S0.Theme == ThemeMode.Retro
-            ? Picker("Phosphor", "The screen's glow in the Retro theme; it stands in for the accent", phosphor)
-            : Picker("Accent", "Buttons, highlights and the mini player", swatches);
-        return V(8, Group(Picker("Theme", "The island itself always stays black", theme), tint,
-                          Picker("Font", "Segoe UI is Windows' own; the others ship with Beanotch, as on the Mac", font)));
+        else
+        {
+            var swatches = H(4);
+            foreach (var accent in Enum.GetValues<AccentChoice>())
+            {
+                var on = S0.Accent == accent;
+                var dot = new Border
+                {
+                    Width = S(14), Height = S(14), CornerRadius = new CornerRadius(S(7)), Background = Theme.Brush(Theme.Primary(accent)),
+                    BorderBrush = Theme.Brush(on ? Theme.Ink : Ui.Ui.Transparent), BorderThickness = new Thickness(on ? 2 : 0),
+                };
+                swatches.Children.Add(Plain(new Grid { Width = S(22), Height = S(22), Children = { Center(dot) } },
+                                            () => { S0.Accent = accent; Save(rebuild: true); }, radius: 11, tip: accent.ToString()));
+            }
+            tint = Picker("Accent", "Buttons, highlights and the mini player", swatches);
+        }
+
+        var size = Segmented(["Compact", "Regular", "Large"], (int)S0.Size, i => { S0.Size = (PanelSize)i; Save(rebuild: true); });
+        string[] fontNames = ["Segoe UI", "Be Vietnam", "Inter", "Jakarta"];
+        var fonts = Cells(Enum.GetValues<AppFont>().Select(font =>
+        {
+            var sample = Center(new TextBlock
+            {
+                Text = "Aa",
+                FontSize = S(17),
+                FontWeight = FontWeights.SemiBold,
+                FontFamily = FontFor(FontWeights.SemiBold, true, font),
+                Foreground = Theme.Brush(Theme.Ink),
+            });
+            var face = new Grid { Background = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.04)), Children = { sample } };
+            return Choice(fontNames[(int)font], S0.Font == font, face, () => { S0.Font = font; Save(rebuild: true); });
+        }));
+
+        return V(8,
+            Group(Picker("Theme", "The island itself always stays black", themes), tint),
+            Group(Row(null, "Panel size", "How big the island opens", size),
+                  Picker("Font", "Segoe UI is Windows' own; the others ship with Beanotch, as on the Mac", fonts)));
+    }
+
+    // A pick with a picture, like the Mac's: a small preview over its name, outlined in the accent when chosen.
+    private static Button Choice(string title, bool selected, FrameworkElement preview, Action pick)
+    {
+        var face = new Border
+        {
+            Height = S(40),
+            CornerRadius = new CornerRadius(S(7)),
+            BorderBrush = Theme.Brush(selected ? Theme.Accent : Theme.Stroke),
+            BorderThickness = new Thickness(selected ? 1.5 : 1),
+            Child = preview,
+        };
+        if (preview is Grid grid) grid.CornerRadius = new CornerRadius(S(6));
+        var label = Text(title, 9.5, selected ? Theme.Ink : Theme.Dim, selected ? FontWeights.SemiBold : FontWeights.Normal);
+        label.HorizontalAlignment = HorizontalAlignment.Center;
+        var b = Plain(V(5, face, label), pick, radius: 9, padding: new Thickness(S(2)));
+        b.HorizontalAlignment = HorizontalAlignment.Stretch;
+        return b;
+    }
+
+    private static Grid Cells(IEnumerable<UIElement> items) => Columns(6, [.. items.Select(i => ((UIElement?)i, (double?)1))]);
+
+    // The theme in miniature: its background, with the accent bar and two lines of text on top.
+    private static Grid ThemeSwatch(ThemeMode mode)
+    {
+        Color dark = Theme.Rgb(0.07, 0.07, 0.08), light = Theme.Rgb(0.95, 0.95, 0.94), green = Theme.Glow(Phosphor.Green);
+        var g = new Grid();
+        if (mode == ThemeMode.System)
+        {
+            g.ColumnDefinitions.Add(new ColumnDefinition());
+            g.ColumnDefinitions.Add(new ColumnDefinition());
+            var left = new Border { Background = Theme.Brush(light) };
+            var right = new Border { Background = Theme.Brush(dark) };
+            Grid.SetColumn(right, 1);
+            g.Children.Add(left);
+            g.Children.Add(right);
+        }
+        else g.Background = Theme.Brush(mode switch { ThemeMode.Light => light, ThemeMode.Retro => Theme.Rgb(0.02, 0.045, 0.03), _ => dark });
+
+        var retro = mode == ThemeMode.Retro;
+        Border Line(double width, double height, Color color) => new()
+        {
+            Width = S(width), Height = S(height), CornerRadius = new CornerRadius(S(height / 2)), Background = Theme.Brush(color),
+            HorizontalAlignment = HorizontalAlignment.Left,
+        };
+        var lines = V(3, Line(22, 4, retro ? green : Theme.Accent),
+                      Line(34, 3, retro ? Theme.WithAlpha(green, 0.5) : Theme.Rgb(0.5, 0.5, 0.5, 0.5)),
+                      Line(28, 3, retro ? Theme.WithAlpha(green, 0.35) : Theme.Rgb(0.5, 0.5, 0.5, 0.35)));
+        lines.Margin = new Thickness(S(7), S(7), 0, 0);
+        Grid.SetColumnSpan(lines, 2);
+        g.Children.Add(lines);
+        if (retro) g.Children.Add(new Border { Background = Scanlines(), IsHitTestVisible = false });
+        return g;
     }
 
     private FrameworkElement Pages()

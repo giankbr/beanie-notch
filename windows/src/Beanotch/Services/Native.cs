@@ -16,6 +16,34 @@ static partial class Native
     [LibraryImport("kernel32.dll")]
     internal static partial uint SetThreadExecutionState(uint flags);
 
+    [LibraryImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
+    private static partial nint GetWindowLongPtr(nint hwnd, int index);
+
+    [LibraryImport("user32.dll", EntryPoint = "SetWindowLongPtrW")]
+    private static partial nint SetWindowLongPtr(nint hwnd, int index, nint value);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool SetWindowPos(nint hwnd, nint after, int x, int y, int cx, int cy, uint flags);
+
+    [LibraryImport("dwmapi.dll")]
+    private static partial int DwmSetWindowAttribute(nint hwnd, int attribute, ref uint value, int size);
+
+    // A bare popup: no frame at all. With the title bar merely hidden, Windows 11 still rounds the corners and draws a
+    // hairline border, which lifts the notch off the top edge of the screen.
+    internal static void Frameless(nint hwnd)
+    {
+        const long caption = 0x00C00000, thickFrame = 0x00040000, sysMenu = 0x00080000, minBox = 0x00020000, maxBox = 0x00010000, popup = 0x80000000;
+        var style = (long)GetWindowLongPtr(hwnd, -16);
+        SetWindowLongPtr(hwnd, -16, (nint)((style & ~(caption | thickFrame | sysMenu | minBox | maxBox)) | popup));
+        var ex = (long)GetWindowLongPtr(hwnd, -20);
+        SetWindowLongPtr(hwnd, -20, (nint)(ex & ~(0x1L | 0x100L | 0x200L | 0x20000L))); // dialog frame, window, client and static edges
+        uint square = 1, noBorder = 0xFFFFFFFE;
+        DwmSetWindowAttribute(hwnd, 33, ref square, 4);   // DWMWA_WINDOW_CORNER_PREFERENCE = DWMWCP_DONOTROUND
+        DwmSetWindowAttribute(hwnd, 34, ref noBorder, 4); // DWMWA_BORDER_COLOR = DWMWA_COLOR_NONE
+        SetWindowPos(hwnd, 0, 0, 0, 0, 0, 0x0020 | 0x0002 | 0x0001 | 0x0004 | 0x0010); // FRAMECHANGED | NOMOVE | NOSIZE | NOZORDER | NOACTIVATE
+    }
+
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     private struct FileOperation
     {

@@ -2,7 +2,9 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Animation;
 using Windows.UI;
 using Windows.UI.Text;
 
@@ -24,10 +26,10 @@ public static class Ui
 
     // A bundled font is one file per weight. Regular and Bold carry the plain family name; Medium and SemiBold carry
     // their weight in it ("Inter SemiBold"), which is how Windows tells them apart.
-    public static FontFamily FontFor(FontWeight weight, bool display = false)
+    public static FontFamily FontFor(FontWeight weight, bool display = false, AppFont? only = null)
     {
-        if (Theme.Retro is not null) return Pixel;
-        var (file, family) = AppFont switch
+        if (only is null && Theme.Retro is not null) return Pixel;
+        var (file, family) = (only ?? AppFont) switch
         {
             AppFont.BeVietnam => ("BeVietnamPro", "Be Vietnam Pro"),
             AppFont.Inter => ("Inter", "Inter"),
@@ -233,6 +235,7 @@ public static class Ui
             Background = Theme.Brush(Theme.Rgb(1, 1, 1)),
             HorizontalAlignment = on ? HorizontalAlignment.Right : HorizontalAlignment.Left,
             Margin = new Thickness(S(2)),
+            Transitions = [new RepositionThemeTransition()],
         };
         var track = new Grid
         {
@@ -303,6 +306,44 @@ public static class Ui
         }
         return el;
     }
+
+    // Pages slide up a touch as they arrive, instead of popping in.
+    public static TransitionCollection Arrive() => [new EntranceThemeTransition { FromVerticalOffset = S(10), FromHorizontalOffset = 0 }];
+
+    // A short fade and drop, for the panel as it opens and the notch as it closes.
+    public static void FadeIn(UIElement el, float drop = 6)
+    {
+        ElementCompositionPreview.SetIsTranslationEnabled(el, true);
+        var visual = ElementCompositionPreview.GetElementVisual(el);
+        var c = visual.Compositor;
+        var ease = c.CreateCubicBezierEasingFunction(new System.Numerics.Vector2(0.2f, 0.8f), new System.Numerics.Vector2(0.2f, 1f));
+        var fade = c.CreateScalarKeyFrameAnimation();
+        fade.InsertKeyFrame(0, 0);
+        fade.InsertKeyFrame(1, 1, ease);
+        fade.Duration = TimeSpan.FromMilliseconds(220);
+        var move = c.CreateVector3KeyFrameAnimation();
+        move.InsertKeyFrame(0, new System.Numerics.Vector3(0, -drop, 0));
+        move.InsertKeyFrame(1, System.Numerics.Vector3.Zero, ease);
+        move.Duration = TimeSpan.FromMilliseconds(260);
+        visual.StartAnimation("Opacity", fade);
+        visual.StartAnimation("Translation", move);
+    }
+
+    // CRT lines for the Retro theme: a dark rule every third pixel.
+    public static LinearGradientBrush Scanlines() => new()
+    {
+        MappingMode = BrushMappingMode.Absolute,
+        SpreadMethod = GradientSpreadMethod.Repeat,
+        StartPoint = new Windows.Foundation.Point(0, 0),
+        EndPoint = new Windows.Foundation.Point(0, 3),
+        GradientStops =
+        {
+            new() { Color = Theme.Rgb(0, 0, 0, 0), Offset = 0 },
+            new() { Color = Theme.Rgb(0, 0, 0, 0), Offset = 0.66 },
+            new() { Color = Theme.Rgb(0, 0, 0, 0.22), Offset = 0.66 },
+            new() { Color = Theme.Rgb(0, 0, 0, 0.22), Offset = 1 },
+        },
+    };
 
     public static Border Divider() => new() { Height = 1, Background = Theme.Brush(Theme.Stroke) };
 
