@@ -28,6 +28,11 @@ final class CountdownTimer: ObservableObject {
         }
     }
 
+    // The length to start with next; a running timer keeps its own.
+    func choose(minutes: Int) {
+        if !isRunning { duration = TimeInterval(minutes * 60) }
+    }
+
     func cancel() {
         timer?.invalidate()
         timer = nil

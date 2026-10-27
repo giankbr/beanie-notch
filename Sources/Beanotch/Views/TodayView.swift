@@ -244,28 +244,8 @@ private struct FocusPage: View {
             let left = focus.left(at: context.date)
             let progress = min(1, max(0.002, 1 - left / max(focus.duration, 1)))
             HStack(spacing: 12) {
-                ZStack {
-                    Circle().stroke(Theme.ink.opacity(0.1), lineWidth: 5)
-                    Circle()
-                        .trim(from: 0, to: progress)
-                        .stroke(AngularGradient(colors: colors, center: .center, startAngle: .zero, endAngle: .degrees(360 * progress)),
-                                style: StrokeStyle(lineWidth: 5, lineCap: .round))
-                        .rotationEffect(.degrees(-90))
-                        .animation(.linear(duration: 0.4), value: progress)
-                    Button { focus.toggle() } label: {
-                        Image(systemName: focus.isRunning ? "pause.fill" : "play.fill")
-                            .font(.system(size: 16, weight: .heavy))
-                            .foregroundStyle(Theme.ink)
-                            .frame(width: 44, height: 44)
-                            .background(Circle().fill(Theme.ink.opacity(0.08)))
-                            .contentShape(Circle())
-                    }
-                    .buttonStyle(PressStyle())
-                    .help(focus.isRunning ? "Pause" : "Start")
-                }
-                .padding(3)
-                .aspectRatio(1, contentMode: .fit)
-                .frame(maxHeight: .infinity)
+                TimerRing(progress: progress, colors: colors, icon: focus.isRunning ? "pause.fill" : "play.fill",
+                          help: focus.isRunning ? "Pause" : "Start") { focus.toggle() }
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(formatClock(left))
@@ -331,36 +311,100 @@ private struct FocusPage: View {
     }
 }
 
+// The ring and the time beside it, as in Focus. The ring empties as the countdown runs; the menu picks the length.
 private struct TimerPage: View {
     @EnvironmentObject var countdown: CountdownTimer
 
+    private let colors = [Color(red: 0.25, green: 0.8, blue: 0.9), Color(red: 0.3, green: 0.55, blue: 1)]
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            TimelineView(.periodic(from: .now, by: countdown.isRunning ? 1 : 3600)) { context in
-                let left = countdown.left(at: context.date)
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text(formatClock(left)).font(.app(size: 28, weight: .bold)).monospacedDigit()
-                            .contentTransition(.numericText())
-                        Spacer(minLength: 4)
-                        Text(countdown.isRunning ? "Running" : "Pick a time").font(.app(size: 9.5, weight: .medium)).foregroundStyle(Theme.faint)
+        TimelineView(.periodic(from: .now, by: countdown.isRunning ? 1 : 3600)) { context in
+            let left = countdown.left(at: context.date)
+            let progress = countdown.isRunning ? min(1, max(0.002, left / max(countdown.duration, 1))) : 1
+            HStack(spacing: 12) {
+                TimerRing(progress: progress, colors: colors, icon: countdown.isRunning ? "stop.fill" : "play.fill",
+                          help: countdown.isRunning ? "Stop" : "Start") {
+                    countdown.isRunning ? countdown.cancel() : countdown.start(minutes: Int(countdown.duration / 60))
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(formatClock(left))
+                        .font(.app(size: 30, weight: .bold))
+                        .monospacedDigit()
+                        .contentTransition(.numericText())
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                    HStack(spacing: 5) {
+                        Circle().fill(colors[0]).frame(width: 6, height: 6)
+                        Text(countdown.isRunning ? "Ends " + context.date.addingTimeInterval(left).formatted(date: .omitted, time: .shortened)
+                                                 : "Shows in the notch")
+                            .font(.app(size: 9.5, weight: .medium)).foregroundStyle(Theme.dim).lineLimit(1)
                     }
-                    SegmentMeter(value: countdown.isRunning ? 1 - left / max(countdown.duration, 1) : 0, color: Theme.accent)
+                    Spacer(minLength: 4)
+                    lengths
                 }
-            }
-            HStack(spacing: 2) {
-                ForEach(CountdownTimer.presets, id: \.self) { m in
-                    chip("\(m)m", active: countdown.isRunning && Int(countdown.duration / 60) == m) { countdown.start(minutes: m) }
-                }
-            }
-            Spacer(minLength: 0)
-            if countdown.isRunning {
-                OutlineButton(text: "Cancel", color: Theme.red) { countdown.cancel() }
-            } else {
-                Text("Tap a time to start; it shows in the notch while it runs")
-                    .font(.app(size: 8.5)).foregroundStyle(Theme.faint).lineLimit(2)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
             }
         }
+    }
+
+    // Picking a length while the timer runs starts it over at that length.
+    private var lengths: some View {
+        Menu {
+            ForEach(CountdownTimer.presets, id: \.self) { m in
+                Button("\(m) min\(Int(countdown.duration / 60) == m ? "  ✓" : "")") {
+                    countdown.isRunning ? countdown.start(minutes: m) : countdown.choose(minutes: m)
+                }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Text("\(Int(countdown.duration / 60)) min").font(.app(size: 9.5, weight: .semibold))
+                Image(systemName: "chevron.down").font(.system(size: 7, weight: .bold))
+            }
+            .foregroundStyle(Theme.ink)
+            .padding(.horizontal, 12)
+            .frame(height: 24)
+            .background(Capsule().fill(Theme.ink.opacity(0.1)))
+            .contentShape(Capsule())
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help("Length")
+    }
+}
+
+// A ring of progress with one round button in its middle, for Focus and Timer.
+private struct TimerRing: View {
+    let progress: Double
+    let colors: [Color]
+    let icon: String
+    let help: String
+    let action: () -> Void
+
+    var body: some View {
+        ZStack {
+            Circle().stroke(Theme.ink.opacity(0.1), lineWidth: 5)
+            Circle()
+                .trim(from: 0, to: progress)
+                .stroke(AngularGradient(colors: colors, center: .center, startAngle: .zero, endAngle: .degrees(360 * progress)),
+                        style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+                .animation(.linear(duration: 0.4), value: progress)
+            Button(action: action) {
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .heavy))
+                    .foregroundStyle(Theme.ink)
+                    .frame(width: 44, height: 44)
+                    .background(Circle().fill(Theme.ink.opacity(0.08)))
+                    .contentShape(Circle())
+            }
+            .buttonStyle(PressStyle())
+            .help(help)
+        }
+        .padding(3)
+        .aspectRatio(1, contentMode: .fit)
+        .frame(maxHeight: .infinity)
     }
 }
 
@@ -469,15 +513,3 @@ private struct MonthView: View {
     }
 }
 
-private func chip(_ text: String, active: Bool, action: @escaping () -> Void) -> some View {
-    Button(action: action) {
-        Text(text)
-            .font(.mono(size: 8.5, weight: .semibold))
-            .foregroundStyle(active ? Theme.ink : Theme.faint)
-            .padding(.horizontal, 5)
-            .frame(height: 18)
-            .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(active ? Theme.ink.opacity(0.1) : .clear))
-            .contentShape(Rectangle())
-    }
-    .buttonStyle(.plain)
-}

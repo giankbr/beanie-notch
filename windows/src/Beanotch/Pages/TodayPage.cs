@@ -5,6 +5,7 @@ using Beanotch.Ui;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Windows.UI;
 using Microsoft.UI.Xaml.Input;
 using static Beanotch.Ui.Ui;
 
@@ -42,7 +43,7 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
     public override void Tick()
     {
         if (rightMode == 0) FocusTick();
-        if (rightMode == 1 && bigTime is not null) bigTime.Text = Clock(Model.Timer.Left);
+        if (rightMode == 1) TimerTick();
     }
 
     // Top strip
@@ -216,35 +217,8 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
         var phase = resting ? "Break" : "Focus";
         var state = focus.Running ? "ends " + (DateTime.Now + focus.Left).ToString("t")
                   : focus.Left < focus.Total ? "paused" : $"{(int)focus.Total.TotalMinutes} min";
-        var play = new Button
-        {
-            Content = Icon(focus.Running ? Glyphs.Pause : Glyphs.Play, 14, Theme.Ink),
-            Width = S(40),
-            Height = S(40),
-            Padding = new Thickness(0),
-            CornerRadius = new CornerRadius(S(20)),
-            Background = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.08)),
-            BorderThickness = new Thickness(0),
-        };
-        play.Click += (_, _) => { focus.Toggle(); Right(); };
-        ToolTipService.SetToolTip(play, focus.Running ? "Pause" : "Start");
-        var inside = Center(play);
-
         var (from, to) = resting ? (Theme.Rgb(0.3, 0.62, 1), Theme.Rgb(0.12, 0.4, 0.86)) : (Theme.Rgb(1, 0.5, 0.16), Theme.Rgb(0.9, 0.27, 0.16));
-        ring = new Microsoft.UI.Xaml.Shapes.Path
-        {
-            StrokeThickness = S(RingStroke),
-            StrokeStartLineCap = Microsoft.UI.Xaml.Media.PenLineCap.Round,
-            StrokeEndLineCap = Microsoft.UI.Xaml.Media.PenLineCap.Round,
-            Stroke = new Microsoft.UI.Xaml.Media.LinearGradientBrush
-            {
-                StartPoint = new Windows.Foundation.Point(0, 0),
-                EndPoint = new Windows.Foundation.Point(1, 1),
-                GradientStops = { new() { Color = from, Offset = 0 }, new() { Color = to, Offset = 1 } },
-            },
-        };
-        var track = new Microsoft.UI.Xaml.Shapes.Ellipse { Stroke = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.1)), StrokeThickness = S(RingStroke) };
-        var dial = new Grid { Width = S(RingSide), Height = S(RingSide), Children = { track, ring, inside }, VerticalAlignment = VerticalAlignment.Center };
+        var dial = Dial(from, to, focus.Running ? Glyphs.Pause : Glyphs.Play, focus.Running ? "Pause" : "Start", () => { focus.Toggle(); Right(); });
 
         // The lengths and a reset behind the gear, so the page fits short panels too.
         var lengths = new MenuFlyout();
@@ -281,11 +255,46 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
         ToolTipService.SetToolTip(gear, "Lengths and reset");
         var pill = Plain(Text(resting ? "Focus" : "Break", 9.5, weight: FontWeights.SemiBold), () => { focus.Skip(); Right(); },
                          Theme.WithAlpha(Theme.Ink, 0.1), 12, new Thickness(S(12), S(4), S(12), S(4)), resting ? "Back to focus" : "Take a break now");
-        var dot = new Microsoft.UI.Xaml.Shapes.Ellipse { Width = S(6), Height = S(6), Fill = Theme.Brush(from), VerticalAlignment = VerticalAlignment.Center };
-        var status = H(5, dot, Text($"{phase} · {state}", 8.5, Theme.Dim, FontWeights.Medium));
-        var side = Rows(2, (bigTime, null), (status, null), (null, 1), (H(6, gear, pill), null));
         FocusTick();
-        return Columns(12, (dial, null), (side, 1));
+        return Columns(12, (dial, null), (Side(from, $"{phase} · {state}", H(6, gear, pill)), 1));
+    }
+
+    // The time beside the ring: large, then a dot and a status line, then the controls at the bottom.
+    private Grid Side(Color dot, string status, UIElement controls)
+    {
+        var mark = new Microsoft.UI.Xaml.Shapes.Ellipse { Width = S(6), Height = S(6), Fill = Theme.Brush(dot), VerticalAlignment = VerticalAlignment.Center };
+        return Rows(2, (bigTime, null), (H(5, mark, Text(status, 8.5, Theme.Dim, FontWeights.Medium)), null), (null, 1), (controls, null));
+    }
+
+    // A ring of progress with one round button in its middle, for Focus and Timer. The ring is filled in on each tick.
+    private Grid Dial(Color from, Color to, string glyph, string tip, Action onClick)
+    {
+        var button = new Button
+        {
+            Content = Icon(glyph, 14, Theme.Ink),
+            Width = S(40),
+            Height = S(40),
+            Padding = new Thickness(0),
+            CornerRadius = new CornerRadius(S(20)),
+            Background = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.08)),
+            BorderThickness = new Thickness(0),
+        };
+        button.Click += (_, _) => onClick();
+        ToolTipService.SetToolTip(button, tip);
+        ring = new Microsoft.UI.Xaml.Shapes.Path
+        {
+            StrokeThickness = S(RingStroke),
+            StrokeStartLineCap = Microsoft.UI.Xaml.Media.PenLineCap.Round,
+            StrokeEndLineCap = Microsoft.UI.Xaml.Media.PenLineCap.Round,
+            Stroke = new Microsoft.UI.Xaml.Media.LinearGradientBrush
+            {
+                StartPoint = new Windows.Foundation.Point(0, 0),
+                EndPoint = new Windows.Foundation.Point(1, 1),
+                GradientStops = { new() { Color = from, Offset = 0 }, new() { Color = to, Offset = 1 } },
+            },
+        };
+        var track = new Microsoft.UI.Xaml.Shapes.Ellipse { Stroke = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.1)), StrokeThickness = S(RingStroke) };
+        return new Grid { Width = S(RingSide), Height = S(RingSide), Children = { track, ring, Center(button) }, VerticalAlignment = VerticalAlignment.Center };
     }
 
     private const double RingSide = 94, RingStroke = 4.5;
@@ -318,22 +327,43 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
         return geometry;
     }
 
+    // The ring and the time beside it, as in Focus. The ring empties as the countdown runs; the menu picks the length.
     private FrameworkElement TimerView()
     {
         var timer = Model.Timer;
-        bigTime = Text(Clock(timer.Left), 34, weight: FontWeights.Bold, display: true);
-        var chips = new VariableSizedWrapGrid { Orientation = Orientation.Horizontal, ItemWidth = S(44), ItemHeight = S(28) };
+        bigTime = Text(Clock(timer.Left), 24, weight: FontWeights.Bold, display: true);
+        Color from = Theme.Rgb(0.25, 0.8, 0.9), to = Theme.Rgb(0.3, 0.55, 1);
+        var dial = Dial(from, to, timer.Running ? Glyphs.Pause : Glyphs.Play, timer.Running ? "Pause" : "Start", () => { timer.Toggle(); Right(); });
+        var status = timer.Running ? "Ends " + (DateTime.Now + timer.Left).ToString("t")
+                   : timer.Left < timer.Length ? "Paused" : "Shows in the island";
+
+        var lengths = new MenuFlyout();
         foreach (var m in CountdownTimer.Presets)
         {
-            var on = timer.Length.TotalMinutes == m;
-            chips.Children.Add(Plain(Center(Text($"{m}m", 10, on ? Theme.Background : Theme.Ink, FontWeights.SemiBold)), () => { timer.Set(m); Right(); },
-                                     on ? Theme.Accent : Theme.WithAlpha(Theme.Ink, 0.07), 8, new Thickness(0, S(4), 0, S(4))));
+            var item = new ToggleMenuFlyoutItem { Text = $"{m} min", IsChecked = timer.Length.TotalMinutes == m };
+            item.Click += (_, _) => { timer.Set(m); Right(); };
+            lengths.Items.Add(item);
         }
-        var start = Plain(Center(H(6, Icon(timer.Running ? Glyphs.Pause : Glyphs.Play, 11, Theme.Background),
-                                     Text(timer.Running ? "Pause" : "Start", 11, Theme.Background, FontWeights.SemiBold))),
-                          () => { timer.Toggle(); Right(); }, Theme.Accent, 10, new Thickness(0, S(8), 0, S(8)));
-        start.HorizontalAlignment = HorizontalAlignment.Stretch;
-        return Rows(8, (bigTime, null), (chips, null), (null, 1), (start, null));
+        var pick = new Button
+        {
+            Content = H(4, Text($"{(int)timer.Length.TotalMinutes} min", 9.5, weight: FontWeights.SemiBold), Icon(Glyphs.ChevronDown, 7, Theme.Ink)),
+            Padding = new Thickness(S(12), S(4), S(12), S(4)),
+            CornerRadius = new CornerRadius(S(12)),
+            Background = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.1)),
+            BorderThickness = new Thickness(0),
+            Flyout = lengths,
+        };
+        ToolTipService.SetToolTip(pick, "Length");
+        TimerTick();
+        return Columns(12, (dial, null), (Side(from, status, pick), 1));
+    }
+
+    private void TimerTick()
+    {
+        if (bigTime is null || ring is null) return;
+        var timer = Model.Timer;
+        bigTime.Text = Clock(timer.Left);
+        ring.Data = Arc(Math.Clamp(timer.Left / timer.Length, 0.002, 0.9999), S(RingSide), S(RingStroke));
     }
 
     private FrameworkElement ClocksView()

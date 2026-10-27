@@ -21,7 +21,7 @@ public static class Glyphs
         Spark = "", Controls = "", Tools = "", Settings = "", Close = "", Play = "",
         Pause = "", Next = "", Previous = "", Folder = "", OpenFile = "", Pin = "",
         Search = "", Refresh = "", Grid = "", List = "", Add = "", Delete = "",
-        Compass = "", Location = "", Sun = "", Power = "", Copy = "", Clock = "";
+        Compass = "", Location = "", Sun = "", Power = "", Copy = "", Clock = "", ChevronDown = "\uE70D";
 }
 
 // Everything the island reports while closed, besides music and prayer: polled cheaply on the UI thread.
