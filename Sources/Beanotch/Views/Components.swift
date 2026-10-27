@@ -32,6 +32,8 @@ enum Theme {
         }
     }
     static var stroke: Color { mode == .glass ? .white.opacity(0.1) : baseStroke }
+    // Keycap: every button, tab and switch is a raised key, lit from above with a bevel along its bottom edge.
+    static var keycap: Bool { mode == .keycap }
     static var thumb: Color { baseThumb }
     static var dim: Color { ink.opacity(0.55) }
     static var faint: Color { ink.opacity(0.4) }
@@ -97,22 +99,68 @@ private struct ButtonFace<S: InsettableShape>: ViewModifier {
     var quiet = false
     @State private var hovered = false
 
+    var solid = false
+
     func body(content: Content) -> some View {
         let shown = !quiet || hovered
         content
             .background {
-                shape.fill(shown ? color : .clear)
-                    .overlay(shape.fill(Theme.ink.opacity(hovered ? 0.06 : 0)))
-                    .overlay(shape.strokeBorder(Theme.ink.opacity(!shown ? 0 : hovered ? 0.14 : 0.07), lineWidth: 0.5))
+                if Theme.keycap && shown {
+                    KeyFace(shape: shape, base: solid ? color : nil, tint: solid ? nil : color, lit: hovered)
+                } else {
+                    shape.fill(shown ? color : .clear)
+                        .overlay(shape.fill(Theme.ink.opacity(hovered ? 0.06 : 0)))
+                        .overlay(shape.strokeBorder(Theme.ink.opacity(!shown ? 0 : hovered ? 0.14 : 0.07), lineWidth: 0.5))
+                }
             }
             .onHover { hovered = $0 }
             .animation(.easeOut(duration: 0.12), value: hovered)
     }
 }
 
+// A raised key: a top-lit gradient, a thin highlight along the top, a darker bevel along the bottom and no drop
+// shadow, like the landing page's buttons. A solid key takes its color (the accent); a plain one is graphite with
+// an optional tint over it.
+struct KeyFace<S: InsettableShape>: View {
+    let shape: S
+    var base: Color?
+    var tint: Color?
+    var lit = false
+
+    var body: some View {
+        let top = base.map { $0.blend(.white, 0.28) } ?? Color(white: 0.2)
+        let bottom = base.map { $0.blend(.black, 0.12) } ?? Color(white: 0.135)
+        shape.fill(LinearGradient(colors: [top, bottom], startPoint: .top, endPoint: .bottom))
+            .overlay(shape.fill(tint ?? .clear))
+            .overlay(shape.fill(LinearGradient(stops: [.init(color: .clear, location: 0.72),
+                                                       .init(color: .black.opacity(base == nil ? 0.45 : 0.3), location: 1)],
+                                               startPoint: .top, endPoint: .bottom)))
+            .overlay(shape.strokeBorder(LinearGradient(colors: [.white.opacity(base == nil ? 0.14 : 0.5), .white.opacity(0.03), .black.opacity(0.35)],
+                                                       startPoint: .top, endPoint: .bottom), lineWidth: 1))
+            .brightness(lit ? 0.04 : 0)
+    }
+}
+
+extension Color {
+    // Part of the way toward another color; Color.mix needs macOS 15.
+    func blend(_ other: NSColor, _ fraction: CGFloat) -> Color {
+        Color(nsColor: NSColor(self).usingColorSpace(.sRGB)?.blended(withFraction: fraction, of: other) ?? NSColor(self))
+    }
+}
+
+// The well a key or a switch sits in: darker than the card, shaded from the top.
+struct KeyWell<S: InsettableShape>: View {
+    let shape: S
+
+    var body: some View {
+        shape.fill(Color(white: 0.055))
+            .overlay(shape.strokeBorder(LinearGradient(colors: [.black.opacity(0.7), .white.opacity(0.06)], startPoint: .top, endPoint: .bottom), lineWidth: 1))
+    }
+}
+
 extension View {
-    func buttonFace<S: InsettableShape>(_ shape: S, _ color: Color, quiet: Bool = false) -> some View {
-        modifier(ButtonFace(shape: shape, color: color, quiet: quiet))
+    func buttonFace<S: InsettableShape>(_ shape: S, _ color: Color, quiet: Bool = false, solid: Bool = false) -> some View {
+        modifier(ButtonFace(shape: shape, color: color, quiet: quiet, solid: solid))
     }
 }
 
@@ -199,7 +247,7 @@ struct PrimaryButton: View {
             .foregroundStyle(.black)
             .frame(maxWidth: .infinity)
             .frame(height: 30)
-            .buttonFace(RoundedRectangle(cornerRadius: 9, style: .continuous), Theme.accent)
+            .buttonFace(RoundedRectangle(cornerRadius: 9, style: .continuous), Theme.accent, solid: true)
             .contentShape(Rectangle())
         }
         .buttonStyle(PressStyle())
@@ -232,8 +280,22 @@ struct StatCell: View {
 extension View {
     // The rounded, hairline-edged card every dashboard block sits on.
     func card(radius: CGFloat = 12) -> some View {
-        background(RoundedRectangle(cornerRadius: radius, style: .continuous).fill(Theme.surface))
-            .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(Theme.stroke))
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        return background {
+            if Theme.keycap {
+                shape.fill(LinearGradient(colors: [Color(white: 0.105), Color(white: 0.08)], startPoint: .top, endPoint: .bottom))
+            } else {
+                shape.fill(Theme.surface)
+            }
+        }
+        .overlay {
+            if Theme.keycap {
+                shape.strokeBorder(LinearGradient(colors: [.white.opacity(0.09), .white.opacity(0.04), .black.opacity(0.5)],
+                                                  startPoint: .top, endPoint: .bottom), lineWidth: 1)
+            } else {
+                shape.strokeBorder(Theme.stroke)
+            }
+        }
     }
 }
 
@@ -519,11 +581,17 @@ struct Segmented: View {
                         .frame(height: 22)
                         .background {
                             if selected {
-                                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                    .fill(Theme.thumb)
-                                    .shadow(color: .black.opacity(0.12), radius: 1, y: 0.5)
-                                    .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(Theme.stroke, lineWidth: 0.5))
-                                    .matchedGeometryEffect(id: "thumb", in: thumb)
+                                Group {
+                                    if Theme.keycap {
+                                        KeyFace(shape: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                                    } else {
+                                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                            .fill(Theme.thumb)
+                                            .shadow(color: .black.opacity(0.12), radius: 1, y: 0.5)
+                                            .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(Theme.stroke, lineWidth: 0.5))
+                                    }
+                                }
+                                .matchedGeometryEffect(id: "thumb", in: thumb)
                             }
                         }
                         .contentShape(Rectangle())
@@ -532,7 +600,13 @@ struct Segmented: View {
             }
         }
         .padding(2)
-        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.ink.opacity(0.055)))
+        .background {
+            if Theme.keycap {
+                KeyWell(shape: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            } else {
+                RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.ink.opacity(0.055))
+            }
+        }
     }
 }
 
@@ -586,12 +660,29 @@ func shortPath(_ url: URL) -> String {
 struct AccentSwitchStyle: ToggleStyle {
     func makeBody(configuration: Configuration) -> some View {
         Button { configuration.isOn.toggle() } label: {
-            Capsule()
-                .fill(configuration.isOn ? Theme.accent : Theme.ink.opacity(0.14))
+            Group {
+                if Theme.keycap {
+                    // The track is a well, lit with the accent when on; the knob is a little white key.
+                    ZStack {
+                        KeyWell(shape: Capsule())
+                        Capsule().fill(LinearGradient(colors: [Theme.accent.blend(.black, 0.25), Theme.accent],
+                                                      startPoint: .top, endPoint: .bottom))
+                            .padding(1).opacity(configuration.isOn ? 1 : 0)
+                    }
+                } else {
+                    Capsule().fill(configuration.isOn ? Theme.accent : Theme.ink.opacity(0.14))
+                }
+            }
                 .frame(width: 30, height: 18)
                 .overlay(alignment: configuration.isOn ? .trailing : .leading) {
-                    Circle().fill(.white).frame(width: 14, height: 14).padding(2)
-                        .shadow(color: .black.opacity(0.25), radius: 1, y: 1)
+                    Group {
+                        if Theme.keycap {
+                            KeyFace(shape: Circle(), base: Color(white: 0.93))
+                        } else {
+                            Circle().fill(.white).shadow(color: .black.opacity(0.25), radius: 1, y: 1)
+                        }
+                    }
+                    .frame(width: 14, height: 14).padding(2)
                 }
                 .animation(.snappy(duration: 0.18), value: configuration.isOn)
         }

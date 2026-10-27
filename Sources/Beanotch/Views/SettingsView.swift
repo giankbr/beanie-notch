@@ -503,7 +503,7 @@ struct SettingsView: View {
     }
 }
 
-// A tiny panel in each theme: light, dark, half-and-half, true black, or frosted.
+// A tiny panel in each theme: light, dark, half-and-half, true black, frosted, or with a key in the corner.
 private struct ThemeSwatch: View {
     let mode: ThemeMode
 
@@ -515,6 +515,12 @@ private struct ThemeSwatch: View {
                 case .dark: dark
                 case .light: light
                 case .midnight: Color.black
+                case .keycap:
+                    ZStack(alignment: .bottomTrailing) {
+                        dark
+                        KeyFace(shape: RoundedRectangle(cornerRadius: 4, style: .continuous), base: Theme.accent)
+                            .frame(width: 22, height: 12).padding(6)
+                    }
                 case .glass:
                     LinearGradient(colors: [Color(red: 0.45, green: 0.55, blue: 0.85), Color(red: 0.75, green: 0.5, blue: 0.7)],
                                    startPoint: .topLeading, endPoint: .bottomTrailing)
