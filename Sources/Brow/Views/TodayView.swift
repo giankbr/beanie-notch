@@ -12,7 +12,7 @@ struct TodayView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     CardHeader(title: ["Up next", "Tasks", "Month"][page],
                                subtitle: ["Calendar · next 24 hours", "End with a time for a reminder", "Dots mark days with events"][page]) {
-                        Segmented(options: ["Agenda", "Tasks", "Month"], selection: $page).frame(width: 190)
+                        Segmented(options: ["Agenda", "Tasks", "Month"], selection: $page).fixedSize()
                     }
                     switch page {
                     case 0: CalendarPanel()

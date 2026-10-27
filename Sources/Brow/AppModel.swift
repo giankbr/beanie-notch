@@ -26,7 +26,7 @@ enum Tab: String, CaseIterable, Identifiable {
         switch self {
         case .prayer: "Prayer"
         case .music: "Music"
-        case .ai: "AI usage"
+        case .ai: "AI"
         default: title
         }
     }
@@ -39,7 +39,7 @@ enum Tab: String, CaseIterable, Identifiable {
         case .shelf: "Shelf"
         case .clipboard: "Clipboard"
         case .music: "Now Playing"
-        case .ai: "AI usage"
+        case .ai: "AI"
         case .controls: "Controls"
         case .tools: "Tools"
         case .settings: "Settings"
@@ -120,6 +120,9 @@ final class AppModel: ObservableObject {
     let updater = Updater()
     let aiUsage = AIUsage()
     let messages = MessageBadges()
+    let claude = ClaudeBridge()
+    // Set by the controller: opens the panel and keeps it open (a permission request is waiting).
+    var openPanel: (() -> Void)?
     private let volumeWatcher = VolumeWatcher()
     private let brightnessWatcher = BrightnessWatcher()
     private let keyboard = KeyboardWatcher()
@@ -174,6 +177,9 @@ final class AppModel: ObservableObject {
                                   color: Theme.accent2, left: name, right: levels, duration: 5))
             }
         }
+        claude.onNotice = notify
+        claude.onRequest = { [weak self] in self?.openPanel?() }
+        settings.$claudeBridge.sink { [weak self] on in self?.claude.setEnabled(on) }.store(in: &sinks)
         messages.onNew = { [weak self] badge in
             self?.show(Notice(icon: "bubble.left.and.bubble.right.fill", color: Theme.accent2, left: badge.name,
                               right: badge.count == 1 ? "New message" : "\(badge.count) unread", duration: 6, open: badge.app))
@@ -208,8 +214,13 @@ final class AppModel: ObservableObject {
                 : Notice(icon: "timer", color: Theme.accent2, left: "Break over", right: "Back to it", essential: true))
         }
         screenshots.onShot = { [weak self] url in
-            self?.shelf.add([url])
-            self?.show(Notice(icon: "camera.viewfinder", color: Theme.accent2, left: "Screenshot", right: "On the Shelf"))
+            guard let self else { return }
+            guard settings.nameScreenshots else {
+                shelf.add([url])
+                show(Notice(icon: "camera.viewfinder", color: Theme.accent2, left: "Screenshot", right: "On the Shelf"))
+                return
+            }
+            Task { await self.addNamedScreenshot(url) }
         }
         screenshots.setEnabled(settings.screenshotsToShelf)
         settingsSink = settings.$screenshotsToShelf.sink { [weak self] on in self?.screenshots.setEnabled(on) }
@@ -243,6 +254,31 @@ final class AppModel: ObservableObject {
         }
     }
 
+    var engine: Assistant.Engine { Assistant.Engine(rawValue: settings.aiEngine) ?? .onDevice }
+
+    // A screenshot renamed after what it shows ("invoice-oktober-2026.png"), read and named on the Mac.
+    private func addNamedScreenshot(_ url: URL) async {
+        var target = url
+        let words = await Assistant.text(in: url)
+        if !words.isEmpty, let name = try? await Assistant.respond(
+            "Screen text: " + String(words.prefix(1500)),
+            instructions: "Name this screenshot. Reply with 2 to 5 lowercase words joined by hyphens, in the text's language, no extension.",
+            engine: engine) {
+            let slug = Assistant.slug(name)
+            if !slug.isEmpty {
+                let folder = url.deletingLastPathComponent(), ext = url.pathExtension
+                var candidate = folder.appendingPathComponent(slug).appendingPathExtension(ext)
+                var n = 2
+                while FileManager.default.fileExists(atPath: candidate.path) {
+                    candidate = folder.appendingPathComponent("\(slug)-\(n)").appendingPathExtension(ext); n += 1
+                }
+                if (try? FileManager.default.moveItem(at: url, to: candidate)) != nil { target = candidate }
+            }
+        }
+        shelf.add([target])
+        show(Notice(icon: "camera.viewfinder", color: Theme.accent2, left: "Screenshot", right: target.lastPathComponent))
+    }
+
     // Volume from a scroll over the notch, in steps like the keyboard's.
     func nudgeVolume(by delta: Float) {
         volumeWatcher.nudge(by: delta)
@@ -267,7 +303,7 @@ final class AppModel: ObservableObject {
 
     var closedWidth: CGFloat {
         let extra: CGFloat = volume != nil ? 190 : notice.map(noticeWidth) ?? (focus.isRunning ? 110
-            : countdown.isRunning ? 110 : downloads.current != nil ? 240 : calendar.meeting != nil ? 240 : showsPrayerCountdown ? 170
+            : countdown.isRunning ? 110 : downloads.current != nil ? 240 : claude.working != nil ? 220 : calendar.meeting != nil ? 240 : showsPrayerCountdown ? 170
             : showsNotchLyrics ? 340 : showsMiniPlayer ? 64 : 0)
         return closedSize.width + extra
     }
@@ -321,6 +357,7 @@ extension View {
             .environmentObject(m.updater)
             .environmentObject(m.aiUsage)
             .environmentObject(m.messages)
+            .environmentObject(m.claude)
     }
 }
 

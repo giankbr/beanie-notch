@@ -1,7 +1,20 @@
 import SwiftUI
 
-// Today, the last five hours and the week for each AI coding tool found on this Mac.
+// Ask a local model, or see what AI coding tools have used.
 struct AIView: View {
+    @State private var page = 0
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Segmented(options: ["Ask", "Usage"], selection: $page).fixedSize()
+            if page == 0 { AskView() } else { FitOrScroll { UsageView() } }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+// Today, the last five hours and the week for each AI coding tool found on this Mac.
+private struct UsageView: View {
     @EnvironmentObject var usage: AIUsage
     @EnvironmentObject var settings: Settings
 
@@ -181,5 +194,140 @@ private struct ToolsCard: View {
         case "Antigravity": return FileManager.default.fileExists(atPath: "/Applications/Antigravity.app")
         default: return FileManager.default.fileExists(atPath: home + "/.gemini/tmp")
         }
+    }
+}
+
+// One question at a time to the chosen model, with Claude Code's live sessions beside it.
+private struct AskView: View {
+    @EnvironmentObject var settings: Settings
+    @EnvironmentObject var claude: ClaudeBridge
+    @State private var question = ""
+    @State private var answer: AIResult?
+    @FocusState private var focused: Bool
+
+    private var engine: Assistant.Engine { Assistant.Engine(rawValue: settings.aiEngine) ?? .onDevice }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 6) {
+                    Image(systemName: "sparkles").font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accent)
+                    TextField("Ask anything, then press Return", text: $question)
+                        .textFieldStyle(.plain).font(.app(size: 11.5)).focused($focused)
+                        .onSubmit(send)
+                    Menu {
+                        ForEach(Assistant.Engine.allCases) { option in
+                            Button { settings.aiEngine = option.rawValue } label: {
+                                Text(option.title + (Assistant.available(option) ? "" : " (not found)"))
+                            }
+                            .disabled(!Assistant.available(option))
+                        }
+                    } label: {
+                        HStack(spacing: 3) {
+                            Text(engine.title).font(.app(size: 9.5, weight: .semibold))
+                            Image(systemName: "chevron.down").font(.system(size: 6, weight: .bold))
+                        }
+                        .foregroundStyle(Theme.dim)
+                    }
+                    .menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
+                }
+                .padding(.horizontal, 10)
+                .frame(height: 30)
+                .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Theme.ink.opacity(0.06)))
+
+                Group {
+                    if let answer {
+                        if let text = answer.text {
+                            ScrollView {
+                                Text(text).font(.app(size: 11.5)).textSelection(.enabled)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .scrollIndicators(.never)
+                        } else if let error = answer.error {
+                            Text(error).font(.app(size: 10.5)).foregroundStyle(Theme.amber)
+                        } else {
+                            LoadingView(text: "\(engine.title) is thinking…")
+                        }
+                    } else {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(engine == .onDevice ? "Answers come from Apple's on-device model: private, offline and free."
+                                 : engine == .claude ? "Answers come from Claude Code on this Mac, with your Claude plan."
+                                 : "Answers come from the first model Ollama has pulled.")
+                                .font(.app(size: 10)).foregroundStyle(Theme.faint)
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                if let text = answer?.text {
+                    HStack {
+                        Spacer()
+                        PillButton(text: "Copy answer", icon: "doc.on.doc", color: Theme.accent) {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(text, forType: .string)
+                        }
+                    }
+                }
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .card()
+
+            SessionsCard().frame(width: settings.size == .compact || settings.size == .mini ? 190 : 220)
+        }
+        .onAppear { focused = true }
+    }
+
+    private func send() {
+        let text = question.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        let ticket = UUID()
+        answer = AIResult(id: ticket, title: text, text: nil, error: nil)
+        let engine = engine
+        Task {
+            do {
+                let reply = try await Assistant.respond(text, instructions: "Answer helpfully and briefly, in the language of the question.", engine: engine)
+                if answer?.id == ticket { answer?.text = reply }
+            } catch {
+                if answer?.id == ticket { answer?.error = error.localizedDescription }
+            }
+        }
+    }
+}
+
+private struct SessionsCard: View {
+    @EnvironmentObject var claude: ClaudeBridge
+    @EnvironmentObject var settings: Settings
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Claude Code").font(.app(size: 12, weight: .semibold))
+            if !settings.claudeBridge {
+                Text("Turn on Claude Code in the notch (Settings › AI) to see sessions here and approve requests from the notch.")
+                    .font(.app(size: 9.5)).foregroundStyle(Theme.faint)
+                PillButton(text: "Turn on", color: Theme.accent) { settings.claudeBridge = true }
+            } else if claude.sessions.isEmpty {
+                Text("Start Claude Code in any terminal; its sessions show here.").font(.app(size: 9.5)).foregroundStyle(Theme.faint)
+            } else {
+                ForEach(claude.sessions) { session in
+                    HStack(spacing: 7) {
+                        Circle().fill(color(session.state)).frame(width: 6, height: 6)
+                        Text(session.project).font(.app(size: 10.5, weight: .medium)).lineLimit(1)
+                        Spacer(minLength: 4)
+                        Text(label(session.state)).font(.app(size: 9)).foregroundStyle(Theme.faint)
+                    }
+                }
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .card()
+    }
+
+    private func color(_ state: ClaudeBridge.Session.State) -> Color {
+        switch state { case .working: Theme.accent; case .waiting: Theme.amber; case .done: Theme.faint }
+    }
+
+    private func label(_ state: ClaudeBridge.Session.State) -> String {
+        switch state { case .working: "Working"; case .waiting: "Waiting for you"; case .done: "Done" }
     }
 }

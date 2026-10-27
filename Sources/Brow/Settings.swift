@@ -129,6 +129,9 @@ final class Settings: ObservableObject {
     @Published var keyboardAlerts: Bool { didSet { save(keyboardAlerts, "keyboardAlerts") } }
     @Published var volumeHUD: Bool { didSet { save(volumeHUD, "volumeHUD") } }
     @Published var gestures: Bool { didSet { save(gestures, "gestures") } }
+    @Published var aiEngine: String { didSet { save(aiEngine, "aiEngine") } }
+    @Published var nameScreenshots: Bool { didSet { save(nameScreenshots, "nameScreenshots") } }
+    @Published var claudeBridge: Bool { didSet { save(claudeBridge, "claudeBridge") } }
     // Pages switched off in Settings › Pages, by their raw names.
     @Published var hiddenTabs: Set<String> { didSet { Self.defaults.set(Array(hiddenTabs).sorted(), forKey: "hiddenTabs") } }
     @Published var messageAlerts: Bool { didSet { save(messageAlerts, "messageAlerts") } }
@@ -166,6 +169,9 @@ final class Settings: ObservableObject {
         keyboardAlerts = d.object(forKey: "keyboardAlerts") as? Bool ?? true
         volumeHUD = d.object(forKey: "volumeHUD") as? Bool ?? true
         gestures = d.object(forKey: "gestures") as? Bool ?? true
+        aiEngine = d.string(forKey: "aiEngine") ?? (Assistant.onDeviceAvailable ? "onDevice" : "claude")
+        nameScreenshots = d.bool(forKey: "nameScreenshots")
+        claudeBridge = d.bool(forKey: "claudeBridge")
         hiddenTabs = Set(d.stringArray(forKey: "hiddenTabs") ?? [])
         messageAlerts = d.object(forKey: "messageAlerts") as? Bool ?? true
         messageAllApps = d.bool(forKey: "messageAllApps")

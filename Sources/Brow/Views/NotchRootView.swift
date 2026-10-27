@@ -10,6 +10,7 @@ struct NotchRootView: View {
     @EnvironmentObject var downloads: DownloadWatcher
     @EnvironmentObject var calendar: CalendarFeed
     @EnvironmentObject var countdown: CountdownTimer
+    @EnvironmentObject var claude: ClaudeBridge
 
     private var size: CGSize {
         model.expanded ? model.openSize : CGSize(width: model.closedWidth, height: model.closedHeight)
@@ -112,6 +113,18 @@ struct NotchRootView: View {
                     Text(formatClock(countdown.left(at: context.date)))
                         .font(.app(size: 11, weight: .semibold)).monospacedDigit().foregroundStyle(.white)
                 }
+            }
+            .transition(.emerge)
+        } else if let session = claude.working {
+            Ears {
+                HStack(spacing: 5) {
+                    Image(systemName: "asterisk").font(.system(size: 10, weight: .heavy))
+                        .symbolEffect(.pulse, options: .repeating)
+                    Text("Claude").font(.app(size: 10.5, weight: .semibold))
+                }
+                .foregroundStyle(Color(red: 0.85, green: 0.47, blue: 0.34))
+            } right: {
+                Text(session.project).font(.app(size: 10.5, weight: .semibold)).lineLimit(1).truncationMode(.middle).foregroundStyle(.white)
             }
             .transition(.emerge)
         } else if let download = downloads.current {
@@ -339,6 +352,11 @@ struct ExpandedView: View {
         }
     }
 
+    // A Claude Code permission request sits over whatever page is open.
+    @ViewBuilder private var permissions: some View {
+        PermissionCard()
+    }
+
     // Dashboard pages scroll when the panel is shorter than them; the rest size or scroll their own content
     // (the player's artwork and the camera preview take their size from the panel, so they can't be measured).
     private var page: some View {
@@ -350,13 +368,14 @@ struct ExpandedView: View {
             case .shelf: ShelfView()
             case .clipboard: ClipboardView()
             case .music: MusicView()
-            case .ai: FitOrScroll { AIView() }
+            case .ai: AIView()
             case .controls: FitOrScroll { ControlsView() }
             case .tools: ToolsView()
             case .settings: SettingsView()
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .overlay(alignment: .top) { permissions }
         .transition(.opacity)
     }
 }
@@ -785,6 +804,55 @@ private struct EarTabs: View {
                 .buttonStyle(.plain)
                 .help(tab.title)
             }
+        }
+    }
+}
+
+// Claude Code asking to use a tool: allow or deny it here, or leave it to the terminal.
+private struct PermissionCard: View {
+    @EnvironmentObject var claude: ClaudeBridge
+
+    var body: some View {
+        if let request = claude.pending.first {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 7) {
+                    Image(systemName: "asterisk").font(.system(size: 11, weight: .heavy)).foregroundStyle(Color(red: 0.85, green: 0.47, blue: 0.34))
+                    Text("Claude Code wants to use \(request.tool)").font(.app(size: 12, weight: .semibold)).lineLimit(1)
+                    Text(request.project).font(.app(size: 10)).foregroundStyle(Theme.faint).lineLimit(1)
+                    Spacer()
+                    if claude.pending.count > 1 { Pill(text: "+\(claude.pending.count - 1) more", color: Theme.amber) }
+                }
+                if !request.detail.isEmpty {
+                    Text(request.detail).font(.mono(size: 10)).foregroundStyle(Theme.ink.opacity(0.85))
+                        .lineLimit(3).textSelection(.enabled)
+                        .padding(8).frame(maxWidth: .infinity, alignment: .leading)
+                        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.ink.opacity(0.06)))
+                }
+                HStack(spacing: 8) {
+                    Button { claude.answer(request, allow: true) } label: {
+                        Label("Allow", systemImage: "checkmark").font(.app(size: 11, weight: .semibold)).foregroundStyle(.black)
+                            .padding(.horizontal, 14).frame(height: 26)
+                            .background(Capsule().fill(Theme.accent))
+                    }
+                    .buttonStyle(PressStyle())
+                    Button { claude.answer(request, allow: false) } label: {
+                        Label("Deny", systemImage: "xmark").font(.app(size: 11, weight: .semibold)).foregroundStyle(Theme.red)
+                            .padding(.horizontal, 14).frame(height: 26)
+                            .background(Capsule().fill(Theme.red.opacity(0.14)))
+                    }
+                    .buttonStyle(PressStyle())
+                    Spacer()
+                    Button { claude.answer(request, allow: nil) } label: {
+                        Text("Answer in terminal").font(.app(size: 10)).foregroundStyle(Theme.dim)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(12)
+            .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.background))
+            .card(radius: 14)
+            .shadow(color: .black.opacity(0.35), radius: 18, y: 8)
+            .transition(.move(edge: .top).combined(with: .opacity))
         }
     }
 }

@@ -19,12 +19,13 @@ struct SettingsView: View {
     @State private var section: Section = .appearance
 
     enum Section: String, CaseIterable, Identifiable {
-        case appearance, pages, notch, inNotch, shelf, wellbeing, prayer, system
+        case appearance, pages, notch, inNotch, ai, shelf, wellbeing, prayer, system
         var id: String { rawValue }
         var title: String {
             switch self {
             case .appearance: "Appearance"
             case .pages: "Pages"
+            case .ai: "AI"
             case .notch: "Notch"
             case .inNotch: "In the notch"
             case .shelf: "Shelf & Clipboard"
@@ -37,6 +38,7 @@ struct SettingsView: View {
             switch self {
             case .appearance: "paintbrush.fill"
             case .pages: "square.stack.fill"
+            case .ai: "sparkles"
             case .notch: "rectangle.topthird.inset.filled"
             case .inNotch: "bell.badge.fill"
             case .shelf: "tray.full.fill"
@@ -101,6 +103,7 @@ struct SettingsView: View {
         switch section {
         case .appearance: appearance
         case .pages: pages
+        case .ai: aiSection
         case .notch: notch
         case .inNotch: inNotch
         case .shelf: shelfSection
@@ -196,6 +199,31 @@ struct SettingsView: View {
         case .controls: "Quick switches, brightness, batteries, Shortcuts"
         case .tools: "Uninstaller, large files, camera mirror"
         case .settings: ""
+        }
+    }
+
+    private var aiSection: some View {
+        card {
+            row("cpu", "Model", "Used by Ask, clipboard actions and screenshot names") {
+                Menu {
+                    ForEach(Assistant.Engine.allCases) { option in
+                        Button(option.title + (Assistant.available(option) ? "" : " (not found)")) { settings.aiEngine = option.rawValue }
+                            .disabled(!Assistant.available(option))
+                    }
+                } label: {
+                    Text((Assistant.Engine(rawValue: settings.aiEngine) ?? .onDevice).title).font(.app(size: 10, weight: .semibold))
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+            }
+            row("asterisk", "Claude Code in the notch",
+                settings.claudeBridge ? "Status and permission requests show in the notch · hooks added to ~/.claude/settings.json"
+                                      : "Adds hooks to ~/.claude/settings.json; switching off removes them") {
+                Toggle("", isOn: $settings.claudeBridge)
+            }
+            row("camera.viewfinder", "Name screenshots", "Renames new screenshots after what they show, before they reach the Shelf") {
+                Toggle("", isOn: $settings.nameScreenshots)
+            }
         }
     }
 

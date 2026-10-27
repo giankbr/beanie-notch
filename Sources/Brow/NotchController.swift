@@ -177,6 +177,10 @@ final class NotchController {
         dropZone.orderFrontRegardless()
 
         model.$expanded.sink { [weak self] open in self?.expandedChanged(open) }.store(in: &sinks)
+        model.openPanel = { [weak self] in
+            self?.expand(pinned: true)
+            self?.model.pinned = true
+        }
         let settings = model.settings
         Publishers.CombineLatest3(settings.$hotkey, settings.$hotkeyCode, settings.$hotkeyModifiers)
             .sink { [weak self] on, code, modifiers in
@@ -363,7 +367,8 @@ final class NotchController {
             outsideSince = nil
             return
         }
-        if model.pinned || NSEvent.pressedMouseButtons != 0 {
+        // A Claude Code permission request keeps it open until it's answered.
+        if model.pinned || NSEvent.pressedMouseButtons != 0 || !model.claude.pending.isEmpty {
             outsideSince = nil
             return
         }

@@ -55,6 +55,11 @@ Brow is written in Swift and SwiftUI with no third-party dependencies. The downl
   - **Claude Code**, read from its local logs: tokens and estimated API cost for today, the last 5 hours and the week, per model, with a 7-day chart.
   - **Codex**, read from its local logs: tokens and rate-limit windows.
   - Cursor, Antigravity and Gemini CLI are detected, but their usage is not shown yet (see below).
+- **AI, on your Mac:**
+  - **Ask:** one question at a time to Apple's on-device model (macOS 26+, offline and free), Claude Code, or a local Ollama model.
+  - **Clipboard actions:** ✦ on copied text summarizes, translates (English ⇄ Indonesian), fixes grammar or explains it.
+  - **Screenshot names:** new screenshots can be renamed after what they show ("invoice-oktober.png"), read and named on the Mac.
+  - **Claude Code in the notch:** while Claude works the notch shows the project; it tells you when Claude is done or waiting, and permission requests appear in the panel with Allow and Deny. Switch it on in Settings › AI: Brow adds hooks to `~/.claude/settings.json` (and removes them when switched off). If Brow isn't running, Claude Code asks in the terminal as usual.
 - **Controls:**
   - Dark mode, Night Shift, keep awake, mic mute, Dock hiding and desktop icons.
   - Brightness sliders for every screen, including external monitors over DDC.

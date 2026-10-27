@@ -17,7 +17,9 @@ struct ClipboardView: View {
 
 private struct HistoryView: View {
     @EnvironmentObject var clipboard: ClipboardHistory
+    @EnvironmentObject var model: AppModel
     @Binding var mode: Int
+    @State private var result: AIResult?
     @State private var query = ""
     @State private var copied: UUID?
     @State private var selected = 0
@@ -30,7 +32,7 @@ private struct HistoryView: View {
     var body: some View {
         VStack(spacing: 8) {
             HStack(spacing: 6) {
-                Segmented(options: ["History", "Notes"], selection: $mode).frame(width: 120)
+                Segmented(options: ["History", "Notes"], selection: $mode).fixedSize()
                 HStack(spacing: 6) {
                     Image(systemName: "magnifyingglass").font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.dim)
                     TextField("Search text, file names, or words in images", text: $query)
@@ -69,9 +71,16 @@ private struct HistoryView: View {
                 }
             }
 
-            Text("↑ ↓ and Return in the search field, or click · pinned text is kept, the rest stays in memory")
+            Text("↑ ↓ and Return in the search field, or click · ✦ on text to summarize, translate or fix it")
                 .font(.app(size: 8.5)).foregroundStyle(Theme.faint)
         }
+        .overlay(alignment: .bottom) {
+            if let result {
+                AIResultCard(result: result, engine: model.engine.title) { self.result = nil }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy(duration: 0.25), value: result)
     }
 
     private func move(_ step: Int) -> KeyPress.Result {
@@ -107,6 +116,7 @@ private struct HistoryView: View {
                     .font(.app(size: 10.5)).lineLimit(1).truncationMode(.middle)
             }
             Spacer(minLength: 6)
+            if let text = entry.text { aiMenu(text) }
             if copied == entry.id {
                 Pill(text: "Copied", color: Theme.accent, icon: "checkmark")
             } else {
@@ -133,6 +143,36 @@ private struct HistoryView: View {
         }
     }
 
+    private func aiMenu(_ text: String) -> some View {
+        Menu {
+            ForEach(TextAction.allCases) { action in
+                Button { run(action, on: text) } label: { Label(action.title, systemImage: action.icon) }
+            }
+        } label: {
+            Image(systemName: "sparkles").font(.system(size: 9, weight: .semibold)).foregroundStyle(Theme.accent)
+                .frame(width: 20, height: 20).contentShape(Rectangle())
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help("Summarize, translate, fix or explain with \(model.engine.title)")
+    }
+
+    private func run(_ action: TextAction, on text: String) {
+        let ticket = UUID()
+        result = AIResult(id: ticket, title: action.title, text: nil, error: nil)
+        let engine = model.engine
+        Task {
+            do {
+                let answer = try await Assistant.respond(String(text.prefix(6000)), instructions: action.instructions, engine: engine)
+                if result?.id == ticket { result?.text = answer }
+            } catch {
+                if result?.id == ticket { result?.error = error.localizedDescription }
+            }
+        }
+    }
+
     @ViewBuilder private func sourceIcon(_ bundleID: String?) -> some View {
         if let bundleID, let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) {
             Image(nsImage: NSWorkspace.shared.icon(forFile: url.path)).resizable().frame(width: 16, height: 16)
@@ -152,7 +192,7 @@ private struct NotesView: View {
     var body: some View {
         VStack(spacing: 8) {
             HStack(spacing: 6) {
-                Segmented(options: ["History", "Notes"], selection: $mode).frame(width: 120)
+                Segmented(options: ["History", "Notes"], selection: $mode).fixedSize()
                 Spacer()
                 Pill(text: "\(notes.text.split(whereSeparator: \.isWhitespace).count) words")
                 PillButton(text: "Copy", icon: "doc.on.doc") {
@@ -182,5 +222,52 @@ private struct NotesView: View {
                     }
                 }
         }
+    }
+}
+
+struct AIResult: Equatable {
+    let id: UUID
+    let title: String
+    var text: String?
+    var error: String?
+}
+
+// The answer to a clipboard action, over the bottom of the list.
+struct AIResultCard: View {
+    let result: AIResult
+    let engine: String
+    var close: () -> Void
+    @State private var copied = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "sparkles").font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accent)
+                Text(result.title).font(.app(size: 11, weight: .semibold))
+                Text(engine).font(.app(size: 9)).foregroundStyle(Theme.faint)
+                Spacer()
+                if let text = result.text {
+                    PillButton(text: copied ? "Copied" : "Copy", icon: copied ? "checkmark" : "doc.on.doc", color: Theme.accent) {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(text, forType: .string)
+                        copied = true
+                    }
+                }
+                IconButton(icon: "xmark") { close() }
+            }
+            if let text = result.text {
+                ScrollView { Text(text).font(.app(size: 11)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
+                    .frame(maxHeight: 110)
+            } else if let error = result.error {
+                Text(error).font(.app(size: 10)).foregroundStyle(Theme.amber)
+            } else {
+                HStack(spacing: 8) { ProgressView().controlSize(.small); Text("Thinking…").font(.app(size: 10)).foregroundStyle(Theme.dim) }
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.background))
+        .card()
+        .shadow(color: .black.opacity(0.25), radius: 14, y: 6)
     }
 }
