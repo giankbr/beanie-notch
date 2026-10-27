@@ -11,6 +11,9 @@
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
     <WindowsPackageType>None</WindowsPackageType>
+    <!-- The SDK only builds resources.pri for projects with XAML files; this one has none, but WinUI's own theme
+         resources still have to be merged into it or the controls can't start. Windows-only: the tool is too. -->
+    <AppxGeneratePriEnabled Condition="'$(OS)' == 'Windows_NT'">true</AppxGeneratePriEnabled>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <SelfContained>true</SelfContained>
     <Nullable>enable</Nullable>
