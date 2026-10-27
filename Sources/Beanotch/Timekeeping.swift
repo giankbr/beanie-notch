@@ -143,7 +143,8 @@ final class Updater: ObservableObject {
 
     init() {
         automatic = UserDefaults.standard.object(forKey: "checkUpdates") as? Bool ?? true
-        let t = Timer.scheduledTimer(withTimeInterval: 24 * 3600, repeats: true) { [weak self] _ in
+        // Every six hours, so a new release reaches people the same day.
+        let t = Timer.scheduledTimer(withTimeInterval: 6 * 3600, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { if self?.automatic == true { self?.check(announce: true) } }
         }
         t.tolerance = 3600
@@ -176,7 +177,11 @@ final class Updater: ObservableObject {
             latest = version
             page = URL(string: release.html_url)
             download = release.assets.first { $0.name.hasSuffix(".dmg") }.flatMap { URL(string: $0.browser_download_url) }
-            if announce, updateAvailable { onNewVersion?(version) }
+            // Announced once per version, however often it's checked.
+            if announce, updateAvailable, UserDefaults.standard.string(forKey: "announcedVersion") != version {
+                UserDefaults.standard.set(version, forKey: "announcedVersion")
+                onNewVersion?(version)
+            }
         }
     }
 

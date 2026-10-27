@@ -181,7 +181,8 @@ final class AppModel: ObservableObject {
                               left: ok ? "Shortcut done" : "Shortcut failed", right: name))
         }
         updater.onNewVersion = { [weak self] version in
-            self?.show(Notice(icon: "arrow.down.app.fill", color: Theme.accent2, left: "Update", right: "Beanotch \(version) is out", duration: 6))
+            self?.show(Notice(icon: "arrow.down.app.fill", color: Theme.accent2, left: "Beanotch \(version)",
+                              right: "Click to update", duration: 15, essential: true, open: AppModel.installUpdate))
         }
         // AirPods and other Bluetooth headphones: their charge follows the "Connected" notice once it's known.
         audio.onBluetooth = { [weak self] name in
@@ -289,6 +290,9 @@ final class AppModel: ObservableObject {
 
     private var settingsSink: AnyCancellable?
     private var lyricsSink: AnyCancellable?
+
+    // A notice's link that installs the update instead of opening a page.
+    static let installUpdate = URL(string: "beanotch:update")!
 
     // Alerts that can wait, held while a call is on.
     private var held: [Notice] = []

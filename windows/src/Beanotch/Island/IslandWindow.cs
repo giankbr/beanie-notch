@@ -35,7 +35,9 @@ public sealed partial class IslandWindow : Window
     private readonly Grid root = new();
     private readonly ClosedView closed;
     private readonly Shell shell;
-    private readonly DispatcherQueueTimer collapseTimer, tick, statsTimer, dataTimer, quakeTimer;
+    private readonly DispatcherQueueTimer collapseTimer, tick, statsTimer, dataTimer, quakeTimer, updateTimer;
+    // A notice's link that installs the update instead of opening a page.
+    private static readonly Uri InstallUpdate = new("beanotch:update");
     private Notice? notice;
     // Alerts that can wait, held while a call is on.
     private readonly List<Notice> held = [];
@@ -65,7 +67,8 @@ public sealed partial class IslandWindow : Window
         root.PointerPressed += (_, _) =>
         {
             if (model.Expanded) return;
-            if (notice?.Open is { } link) _ = Windows.System.Launcher.LaunchUriAsync(link);
+            if (notice?.Open == InstallUpdate) _ = model.Updater.InstallAsync();
+            else if (notice?.Open is { } link) _ = Windows.System.Launcher.LaunchUriAsync(link);
             else Expand();
         };
         root.PointerExited += (_, _) => collapseTimer?.Start();
@@ -113,7 +116,12 @@ public sealed partial class IslandWindow : Window
         model.Stats.Sample();
         _ = model.Cleaner.ScanAsync();
         _ = model.RefreshDataAsync();
-        _ = model.Updater.CheckAsync();
+        // A new release is looked for at start and every six hours, and announced once per version.
+        updateTimer = ui.CreateTimer();
+        updateTimer.Interval = TimeSpan.FromHours(6);
+        updateTimer.Tick += (_, _) => _ = CheckForUpdate();
+        updateTimer.Start();
+        _ = CheckForUpdate();
         dataTimer = ui.CreateTimer();
         dataTimer.Interval = TimeSpan.FromMinutes(10);
         dataTimer.Tick += (_, _) => _ = model.RefreshDataAsync();
@@ -153,6 +161,16 @@ public sealed partial class IslandWindow : Window
                 _ = SnapshotAsync(dir);
             };
         }
+    }
+
+    private async Task CheckForUpdate()
+    {
+        await model.Updater.CheckAsync();
+        if (!model.Updater.UpdateAvailable || model.Updater.Latest is not { } latest || model.Settings.AnnouncedVersion == latest) return;
+        model.Settings.AnnouncedVersion = latest;
+        model.Settings.Save();
+        Show(new Notice(Glyphs.Download, Theme.Accent2, $"Beanotch {latest}", "Click to update", TimeSpan.FromSeconds(15),
+                        Essential: true, Open: InstallUpdate));
     }
 
     private void Show(Notice n)

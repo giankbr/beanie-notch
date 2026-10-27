@@ -31,6 +31,8 @@ public sealed class AppSettings
     public bool QuakeAlerts { get; set; } = true;
     public string QuakeSeen { get; set; } = "";
     public bool NotchPet { get; set; }
+    // The newest version announced in the island, so each one is announced once.
+    public string AnnouncedVersion { get; set; } = "";
     // The sound while a focus stretch runs; empty for none.
     public string FocusSound { get; set; } = "";
     public string RatesDay { get; set; } = "";

@@ -144,7 +144,9 @@ final class NotchController {
         }
         zone.onClick = { [weak self] in
             // A notice with a link (a chat app, Maps, a parcel tracker) opens it; otherwise the panel opens.
-            if let app = self?.model.notice?.open {
+            if self?.model.notice?.open == AppModel.installUpdate {
+                self?.model.updater.install()
+            } else if let app = self?.model.notice?.open {
                 NSWorkspace.shared.open(app)
             } else {
                 self?.expand(pinned: true)
