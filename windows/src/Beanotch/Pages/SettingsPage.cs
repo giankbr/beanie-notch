@@ -315,6 +315,7 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
             Row(Glyphs.Location, "Place", "Times are worked out on this PC", city),
             Row(null, "Method", "", method),
             Picker("Reminder", "Before each prayer, in the island", reminder),
+            Row(null, "At prayer time", "A notice and a chime when each prayer comes", Switch(S0.PrayerAlerts, v => { S0.PrayerAlerts = v; Save(); })),
         };
         if (Quakes.InIndonesia(S0.Place))
             rows.Add(Row("\uE7BA", "Earthquakes", "From BMKG: near you, strong ones, or a tsunami risk, in red", Switch(S0.QuakeAlerts, v => { S0.QuakeAlerts = v; Save(); })));

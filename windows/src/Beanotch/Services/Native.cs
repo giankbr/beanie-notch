@@ -69,6 +69,13 @@ static partial class Native
         return r.Left <= info.Monitor.Left && r.Top <= info.Monitor.Top && r.Right >= info.Monitor.Right && r.Bottom >= info.Monitor.Bottom;
     }
 
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool MessageBeep(uint type);
+
+    // The system's "asterisk" sound, for a prayer time.
+    internal static void Chime() => MessageBeep(0x40);
+
     [LibraryImport("dwmapi.dll")]
     private static partial int DwmSetWindowAttribute(nint hwnd, int attribute, ref uint value, int size);
 

@@ -129,6 +129,14 @@ public sealed class Model
         if (Settings.PrayerReminder > 0 && NextPrayer is var prayer && prayer.Time - now is var left
             && left <= TimeSpan.FromMinutes(Settings.PrayerReminder) && left > TimeSpan.Zero && announced.Add("prayer|" + prayer.Time))
             Raise(Glyphs.Moon, Ui.Theme.Accent2, Label(prayer), "in " + Countdown(left), 8);
+        // The time itself, with a chime; in Ramadan, Maghrib is the iftar notice below.
+        if (Settings.PrayerAlerts && Visible(Tab.Prayer))
+            foreach (var e in PrayersToday.Where(e => e.IsPrayer && !(Ramadan && e.Name == "Maghrib")))
+                if (e.Time - now is var gap && gap <= TimeSpan.Zero && gap > TimeSpan.FromMinutes(-1) && announced.Add("time|" + e.Time))
+                {
+                    Services.Native.Chime();
+                    Raise(Glyphs.Moon, Ui.Theme.Accent, e.Name, Clock(e.Time), 10);
+                }
         if (Ramadan && Settings.PrayerCountdown)
             foreach (var e in PrayersToday.Where(e => e.Name is "Imsak" or "Maghrib"))
             {

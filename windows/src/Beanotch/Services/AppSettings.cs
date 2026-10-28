@@ -49,6 +49,8 @@ public sealed class AppSettings
     public Dictionary<string, double> RatesToday { get; set; } = [];
     public Dictionary<string, double> RatesPrevious { get; set; } = [];
     public int PrayerReminder { get; set; } = 10;
+    // A notice and a chime when each prayer time comes.
+    public bool PrayerAlerts { get; set; } = true;
     public string CalendarUrl { get; set; } = "";
     public List<TaskItem> Tasks { get; set; } = [];
     public List<string> Clocks { get; set; } = ["Europe/London", "America/New_York", "Asia/Tokyo"];
