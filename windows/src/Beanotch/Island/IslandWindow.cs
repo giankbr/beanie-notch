@@ -44,6 +44,7 @@ public sealed partial class IslandWindow : Window
     private DateTime noticeUntil;
     private (int W, int H, NotchShape Shape) placed;
     private bool hiddenForFullscreen;
+    private int fullscreenVotes;
     private readonly DispatcherQueueTimer petStroke;
 
     private bool OnPet(Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
@@ -58,7 +59,11 @@ public sealed partial class IslandWindow : Window
     private void HideForFullscreen()
     {
         var hide = model.Settings.HideInFullscreen && !model.Expanded && Native.FullscreenAppOpen(hwnd);
-        if (hide == hiddenForFullscreen) return;
+        // A change has to hold for a few ticks (over a second) before the island follows it, so a window passing
+        // through full screen size, or a moment's focus change, doesn't make it blink.
+        fullscreenVotes = hide == hiddenForFullscreen ? 0 : fullscreenVotes + 1;
+        if (fullscreenVotes < 3) return;
+        fullscreenVotes = 0;
         hiddenForFullscreen = hide;
         if (hide) AppWindow.Hide();
         else AppWindow.Show(false);

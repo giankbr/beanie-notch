@@ -57,6 +57,17 @@ static partial class Native
     [LibraryImport("shell32.dll")]
     private static partial int SHQueryUserNotificationState(out int state);
 
+    [LibraryImport("user32.dll")]
+    private static partial uint GetWindowThreadProcessId(nint hwnd, out uint process);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool IsWindowVisible(nint hwnd);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool IsIconic(nint hwnd);
+
     // Something fills the island's screen: a game (Direct3D full screen), a slideshow, or any window, a video
     // player in full screen say, covering the whole monitor. The desktop and the taskbar don't count.
     internal static bool FullscreenAppOpen(nint island)
@@ -64,6 +75,9 @@ static partial class Native
         if (SHQueryUserNotificationState(out var state) == 0 && state is 3 or 4) return true; // D3D full screen, presentation mode
         var front = GetForegroundWindow();
         if (front == 0 || front == island) return false;
+        // Only a real, visible app window counts: not the island's own windows, nor hidden or minimized ones.
+        GetWindowThreadProcessId(front, out var pid);
+        if (pid == Environment.ProcessId || !IsWindowVisible(front) || IsIconic(front)) return false;
         var name = new char[64];
         var length = GetClassName(front, name, name.Length);
         if (new string(name, 0, Math.Max(length, 0)) is "Progman" or "WorkerW" or "Shell_TrayWnd" or "Shell_SecondaryTrayWnd") return false;
@@ -97,7 +111,7 @@ static partial class Native
         DwmSetWindowAttribute(hwnd, 33, ref square, 4);   // DWMWA_WINDOW_CORNER_PREFERENCE = DWMWCP_DONOTROUND
         DwmSetWindowAttribute(hwnd, 34, ref noBorder, 4); // DWMWA_BORDER_COLOR = DWMWA_COLOR_NONE
         // Windows 11 still keeps a sliver of frame (a light line along the edges) on a window without a title bar: the
-        // window's whole area is made client area, and what shows behind the content is painted black like the notch.
+        // window's whole area is made client area.
         unsafe { SetWindowSubclass(hwnd, &NoFrame, 7, 0); }
         SetWindowPos(hwnd, 0, 0, 0, 0, 0, 0x0020 | 0x0002 | 0x0001 | 0x0004 | 0x0010); // FRAMECHANGED | NOMOVE | NOSIZE | NOZORDER | NOACTIVATE
     }
@@ -109,16 +123,6 @@ static partial class Native
     [LibraryImport("comctl32.dll")]
     private static partial nint DefSubclassProc(nint hwnd, uint message, nint wParam, nint lParam);
 
-    [LibraryImport("gdi32.dll")]
-    private static partial nint GetStockObject(int index);
-
-    [LibraryImport("user32.dll")]
-    private static partial int FillRect(nint dc, in Rect rect, nint brush);
-
-    [LibraryImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool GetClientRect(nint hwnd, out Rect rect);
-
     [UnmanagedCallersOnly(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvStdcall)])]
     private static nint NoFrame(nint hwnd, uint message, nint wParam, nint lParam, nuint id, nuint data)
     {
@@ -126,9 +130,6 @@ static partial class Native
         {
             case 0x0083 when wParam != 0: // WM_NCCALCSIZE: the client area is the whole window
                 return 0;
-            case 0x0014 when GetClientRect(hwnd, out var rect): // WM_ERASEBKGND: black, never the system's white
-                FillRect(wParam, rect, GetStockObject(4)); // BLACK_BRUSH
-                return 1;
         }
         return DefSubclassProc(hwnd, message, wParam, lParam);
     }
