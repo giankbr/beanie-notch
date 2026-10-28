@@ -22,7 +22,7 @@
     <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\Beanotch.ico</ApplicationIcon>
-    <Version>1.10.9</Version>
+    <Version>1.10.10</Version>
     <!-- Drops the parts of .NET and the Windows SDK projection the app never calls. -->
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>full</TrimMode>
