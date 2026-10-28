@@ -96,9 +96,41 @@ static partial class Native
         uint square = 1, noBorder = 0xFFFFFFFE;
         DwmSetWindowAttribute(hwnd, 33, ref square, 4);   // DWMWA_WINDOW_CORNER_PREFERENCE = DWMWCP_DONOTROUND
         DwmSetWindowAttribute(hwnd, 34, ref noBorder, 4); // DWMWA_BORDER_COLOR = DWMWA_COLOR_NONE
-        uint noFrame = 1;
-        DwmSetWindowAttribute(hwnd, 2, ref noFrame, 4);   // DWMWA_NCRENDERING_POLICY = DWMNCRP_DISABLED: no shadow or edge at all
+        // Windows 11 still keeps a sliver of frame (a light line along the edges) on a window without a title bar: the
+        // window's whole area is made client area, and what shows behind the content is painted black like the notch.
+        unsafe { SetWindowSubclass(hwnd, &NoFrame, 7, 0); }
         SetWindowPos(hwnd, 0, 0, 0, 0, 0, 0x0020 | 0x0002 | 0x0001 | 0x0004 | 0x0010); // FRAMECHANGED | NOMOVE | NOSIZE | NOZORDER | NOACTIVATE
+    }
+
+    [LibraryImport("comctl32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static unsafe partial bool SetWindowSubclass(nint hwnd, delegate* unmanaged[Stdcall]<nint, uint, nint, nint, nuint, nuint, nint> proc, nuint id, nuint data);
+
+    [LibraryImport("comctl32.dll")]
+    private static partial nint DefSubclassProc(nint hwnd, uint message, nint wParam, nint lParam);
+
+    [LibraryImport("gdi32.dll")]
+    private static partial nint GetStockObject(int index);
+
+    [LibraryImport("user32.dll")]
+    private static partial int FillRect(nint dc, in Rect rect, nint brush);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool GetClientRect(nint hwnd, out Rect rect);
+
+    [UnmanagedCallersOnly(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvStdcall)])]
+    private static nint NoFrame(nint hwnd, uint message, nint wParam, nint lParam, nuint id, nuint data)
+    {
+        switch (message)
+        {
+            case 0x0083 when wParam != 0: // WM_NCCALCSIZE: the client area is the whole window
+                return 0;
+            case 0x0014 when GetClientRect(hwnd, out var rect): // WM_ERASEBKGND: black, never the system's white
+                FillRect(wParam, rect, GetStockObject(4)); // BLACK_BRUSH
+                return 1;
+        }
+        return DefSubclassProc(hwnd, message, wParam, lParam);
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
