@@ -72,14 +72,24 @@ i[data-lucide], svg.lucide { width: 16px; height: 16px; stroke-width: 1.75; flex
 /* Announcement + nav */
 .banner { background: var(--banner-bg); color: var(--banner-fg); border-bottom: 1px solid var(--border); font-size: 13.5px; font-weight: 500; }
 .banner a { display: flex; gap: 8px; align-items: center; justify-content: center; padding: 9px 16px; text-align: center; }
-nav { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: saturate(160%) blur(14px); -webkit-backdrop-filter: saturate(160%) blur(14px); }
-nav .wrap { display: flex; align-items: center; gap: 36px; height: 76px; }
-.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; letter-spacing: -.3px; }
-.brand img { width: 30px; height: 30px; border-radius: 8px; }
-.nav-links { display: flex; gap: 28px; font-size: 14.5px; color: var(--text-2); font-weight: 500; white-space: nowrap; }
-@media (max-width: 1100px) { .nav-links { gap: 18px; } }
+/* A floating bar: the brand, the sections in one tray with the one in view lit, and the actions. */
+nav { position: sticky; top: 0; z-index: 20; padding: 12px 16px 0; pointer-events: none; }
+nav .bar { pointer-events: auto; max-width: 1180px; margin: 0 auto; height: 62px; padding: 0 10px 0 18px; border-radius: 20px;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px;
+  background: color-mix(in srgb, var(--surface) 70%, transparent); border: 1px solid var(--border);
+  backdrop-filter: saturate(160%) blur(18px); -webkit-backdrop-filter: saturate(160%) blur(18px);
+  box-shadow: 0 12px 32px -20px rgba(0,0,0,.45); transition: background .3s, box-shadow .3s; }
+.brand { justify-self: start; display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; letter-spacing: -.3px; }
+.brand img { width: 28px; height: 28px; border-radius: 8px; }
+.nav-links { display: flex; gap: 2px; padding: 4px; border-radius: 13px; font-size: 14px; font-weight: 500; white-space: nowrap;
+  background: color-mix(in srgb, var(--text-1) 5%, transparent); box-shadow: inset 0 0 0 1px var(--border); }
+.nav-links a { padding: 7px 14px; border-radius: 10px; color: var(--text-2); transition: color .2s, background .2s, box-shadow .2s; }
 .nav-links a:hover { color: var(--text-1); }
-.nav-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.nav-links a.on { color: var(--text-1); background: linear-gradient(180deg, var(--key-top), var(--key-bottom));
+  box-shadow: inset 0 1px 0 var(--key-shine), inset 0 -2px 0 var(--key-edge), inset 0 0 0 1px var(--key-line); }
+@media (max-width: 1100px) { .nav-links a { padding: 7px 10px; } }
+.nav-right { justify-self: end; display: flex; gap: 8px; align-items: center; }
+.nav-right .btn { height: 40px; }
 .icon-btn { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 11px; border: 0; color: var(--text-2); cursor: pointer;
   background: linear-gradient(180deg, var(--key-top), var(--key-bottom)); transition: transform .12s, box-shadow .12s, color .12s;
   box-shadow: inset 0 1px 0 var(--key-shine), inset 0 -2px 0 var(--key-edge), inset 0 0 0 1px var(--key-line); }
@@ -287,6 +297,7 @@ footer { padding: 0; overflow: hidden; }
 /* Small screens */
 @media (max-width: 960px) {
   .nav-links { display: none; }
+  nav .bar { display: flex; justify-content: space-between; height: 58px; }
   .grid-2, .grid-3, .faq, .cta, .custom, .credits { grid-template-columns: 1fr; }
   .faq { gap: 32px; }
   .panel-card .txt { grid-template-columns: 1fr; gap: 6px; }
@@ -366,7 +377,7 @@ h2 em { transition: opacity .9s .15s, transform .9s .15s cubic-bezier(.2,.7,.2,1
 .panel-card:hover .shot img { transform: translateY(-6px) scale(1.02); }
 .card, .feature { transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s, border-color .35s; }
 .panel-card:hover, .closed-card:hover, .feature:hover, .mini:hover { transform: translateY(-4px); box-shadow: 0 18px 40px -22px rgba(0,0,0,.35); }
-nav.scrolled { box-shadow: 0 1px 0 var(--border); }
+nav.scrolled .bar { background: color-mix(in srgb, var(--surface) 86%, transparent); box-shadow: 0 16px 40px -18px rgba(0,0,0,.55); }
 .watermark { transform: translateY(var(--wm, 0px)); }
 @media (prefers-reduced-motion: reduce) {
   .reveal, .hero h1 .w, .hero .pill, .hero .lead, .hero .cta-row, .hero .meta, .hero-shot { opacity: 1 !important; transform: none !important; filter: none !important; animation: none !important; }
@@ -441,9 +452,17 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
 .both { margin-top: 24px; padding: 32px; border-radius: 24px; }
 .both .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
 .both .top > span { color: var(--text-3); font-size: 13px; }
-.both .chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-.both .chips div { display: flex; gap: 10px; align-items: center; padding: 14px 16px; background: var(--inner); border: 1px solid var(--border); border-radius: 14px; font-size: 15px; font-weight: 500; }
-.both .chips svg { color: var(--text-2); }
+.both .groups { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.both .group { background: var(--inner); border: 1px solid var(--border); border-radius: 18px; padding: 18px 18px 6px; }
+.both .group h4 { margin: 0 0 8px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 600;
+  letter-spacing: .9px; text-transform: uppercase; color: var(--g); }
+.both .group h4 span { color: var(--text-3); font-size: 12px; letter-spacing: 0; }
+.both .group ul { list-style: none; margin: 0; padding: 0; }
+.both .group li { display: flex; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid var(--border); font-size: 15px; font-weight: 500; }
+.both .group li:first-child { border-top: 0; }
+.both .ic { width: 30px; height: 30px; flex: none; display: grid; place-items: center; border-radius: 9px; color: var(--g);
+  background: color-mix(in srgb, var(--g) 14%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--g) 22%, transparent); }
+.both .ic svg { width: 16px; height: 16px; }
 
 /* Get Beanotch: one card per platform */
 .get { padding: 40px; display: flex; flex-direction: column; gap: 24px; border-radius: 28px; }
@@ -455,13 +474,12 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
 .get .term code { white-space: normal; }
 @media (max-width: 960px) {
   .hero-shot.platform-stage { grid-template-columns: 1fr; margin-inline: 16px; }
-  .both .chips { grid-template-columns: repeat(2, 1fr); }
+  .both .groups { grid-template-columns: 1fr; }
 }
 @media (max-width: 560px) {
   .hero .pill { font-size: 11.5px; white-space: nowrap; gap: 6px; }
   .platform-stage .shot { height: 220px; }
   .platform-stage .shot.mac { height: auto; aspect-ratio: 2 / 1; }
-  .both .chips { grid-template-columns: 1fr; }
   .plat-card .body, .both, .get { padding: 24px; }
   .plat-card .title { flex-wrap: wrap; }
 }
@@ -496,15 +514,15 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
 <div class="banner"><a href="#new">✦ New in 1.10: a notch pet, terminal runs, smart copy and the Keycap and Pixel themes. <i data-lucide="arrow-right"></i></a></div>
 
 <nav>
-  <div class="wrap">
+  <div class="bar">
     <a class="brand" href="#"><img src="landing-page-assets/beanotch-icon.png" alt="">Beanotch</a>
     <div class="nav-links">
-      <a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#new">What's new</a><a href="#pet">Pet</a><a href="#customize">Customize</a><a href="#platforms">Mac vs Windows</a><a href="#faq">FAQ</a>
+      <a href="#features">Features</a><a href="#new">What's new</a><a href="#pet">Pet</a><a href="#customize">Customize</a><a href="#platforms">Platforms</a><a href="#faq">FAQ</a>
     </div>
     <div class="nav-right">
+      <a class="icon-btn" href="https://github.com/giankbr/beanie-notch" aria-label="Beanotch on GitHub"><i data-lucide="github"></i></a>
       <button class="icon-btn" id="themeBtn" aria-label="Switch light or dark"><i data-lucide="moon"></i></button>
-      <a class="btn btn-ghost btn-sm" href="https://github.com/giankbr/beanie-notch"><i data-lucide="github"></i>Star on GitHub</a>
-      <a class="btn btn-primary btn-sm dl" data-label="Get Beanotch" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch.dmg"><i data-lucide="apple"></i>Get Beanotch</a>
+      <a class="btn btn-primary btn-sm dl" data-label="Download" href="https://github.com/giankbr/beanie-notch/releases/latest/download/Beanotch.dmg"><i data-lucide="apple"></i>Download</a>
     </div>
   </div>
 </nav>
@@ -761,7 +779,11 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
     </div>
     <div class="card both">
       <div class="top"><div class="lbl"><i style="background:var(--live)"></i>ON BOTH</div><span>Same panels, same look, built natively for each</span></div>
-      <div class="chips"><div><i data-lucide="layout-grid"></i>Overview &amp; cleanup</div><div><i data-lucide="calendar"></i>Today &amp; Join</div><div><i data-lucide="moon"></i>Prayer times &amp; qibla</div><div><i data-lucide="music"></i>Synced lyrics</div><div><i data-lucide="inbox"></i>Shelf</div><div><i data-lucide="clipboard"></i>Clipboard history</div><div><i data-lucide="sparkles"></i>Claude Code usage</div><div><i data-lucide="sun"></i>Brightness &amp; DDC</div><div><i data-lucide="smile"></i>Notch pet</div><div><i data-lucide="terminal"></i>Terminal runs</div><div><i data-lucide="clipboard-check"></i>Smart copy</div><div><i data-lucide="coins"></i>Rates, gold &amp; fuel</div><div><i data-lucide="phone"></i>Call mode</div><div><i data-lucide="palette"></i>Dark, Glass, Keycap, Pixel</div></div>
+      <div class="groups">
+        <div class="group" style="--g:#3B8BFF"><h4>Panels<span>6</span></h4><ul><li><span class="ic"><i data-lucide="layout-grid"></i></span>Overview &amp; cleanup</li><li><span class="ic"><i data-lucide="calendar"></i></span>Today &amp; Join</li><li><span class="ic"><i data-lucide="moon"></i></span>Prayer times &amp; qibla</li><li><span class="ic"><i data-lucide="music"></i></span>Synced lyrics</li><li><span class="ic"><i data-lucide="inbox"></i></span>Shelf</li><li><span class="ic"><i data-lucide="clipboard"></i></span>Clipboard history</li></ul></div>
+        <div class="group" style="--g:#8C7CFF"><h4>Helpers<span>5</span></h4><ul><li><span class="ic"><i data-lucide="sparkles"></i></span>Claude Code usage</li><li><span class="ic"><i data-lucide="terminal"></i></span>Terminal runs</li><li><span class="ic"><i data-lucide="clipboard-check"></i></span>Smart copy</li><li><span class="ic"><i data-lucide="coins"></i></span>Rates, gold &amp; fuel</li><li><span class="ic"><i data-lucide="phone"></i></span>Call mode</li></ul></div>
+        <div class="group" style="--g:#22C55E"><h4>Look &amp; feel<span>4</span></h4><ul><li><span class="ic"><i data-lucide="smile"></i></span>Notch pet</li><li><span class="ic"><i data-lucide="palette"></i></span>Dark, Glass, Keycap, Pixel</li><li><span class="ic"><i data-lucide="layout-template"></i></span>Four layouts, four sizes</li><li><span class="ic"><i data-lucide="sun"></i></span>Brightness &amp; DDC</li></ul></div>
+      </div>
     </div>
   </div>
 </section>
@@ -1089,6 +1111,21 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
     other.querySelector("span").textContent = "x64";
     document.querySelectorAll(".win-dl").forEach(function (a) { a.href = a.href.replace("-x64.exe", "-arm64.exe"); });
   }).catch(function () {});
+})();
+
+// The nav lights the section in view.
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll(".nav-links a"));
+  var sections = links.map(function (a) { return document.querySelector(a.getAttribute("href")); });
+  if (!("IntersectionObserver" in window)) return;
+  var shown = new Map();
+  var watch = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { shown.set(e.target, e.isIntersecting ? e.intersectionRect.height : 0); });
+    var best = null, most = 0;
+    sections.forEach(function (sec, i) { var h = shown.get(sec) || 0; if (h > most) { most = h; best = i; } });
+    links.forEach(function (a, i) { a.classList.toggle("on", i === best); });
+  }, { threshold: [0, .1, .25, .5, .75, 1], rootMargin: "-80px 0px -35% 0px" });
+  sections.forEach(function (sec) { if (sec) watch.observe(sec); });
 })();
 
 // One download button for everyone: on a Windows PC the main buttons fetch the Windows installer instead of the
