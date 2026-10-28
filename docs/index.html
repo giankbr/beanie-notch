@@ -507,6 +507,29 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
   .pet-moods figure { padding: 10px 4px 8px; }
   .pet-moods figcaption { font-size: 11.5px; }
 }
+/* Beanotch Dock, the sister app: its dock on a Windows desktop, light or dark with the page. */
+:root[data-theme="dark"] .dock-promo .only-light, :root[data-theme="light"] .dock-promo .only-dark { display: none; }
+.dock-promo { display: grid; grid-template-columns: 1fr 1.25fr; gap: 0; padding: 0; margin-top: 56px; border-radius: 28px; }
+.dock-promo .copy { padding: 44px 40px; display: flex; flex-direction: column; gap: 18px; justify-content: center; }
+.dock-promo .copy .app { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 20px; }
+.dock-promo .copy .app img { width: 44px; height: 44px; border-radius: 11px; }
+.dock-promo .copy h3 { margin: 0; font-size: 30px; line-height: 1.15; letter-spacing: -.6px; }
+.dock-promo .copy p { margin: 0; color: var(--text-2); font-size: 16px; line-height: 1.6; }
+.dock-promo ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; color: var(--text-2); font-size: 15px; }
+.dock-promo li { display: flex; gap: 10px; align-items: center; }
+.dock-promo li svg { color: var(--accent); }
+.dock-promo .btn { height: 44px; padding: 0 18px; font-size: 15px; border-radius: 13px; }
+.dock-promo .btn { height: 44px; padding: 0 18px; font-size: 15px; border-radius: 13px; }
+.dock-promo .scene { position: relative; min-height: 340px; overflow: hidden; border-radius: 0 28px 28px 0; }
+.dock-promo .scene .wall { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.dock-promo .scene .bar { position: absolute; left: 50%; bottom: 6%; width: 88%; transform: translateX(-50%); }
+@media (max-width: 960px) {
+  .dock-promo { grid-template-columns: 1fr; }
+  .dock-promo .copy { padding: 28px 24px; }
+  .dock-promo .copy h3 { font-size: 24px; }
+  .dock-promo .scene { min-height: 220px; border-radius: 0 0 28px 28px; }
+  .dock-promo .scene .bar { width: 96%; }
+}
 </style>
 </head>
 <body>
@@ -517,7 +540,7 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
   <div class="bar">
     <a class="brand" href="#"><img src="landing-page-assets/beanotch-icon.png" alt="">Beanotch</a>
     <div class="nav-links">
-      <a href="#features">Features</a><a href="#new">What's new</a><a href="#pet">Pet</a><a href="#customize">Customize</a><a href="#platforms">Platforms</a><a href="#faq">FAQ</a>
+      <a href="#features">Features</a><a href="#new">What's new</a><a href="#pet">Pet</a><a href="#customize">Customize</a><a href="#platforms">Platforms</a><a href="#dock">Dock</a><a href="#faq">FAQ</a>
     </div>
     <div class="nav-right">
       <a class="icon-btn" href="https://github.com/giankbr/beanie-notch" aria-label="Beanotch on GitHub"><i data-lucide="github"></i></a>
@@ -788,6 +811,39 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
   </div>
 </section>
 
+<section id="dock" style="border-top:1px solid var(--border)">
+  <div class="wrap">
+    <div class="center">
+      <span class="eyebrow">From the same maker</span>
+      <h2>And for the bottom,<em>a dock.</em></h2>
+      <p class="sub">Beanotch takes the top of the screen. Beanotch Dock brings the Mac's Dock to the bottom of a Windows PC.</p>
+    </div>
+    <article class="card dock-promo">
+      <div class="copy">
+        <div class="app"><img src="landing-page-assets/dock/icon.png" alt="">Beanotch Dock</div>
+        <h3>The Mac dock, right on Windows.</h3>
+        <p>Icons that grow as your pointer glides past, a dot under every open app, and Downloads and the Recycle Bin at the end. Windows' taskbar steps aside while it runs.</p>
+        <ul>
+          <li><i data-lucide="sparkles"></i>Magnification, labels and the launch bounce</li>
+          <li><i data-lucide="panel-bottom"></i>Bottom, left or right, with auto-hide</li>
+          <li><i data-lucide="sliders-horizontal"></i>Size, glass, corners, spacing and more</li>
+          <li><i data-lucide="refresh-cw"></i>Updates itself · free and open source</li>
+        </ul>
+        <div class="cta-row" style="justify-content:flex-start">
+          <a class="btn btn-primary" href="https://github.com/giankbr/beanotch-dock/releases/latest/download/BeanotchDock-Setup-x64.exe"><svg class="lucide winlogo" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 5.1 10.4 4v7.2H3zm8.4-1.2L21 2.5v8.7h-9.6zM3 12.6h7.4v7.3L3 18.8zm8.4 0H21v8.9l-9.6-1.4z"/></svg>Download</a>
+          <a class="btn btn-ghost" href="https://giankbr.github.io/beanotch-dock"><i data-lucide="arrow-up-right"></i>Learn more</a>
+        </div>
+      </div>
+      <div class="scene">
+        <img class="wall only-light" src="landing-page-assets/dock/wall-light.jpg" alt="" loading="lazy">
+        <img class="wall only-dark" src="landing-page-assets/dock/wall-dark.jpg" alt="" loading="lazy">
+        <img class="bar only-light" src="landing-page-assets/dock/dock-magnified-light.png" alt="Beanotch Dock along the bottom of a Windows 11 desktop, Firefox magnified" loading="lazy">
+        <img class="bar only-dark" src="landing-page-assets/dock/dock-magnified-dark.png" alt="" loading="lazy">
+      </div>
+    </article>
+  </div>
+</section>
+
 <section id="faq" style="border-top:1px solid var(--border)">
   <div class="wrap faq">
     <div>
@@ -866,7 +922,7 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
     </div>
     <div class="cols">
       <div><h5>PRODUCT</h5><a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#new">What's new</a><a href="#pet">Pet</a><a href="#features">AI usage <span class="new">New</span></a><a href="#customize">Customize</a><a href="https://github.com/giankbr/beanie-notch/releases">Releases</a></div>
-      <div><h5>PROJECT</h5><a href="https://github.com/giankbr/beanie-notch">GitHub</a><a href="https://github.com/giankbr/beanie-notch#build">Build from source</a><a href="https://github.com/giankbr/beanie-notch/releases">Changelog</a><a href="https://github.com/giankbr/beanie-notch/issues">Report an issue</a><a href="https://yapp.ink/gian" target="_blank" rel="noopener">Support Beanotch</a></div>
+      <div><h5>PROJECT</h5><a href="https://github.com/giankbr/beanie-notch">GitHub</a><a href="https://github.com/giankbr/beanie-notch#build">Build from source</a><a href="https://github.com/giankbr/beanie-notch/releases">Changelog</a><a href="https://github.com/giankbr/beanie-notch/issues">Report an issue</a><a href="https://yapp.ink/gian" target="_blank" rel="noopener">Support Beanotch</a><a href="https://giankbr.github.io/beanotch-dock">Beanotch Dock <span class="new">New</span></a></div>
       <div><h5>PRIVACY</h5><span>No tracking</span><span>Location stays on Mac</span><span>No API keys</span><a href="https://github.com/giankbr/beanie-notch#install">Permissions</a></div>
       <div><h5>REQUIREMENTS</h5><span>macOS 14 or later</span><span>Windows 10 or later (beta)</span><span>Apple silicon &amp; Intel</span><span>3.6 MB download</span><span id="version">v1.9.1</span></div>
     </div>
