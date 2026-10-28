@@ -465,6 +465,30 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
   .plat-card .body, .both, .get { padding: 24px; }
   .plat-card .title { flex-wrap: wrap; }
 }
+/* The notch pet: pixel sprites kept crisp, in a few small grids. */
+.pet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 56px; }
+.pet-card { padding: 26px 24px; display: flex; flex-direction: column; gap: 18px; }
+.pet-card h3 { margin: 0; font-size: 19px; font-weight: 600; }
+.pet-card > p { margin: -10px 0 0; color: var(--text-2); font-size: 15px; line-height: 1.6; }
+.sprite { image-rendering: pixelated; height: 44px; width: auto; display: block; }
+.pet-do { display: grid; gap: 12px; }
+.pet-do div { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: center; }
+.pet-do .sp { background: #0b0b0d; border-radius: 12px; height: 60px; display: flex; align-items: center; justify-content: center; }
+.pet-do b { display: block; font-weight: 600; font-size: 15px; }
+.pet-do span { color: var(--text-2); font-size: 14px; }
+.pet-moods { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.pet-moods figure { margin: 0; background: #0b0b0d; border-radius: 12px; padding: 12px 6px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.pet-moods figcaption { color: #c4c4cc; font-size: 12.5px; text-align: center; line-height: 1.3; }
+.pet-wide { grid-column: 1 / -1; }
+.pet-wide .pet-moods { grid-template-columns: repeat(9, 1fr); }
+.pet-wide figcaption small { display: block; color: #8b8b94; font-size: 11.5px; }
+@media (max-width: 960px) {
+  .pet-grid { grid-template-columns: 1fr; margin-top: 40px; }
+  .pet-wide .pet-moods { grid-template-columns: repeat(3, 1fr); }
+  .pet-moods { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .pet-moods figure { padding: 10px 4px 8px; }
+  .pet-moods figcaption { font-size: 11.5px; }
+}
 </style>
 </head>
 <body>
@@ -475,7 +499,7 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
   <div class="wrap">
     <a class="brand" href="#"><img src="landing-page-assets/beanotch-icon.png" alt="">Beanotch</a>
     <div class="nav-links">
-      <a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#new">What's new</a><a href="#customize">Customize</a><a href="#platforms">Mac vs Windows</a><a href="#faq">FAQ</a>
+      <a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#new">What's new</a><a href="#pet">Pet</a><a href="#customize">Customize</a><a href="#platforms">Mac vs Windows</a><a href="#faq">FAQ</a>
     </div>
     <div class="nav-right">
       <button class="icon-btn" id="themeBtn" aria-label="Switch light or dark"><i data-lucide="moon"></i></button>
@@ -616,6 +640,58 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
   </div>
 </section>
 
+<section id="pet" style="border-top:1px solid var(--border)">
+  <div class="wrap">
+    <div class="center">
+      <span class="eyebrow">Notch pet</span>
+      <h2>A tiny friend,<em>right by the camera.</em></h2>
+      <p class="sub">Turn it on in Settings and a pixel pet moves into the corner of the notch. Its eyes follow your pointer, and it has a mood for most of what your computer does.</p>
+    </div>
+    <div class="pet-grid">
+      <article class="card pet-card">
+        <h3>Play with it</h3>
+        <p>None of these open the panel. The pet's corner is all its own.</p>
+        <div class="pet-do">
+          <div><span class="sp"><img class="sprite" src="landing-page-assets/pet/mood-love.png" alt="" loading="lazy"></span><p style="margin:0"><b>Click it</b><span>A hop and a heart. Five quick clicks make it dizzy.</span></p></div>
+          <div><span class="sp"><img class="sprite" src="landing-page-assets/pet/mood-love.png" alt="" loading="lazy"></span><p style="margin:0"><b>Rest the pointer on it</b><span>It closes its eyes and enjoys the petting.</span></p></div>
+          <div><span class="sp"><img class="sprite" src="landing-page-assets/pet/mood-eating.png" alt="" loading="lazy"></span><p style="margin:0"><b>Drop a file on it</b><span>It eats it, and the file lands on the Shelf.</span></p></div>
+          <div><span class="sp"><img class="sprite" src="landing-page-assets/pet/mood-dancing.png" alt="" loading="lazy"></span><p style="margin:0"><b>Scroll on it</b><span>It sways side to side.</span></p></div>
+          <div><span class="sp"><img class="sprite" src="landing-page-assets/pet/mood-dizzy.png" alt="" loading="lazy"></span><p style="margin:0"><b>Shake the pointer near the notch</b><span>Stars, spinning eyes, the works.</span></p></div>
+        </div>
+      </article>
+      <article class="card pet-card">
+        <h3>It notices</h3>
+        <p>Music, your terminal, the focus timer, the battery, prayer times and earthquakes all show on its face.</p>
+        <div class="pet-moods">
+          <figure><img class="sprite" src="landing-page-assets/pet/mood-dancing.png" alt="" loading="lazy"><figcaption>Music playing</figcaption></figure>
+          <figure><img class="sprite" src="landing-page-assets/pet/mood-party.png" alt="" loading="lazy"><figcaption>Command passed</figcaption></figure>
+          <figure><img class="sprite" src="landing-page-assets/pet/mood-sad.png" alt="" loading="lazy"><figcaption>Command failed</figcaption></figure>
+          <figure><img class="sprite" src="landing-page-assets/pet/mood-focus.png" alt="" loading="lazy"><figcaption>Focusing</figcaption></figure>
+          <figure><img class="sprite" src="landing-page-assets/pet/mood-coffee.png" alt="" loading="lazy"><figcaption>On a break</figcaption></figure>
+          <figure><img class="sprite" src="landing-page-assets/pet/mood-tired.png" alt="" loading="lazy"><figcaption>Battery low</figcaption></figure>
+          <figure><img class="sprite" src="landing-page-assets/pet/mood-charged.png" alt="" loading="lazy"><figcaption>Plugged in</figcaption></figure>
+          <figure><img class="sprite" src="landing-page-assets/pet/mood-sleepy.png" alt="" loading="lazy"><figcaption>You're away</figcaption></figure>
+        </div>
+      </article>
+      <article class="card pet-card pet-wide">
+        <h3>Grows with you</h3>
+        <p>It gets hungry once a day: click to feed it. Focus sessions, meals, petting and days together earn points, and every ten is a level that unlocks something to wear. Give it a name, and it'll remind you to drink and stand, and now and then stroll across the notch.</p>
+        <div class="pet-moods">
+          <figure><img class="sprite" src="landing-page-assets/pet/mood-hungry.png" alt="" loading="lazy"><figcaption>Hungry<small>click to feed</small></figcaption></figure>
+          <figure><img class="sprite" src="landing-page-assets/pet/wear-scarf.png" alt="" loading="lazy"><figcaption>Scarf<small>level 2</small></figcaption></figure>
+          <figure><img class="sprite" src="landing-page-assets/pet/wear-glasses.png" alt="" loading="lazy"><figcaption>Glasses<small>level 3</small></figcaption></figure>
+          <figure><img class="sprite" src="landing-page-assets/pet/wear-cap.png" alt="" loading="lazy"><figcaption>Cap<small>level 4</small></figcaption></figure>
+          <figure><img class="sprite" src="landing-page-assets/pet/wear-crown.png" alt="" loading="lazy"><figcaption>Crown<small>level 6</small></figcaption></figure>
+          <figure><img class="sprite" src="landing-page-assets/pet/wear-prayer.png" alt="" loading="lazy"><figcaption>Prayer cap<small>at prayer times</small></figcaption></figure>
+          <figure><img class="sprite" src="landing-page-assets/pet/kind-cat.png" alt="" loading="lazy"><figcaption>Cat</figcaption></figure>
+          <figure><img class="sprite" src="landing-page-assets/pet/kind-frog.png" alt="" loading="lazy"><figcaption>Frog</figcaption></figure>
+          <figure><img class="sprite" src="landing-page-assets/pet/kind-ghost.png" alt="" loading="lazy"><figcaption>Ghost</figcaption></figure>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
 <section>
   <div class="wrap">
     <div class="center">
@@ -647,10 +723,8 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
       <div class="settings">
         <h3>Appearance <small>⌘ ,</small></h3>
         <div><label>Layout</label><div class="seg" data-key="layout"><button aria-pressed="true">Studio</button><button>Compact</button><button>Top tabs</button><button>Classic</button></div></div>
-        <div class="two">
-          <div><label>Theme</label><div class="seg" data-key="theme"><button>Dark</button><button>Light</button></div></div>
-          <div><label>Panel size</label><div class="seg" data-key="size"><button>Mini</button><button>S</button><button aria-pressed="true">M</button><button>L</button></div></div>
-        </div>
+        <div><label>Theme</label><div class="seg" data-key="theme"><button>Dark</button><button>Light</button><button>Keycap</button><button>Pixel</button></div></div>
+        <div><label>Panel size</label><div class="seg" data-key="size"><button>Mini</button><button>S</button><button aria-pressed="true">M</button><button>L</button></div></div>
         <div><label>Accent</label><div class="dots" id="dots"></div></div>
         <div><label>Notch shape</label><div class="shapes" data-key="shape"><button data-s="drop" aria-pressed="true">Drop</button><button data-s="seamless">Seamless</button><button data-s="floating">Floating</button></div></div>
         <div><label>Typeface</label><div class="seg" data-key="font"><button>SF Pro</button><button aria-pressed="true">Be Vietnam</button><button>Inter</button><button>Jakarta</button></div></div>
@@ -769,7 +843,7 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
       </div>
     </div>
     <div class="cols">
-      <div><h5>PRODUCT</h5><a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#new">What's new</a><a href="#features">AI usage <span class="new">New</span></a><a href="#customize">Customize</a><a href="https://github.com/giankbr/beanie-notch/releases">Releases</a></div>
+      <div><h5>PRODUCT</h5><a href="#features">Features</a><a href="#closed">Closed notch</a><a href="#new">What's new</a><a href="#pet">Pet</a><a href="#features">AI usage <span class="new">New</span></a><a href="#customize">Customize</a><a href="https://github.com/giankbr/beanie-notch/releases">Releases</a></div>
       <div><h5>PROJECT</h5><a href="https://github.com/giankbr/beanie-notch">GitHub</a><a href="https://github.com/giankbr/beanie-notch#build">Build from source</a><a href="https://github.com/giankbr/beanie-notch/releases">Changelog</a><a href="https://github.com/giankbr/beanie-notch/issues">Report an issue</a><a href="https://yapp.ink/gian" target="_blank" rel="noopener">Support Beanotch</a></div>
       <div><h5>PRIVACY</h5><span>No tracking</span><span>Location stays on Mac</span><span>No API keys</span><a href="https://github.com/giankbr/beanie-notch#install">Permissions</a></div>
       <div><h5>REQUIREMENTS</h5><span>macOS 14 or later</span><span>Windows 10 or later (beta)</span><span>Apple silicon &amp; Intel</span><span>3.6 MB download</span><span id="version">v1.9.1</span></div>
@@ -836,9 +910,10 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
     updatePreview();
   }
 
-  function setTheme(mode, save) {
+  // Keycap and Pixel are dark themes: the page goes dark, the preview shows that look.
+  function setTheme(mode, save, look) {
     root.setAttribute("data-theme", mode);
-    state.theme = mode === "dark" ? "Dark" : "Light";
+    state.theme = look || (mode === "dark" ? "Dark" : "Light");
     document.querySelectorAll('[data-key="theme"] button').forEach(function (b) { b.setAttribute("aria-pressed", String(b.textContent === state.theme)); });
     var btn = document.getElementById("themeBtn");
     btn.innerHTML = '<i data-lucide="' + (mode === "dark" ? "sun" : "moon") + '"></i>';
@@ -858,7 +933,7 @@ svg.winlogo { width: 1.1em; height: 1.1em; }
       var b = e.target.closest("button"); if (!b) return;
       group.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
       var key = group.dataset.key, value = b.textContent.trim();
-      if (key === "theme") return setTheme(value === "Dark" ? "dark" : "light", true);
+      if (key === "theme") return setTheme(value === "Light" ? "light" : "dark", true, value);
       if (key === "font") { root.setAttribute("data-font", { "SF Pro": "sf", "Inter": "inter", "Jakarta": "jakarta" }[value] || "vietnam"); }
       state[key] = value;
       label();
