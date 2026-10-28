@@ -3,7 +3,7 @@ using Windows.UI;
 
 namespace Beanotch.Ui;
 
-public enum ThemeMode { System, Light, Dark, Midnight, Glass, Keycap, Pixel }
+public enum ThemeMode { System, Light, Dark, Glass, Keycap, Pixel }
 
 // Segoe UI is Windows' own; the others ship with the app, as on the Mac (all under the SIL Open Font License).
 public enum AppFont { System, BeVietnam, Inter, Jakarta }
@@ -75,24 +75,22 @@ public static class Theme
 
     // White on the dark panel, near-black on the light one.
     public static Color Ink => Dark ? Rgb(1, 1, 1) : Rgb(0.08, 0.08, 0.08);
-    // Charcoal with lighter cards in the dark; a warm off-white with white cards in the light.
-    // Midnight is true black, flush with the notch; Glass shows the desktop through, blurred (the window's acrylic).
+    // Black, flush with the notch, with faintly lighter cards in the dark; a warm off-white with white cards in the
+    // light. Glass shows the desktop through, blurred (the window's acrylic).
     public static Color Background => Mode switch
     {
-        ThemeMode.Midnight => Black,
         ThemeMode.Glass => Rgb(0.09, 0.09, 0.09),
         ThemeMode.Pixel => Rgb(0.043, 0.043, 0.051),
-        _ => Dark ? Rgb(0.055, 0.055, 0.063) : Rgb(0.953, 0.953, 0.945),
+        _ => Dark ? Black : Rgb(0.953, 0.953, 0.945),
     };
     // The open panel's fill: the background, or a dark wash over the acrylic in Glass. Anything drawn over the page
     // (flyouts, buttons' text) keeps the solid background.
     public static Color Panel => Mode == ThemeMode.Glass ? Rgb(0, 0, 0, 0.3) : Background;
     public static Color Surface => Mode switch
     {
-        ThemeMode.Midnight => Rgb(1, 1, 1, 0.035),
         ThemeMode.Glass => Rgb(1, 1, 1, 0.07),
         ThemeMode.Pixel => PixelCard,
-        _ => Dark ? Rgb(1, 1, 1, 0.045) : Rgb(1, 1, 1),
+        _ => Dark ? Rgb(1, 1, 1, 0.04) : Rgb(1, 1, 1),
     };
     public static Color Stroke => Mode == ThemeMode.Glass ? Rgb(1, 1, 1, 0.1) : Dark ? Rgb(1, 1, 1, 0.07) : Rgb(0, 0, 0, 0.07);
     public static Color Thumb => Dark ? Rgb(1, 1, 1, 0.14) : Rgb(1, 1, 1);

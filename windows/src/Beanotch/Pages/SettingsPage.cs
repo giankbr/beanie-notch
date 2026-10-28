@@ -159,7 +159,7 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
     // The theme in miniature: its background, with the accent bar and two lines of text on top.
     private static Grid ThemeSwatch(ThemeMode mode)
     {
-        Color dark = Theme.Rgb(0.07, 0.07, 0.08), light = Theme.Rgb(0.95, 0.95, 0.94);
+        Color dark = Theme.Black, light = Theme.Rgb(0.95, 0.95, 0.94);
         var g = new Grid();
         if (mode == ThemeMode.System)
         {
@@ -202,7 +202,7 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
                 Margin = new Thickness(0, 0, S(5), S(5)),
             });
         }
-        else g.Background = Theme.Brush(mode switch { ThemeMode.Light => light, ThemeMode.Midnight => Theme.Black, _ => dark });
+        else g.Background = Theme.Brush(mode switch { ThemeMode.Light => light, _ => dark });
 
         Border Line(double width, double height, Color color) => new()
         {

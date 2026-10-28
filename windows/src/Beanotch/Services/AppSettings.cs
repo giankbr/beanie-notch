@@ -64,8 +64,13 @@ public sealed class AppSettings
 
     public static AppSettings Load()
     {
-        // Retro, dropped in 1.9.6, reads as Dark; an unknown theme name would otherwise fail the whole file.
-        try { return JsonSerializer.Deserialize(File.ReadAllText(FilePath).Replace("\"Retro\"", "\"Dark\""), SettingsJson.Default.AppSettings) ?? new(); }
+        // Retro (dropped in 1.9.6) and Midnight (folded into Dark in 1.10.5) read as Dark; an unknown theme name would
+        // otherwise fail the whole file.
+        try
+        {
+            var json = File.ReadAllText(FilePath).Replace("\"Retro\"", "\"Dark\"").Replace("\"Midnight\"", "\"Dark\"");
+            return JsonSerializer.Deserialize(json, SettingsJson.Default.AppSettings) ?? new();
+        }
         catch (Exception e) when (e is IOException or JsonException or UnauthorizedAccessException) { return new(); }
     }
 
