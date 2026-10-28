@@ -15,6 +15,7 @@ public sealed class AppSettings
     public AppFont Font { get; set; } = AppFont.System;
     public PanelSize Size { get; set; } = PanelSize.Regular;
     public NotchShape Shape { get; set; } = NotchShape.Drop;
+    public PanelLayout Layout { get; set; } = PanelLayout.Studio;
     // Opening: on hover (else on a click), how long the panel waits once the pointer leaves, and the global shortcut.
     public bool OpenOnHover { get; set; } = true;
     public double CloseDelay { get; set; } = 0.6;

@@ -13,6 +13,10 @@ public enum PanelSize { Compact, Regular, Large }
 // As on the Mac: Drop curves out of the top edge, Seamless meets it square, Floating hangs just below it, rounded all round.
 public enum NotchShape { Drop, Seamless, Floating }
 
+// How the open panel finds its pages, as on the Mac: a labelled side menu, a rail of icons, tabs along the top, a row
+// of round buttons, or a grid of tiles to pick from.
+public enum PanelLayout { Studio, Compact, TopTabs, Classic, Launcher }
+
 public enum AccentChoice { Mint, Ocean, Sunset, Rose, Lime, Violet, Teal, Gold, Crimson, Graphite }
 
 // The Mac app's palette, so both look like the same product. Sizes on Windows are scaled up a little (see Ui.K):

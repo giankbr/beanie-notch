@@ -80,6 +80,14 @@ public sealed partial class IslandWindow
             catch (Exception e) { log.Add($"FAIL open {tab}: {e.GetType().Name}: {e.Message}"); continue; }
             await Shot($"{index++:00}-dark-{tab.ToString().ToLowerInvariant()}", tab is Tab.Ai or Tab.Tools or Tab.Controls ? 4000 : 2000);
         }
+        foreach (var layout in new[] { PanelLayout.Compact, PanelLayout.TopTabs, PanelLayout.Classic, PanelLayout.Launcher, PanelLayout.Studio })
+        {
+            model.Settings.Layout = layout;
+            shell.Rebuild();
+            shell.Open(Tab.Today);
+            if (layout == PanelLayout.Launcher) shell.Shown();
+            if (layout != PanelLayout.Studio) await Shot($"{index++:00}-layout-{layout.ToString().ToLowerInvariant()}", 2000);
+        }
         model.Phone.Start();
         shell.Open(Tab.Shelf);
         await Shot($"{index++:00}-dark-shelf-phone", 2000);

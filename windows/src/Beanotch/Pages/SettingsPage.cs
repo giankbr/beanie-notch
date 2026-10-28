@@ -129,14 +129,61 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
             return Choice(fontNames[(int)font], S0.Font == font, face, () => { S0.Font = font; Save(rebuild: true); });
         }));
 
+        var layouts = Cells(Enum.GetValues<PanelLayout>().Select(layout =>
+            Choice(layout == PanelLayout.TopTabs ? "Top tabs" : layout.ToString(), S0.Layout == layout, LayoutSketch(layout),
+                   () => { S0.Layout = layout; Save(rebuild: true); })));
         var shapes = Cells(Enum.GetValues<NotchShape>().Select(shape =>
             Choice(shape.ToString(), S0.Shape == shape, ShapeSketch(shape), () => { S0.Shape = shape; Save(rebuild: true); })));
 
         return V(8,
             Group(Picker("Theme", "The island itself always stays black", themes), tint),
-            Group(Picker("Notch shape", "How the island meets the top of the screen", shapes)),
+            Group(Picker("Layout", "How the panel finds its pages", layouts),
+                  Picker("Notch shape", "How the island meets the top of the screen", shapes)),
             Group(Row(null, "Panel size", "How big the island opens", size),
                   Picker("Font", "Segoe UI is Windows' own; the others ship with Beanotch, as on the Mac", fonts)));
+    }
+
+    // The layout in miniature: where the menu sits, and the page.
+    private static Grid LayoutSketch(PanelLayout layout)
+    {
+        var g = new Grid { Background = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.04)), Padding = new Thickness(S(5)) };
+        Border Block(double w, double h, HorizontalAlignment ha, VerticalAlignment va, double l = 0, double t = 0, double opacity = 0.18) => new()
+        {
+            Width = w, Height = h, HorizontalAlignment = ha, VerticalAlignment = va, Margin = new Thickness(l, t, 0, 0),
+            CornerRadius = new CornerRadius(S(2)), Background = Theme.Brush(Theme.WithAlpha(Theme.Ink, opacity)),
+        };
+        var (L, T, St, C) = (HorizontalAlignment.Left, VerticalAlignment.Top, HorizontalAlignment.Stretch, VerticalAlignment.Stretch);
+        switch (layout)
+        {
+            case PanelLayout.Studio:
+                g.Children.Add(Block(S(14), double.NaN, L, C, 0, 0, 0.3));
+                g.Children.Add(new Border { Margin = new Thickness(S(18), 0, 0, 0), CornerRadius = new CornerRadius(S(2)), Background = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.12)) });
+                break;
+            case PanelLayout.Compact:
+                g.Children.Add(Block(S(5), double.NaN, L, C, 0, 0, 0.3));
+                g.Children.Add(new Border { Margin = new Thickness(S(9), 0, 0, 0), CornerRadius = new CornerRadius(S(2)), Background = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.12)) });
+                break;
+            case PanelLayout.TopTabs:
+                for (var i = 0; i < 4; i++) g.Children.Add(Block(S(9), S(4), L, T, i * S(11), 0, i == 0 ? 0.45 : 0.25));
+                g.Children.Add(new Border { Margin = new Thickness(0, S(8), 0, 0), CornerRadius = new CornerRadius(S(2)), Background = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.12)) });
+                break;
+            case PanelLayout.Classic:
+                g.Children.Add(Block(S(16), S(4), L, T, 0, 0, 0.4));
+                for (var i = 0; i < 3; i++) g.Children.Add(Block(S(4), S(4), HorizontalAlignment.Right, T, 0, 0, i == 0 ? 0.45 : 0.25) is var dot ? Shift(dot, i) : null);
+                g.Children.Add(new Border { Margin = new Thickness(0, S(8), 0, 0), CornerRadius = new CornerRadius(S(2)), Background = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.12)) });
+                break;
+            default:
+                for (var r = 0; r < 2; r++)
+                    for (var c = 0; c < 3; c++) g.Children.Add(Block(S(10), S(10), L, T, c * S(13), r * S(13), 0.22));
+                break;
+        }
+        return g;
+
+        static Border Shift(Border dot, int i)
+        {
+            dot.Margin = new Thickness(0, 0, i * S(6), 0);
+            return dot;
+        }
     }
 
     // The shape in miniature: the top of the screen, and the island hanging from it.
