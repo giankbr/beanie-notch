@@ -12,6 +12,8 @@ final class ClaudeBridge: ObservableObject {
         var project: String
         var state: State
         var updated: Date
+        // Claude Code's log of the session, written to all the while it works.
+        var transcript: String?
     }
 
     struct Request: Identifiable, Equatable {
@@ -30,6 +32,7 @@ final class ClaudeBridge: ObservableObject {
     var onRequest: (() -> Void)?
     private var listener: NWListener?
     private var waiting: [UUID: NWConnection] = [:]
+    private var sweep: Timer?
 
     var working: Session? { sessions.first { $0.state == .working } }
 
@@ -56,11 +59,14 @@ final class ClaudeBridge: ObservableObject {
         if on {
             _ = token
             start()
-            if Self.hooksInstalled(Array(Self.markers.dropFirst())) { Self.removeHooks() }
+            // Older names, or a set missing an event added since (SessionEnd), are replaced with the current one.
+            if Self.hooksInstalled(Array(Self.markers.dropFirst())) || Self.hooksInstalled() && !Self.hooksComplete() { Self.removeHooks() }
             if !Self.hooksInstalled() { Self.installHooks() }
         } else {
             listener?.cancel()
             listener = nil
+            sweep?.invalidate()
+            sweep = nil
             answerAll(nil)
             if Self.hooksInstalled(Self.markers) { Self.removeHooks() }
             sessions = []
@@ -96,6 +102,26 @@ final class ClaudeBridge: ObservableObject {
         }
         listener.start(queue: .main)
         self.listener = listener
+        let t = Timer(timeInterval: 20, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.settle() }
+        }
+        t.tolerance = 5
+        RunLoop.main.add(t, forMode: .common)
+        sweep = t
+    }
+
+    // A session stopped with Esc, closed, or left while Beanotch was quit never sends Stop. It counts as working
+    // only while its transcript was written in the last five minutes (a long build can go quiet that long), or,
+    // without one, for half an hour after the prompt.
+    private func settle() {
+        let now = Date()
+        for (i, session) in sessions.enumerated() where session.state == .working {
+            let written = session.transcript.flatMap {
+                (try? FileManager.default.attributesOfItem(atPath: $0))?[.modificationDate] as? Date
+            }
+            let quiet = written.map { now.timeIntervalSince($0) > 300 } ?? (now.timeIntervalSince(session.updated) > 1800)
+            if quiet { sessions[i].state = .done }
+        }
     }
 
     struct HTTPRequest { let token: String; let body: Data }
@@ -145,9 +171,15 @@ final class ClaudeBridge: ObservableObject {
         }
         let id = json["session_id"] as? String ?? "?"
         let project = (json["cwd"] as? String).map { URL(fileURLWithPath: $0).lastPathComponent } ?? "Claude Code"
+        if let path = json["transcript_path"] as? String, let i = sessions.firstIndex(where: { $0.id == id }) {
+            sessions[i].transcript = path
+        }
         switch event {
         case "UserPromptSubmit":
-            update(id, project, .working)
+            update(id, project, .working, transcript: json["transcript_path"] as? String)
+            Self.reply(connection, body: "")
+        case "SessionEnd":
+            sessions.removeAll { $0.id == id }
             Self.reply(connection, body: "")
         case "Stop":
             update(id, project, .done)
@@ -179,13 +211,14 @@ final class ClaudeBridge: ObservableObject {
         }
     }
 
-    private func update(_ id: String, _ project: String, _ state: Session.State) {
+    private func update(_ id: String, _ project: String, _ state: Session.State, transcript: String? = nil) {
         if let i = sessions.firstIndex(where: { $0.id == id }) {
             sessions[i].state = state
             sessions[i].project = project
             sessions[i].updated = Date()
+            if let transcript { sessions[i].transcript = transcript }
         } else {
-            sessions.insert(Session(id: id, project: project, state: state, updated: Date()), at: 0)
+            sessions.insert(Session(id: id, project: project, state: state, updated: Date(), transcript: transcript), at: 0)
         }
         sessions = Array(sessions.filter { Date().timeIntervalSince($0.updated) < 6 * 3600 }.prefix(8))
     }
@@ -201,7 +234,8 @@ final class ClaudeBridge: ObservableObject {
             + "--data-binary @- http://127.0.0.1:\(port)/\(marker) 2>/dev/null; exit 0"
     }
 
-    private static let events: [(String, Int)] = [("PermissionRequest", 115), ("UserPromptSubmit", 3), ("Stop", 3), ("Notification", 3)]
+    private static let events: [(String, Int)] = [("PermissionRequest", 115), ("UserPromptSubmit", 3), ("Stop", 3), ("Notification", 3),
+                                                  ("SessionEnd", 3)]
 
     private static func readSettings() -> [String: Any] {
         guard let data = try? Data(contentsOf: settingsURL),
@@ -220,6 +254,16 @@ final class ClaudeBridge: ObservableObject {
         return hooks.values.contains { groups in
             (groups as? [[String: Any]] ?? []).contains { group in
                 (group["hooks"] as? [[String: Any]] ?? []).contains { isOurs($0, markers) }
+            }
+        }
+    }
+
+    // Every event has Beanotch's hook.
+    private static func hooksComplete() -> Bool {
+        let hooks = readSettings()["hooks"] as? [String: Any] ?? [:]
+        return events.allSatisfy { event, _ in
+            (hooks[event] as? [[String: Any]] ?? []).contains { group in
+                (group["hooks"] as? [[String: Any]] ?? []).contains { isOurs($0, [marker]) }
             }
         }
     }
