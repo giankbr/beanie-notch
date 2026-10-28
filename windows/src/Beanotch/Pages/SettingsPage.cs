@@ -290,7 +290,25 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
                 }))));
             idle.Add(Toggle("Cap for prayer", "Puts it on for ten minutes at each prayer time", S0.PetPrayerCap, v => S0.PetPrayerCap = v));
         }
-        return V(8, Group([.. idle]),
+        int[] waters = [0, 30, 45, 60, 90], stretches = [0, 30, 45, 60];
+        double[] delaySeconds = [0.4, 1, 2.5];
+        var hotkey = Beanotch.Island.IslandWindow.CurrentHotkey?.Invoke();
+        var opening = Group(
+            Toggle("Open on hover", "Otherwise a click on the island opens it", S0.OpenOnHover, v => S0.OpenOnHover = v),
+            Row(null, "Close after", "How long the panel waits once the pointer leaves",
+                Segmented(["Quick", "1 s", "2.5 s"], Math.Max(0, Array.FindIndex(delaySeconds, d => Math.Abs(d - S0.CloseDelay) < 0.2)),
+                          i => { S0.CloseDelay = delaySeconds[i]; Save(); })),
+            Row(null, "Keyboard shortcut", S0.Hotkey ? (hotkey is null ? "Taken by another app" : $"{hotkey} opens and closes the panel") : "Off",
+                Switch(S0.Hotkey, v => { S0.Hotkey = v; Save(); Beanotch.Island.IslandWindow.ApplyHotkey?.Invoke(); Refresh(); })),
+            Toggle("Scroll for volume", "Scroll on the closed island to turn the sound up or down", S0.ScrollVolume, v => S0.ScrollVolume = v));
+        var health = Group(
+            Row(null, "Drink water", "A reminder while you're at the PC",
+                Segmented(["Off", "30 m", "45 m", "1 h", "90 m"], Math.Max(0, Array.IndexOf(waters, S0.WaterEvery)), i => { S0.WaterEvery = waters[i]; Save(); })),
+            Row(null, "Stand up", "A stretch now and then",
+                Segmented(["Off", "30 m", "45 m", "1 h"], Math.Max(0, Array.IndexOf(stretches, S0.StretchEvery)), i => { S0.StretchEvery = stretches[i]; Save(); })),
+            Toggle("Eye breaks", "Every 20 minutes, look 20 feet away for 20 seconds", S0.EyeBreaks, v => S0.EyeBreaks = v));
+
+        return V(8, opening, Group([.. idle]), health,
             Group(
             Toggle("Lyrics", "The line being sung, while music plays", S0.Lyrics, v => S0.Lyrics = v),
             Toggle("Volume", "Level when it changes", S0.VolumeHud, v => S0.VolumeHud = v),

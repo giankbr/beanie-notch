@@ -15,6 +15,17 @@ public sealed class AppSettings
     public AppFont Font { get; set; } = AppFont.System;
     public PanelSize Size { get; set; } = PanelSize.Regular;
     public NotchShape Shape { get; set; } = NotchShape.Drop;
+    // Opening: on hover (else on a click), how long the panel waits once the pointer leaves, and the global shortcut.
+    public bool OpenOnHover { get; set; } = true;
+    public double CloseDelay { get; set; } = 0.6;
+    public bool Hotkey { get; set; } = true;
+    // Scrolling on the closed island sets the volume.
+    public bool ScrollVolume { get; set; } = true;
+    // Reminders, as on the Mac: minutes between glasses of water and between stretches (0 for never), and the 20-20-20
+    // eye break. Only while you're at the PC, 8 am to 10 pm.
+    public int WaterEvery { get; set; }
+    public int StretchEvery { get; set; }
+    public bool EyeBreaks { get; set; }
     public bool ClipboardHistory { get; set; } = true;
     public bool ScreenshotsToShelf { get; set; } = true;
     public bool Lyrics { get; set; } = true;

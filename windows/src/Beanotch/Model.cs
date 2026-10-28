@@ -117,9 +117,31 @@ public sealed class Model
     public CalendarEvent? NextEvent =>
         Events.Where(e => !e.AllDay && e.End > DateTimeOffset.Now).OrderBy(e => e.Start).FirstOrDefault();
 
+    private DateTimeOffset lastWater = DateTimeOffset.Now, lastStretch = DateTimeOffset.Now, lastEyes = DateTimeOffset.Now;
+
+    // Drink, stretch and rest your eyes, as on the Mac. The clocks start over when you've been away five minutes.
+    private void Remind(DateTimeOffset now)
+    {
+        if (Settings.WaterEvery == 0 && Settings.StretchEvery == 0 && !Settings.EyeBreaks) return;
+        if (Services.Native.Idle > TimeSpan.FromMinutes(5)) { lastWater = lastStretch = lastEyes = now; return; }
+        if (now.Hour is < 8 or >= 22) return;
+        var who = Settings.NotchPet ? Pet.Name + ": " : "";
+        void Say(string glyph, string left, string right) =>
+            Notice?.Invoke(new Notice(glyph, Ui.Theme.Accent, who + left, right, TimeSpan.FromSeconds(8), Essential: true));
+        if (Settings.EyeBreaks && now - lastEyes >= TimeSpan.FromMinutes(20)) { lastEyes = now; Say("\uE7B3", "Eye break", "Look far away for 20 s"); }
+        else if (Settings.WaterEvery > 0 && now - lastWater >= TimeSpan.FromMinutes(Settings.WaterEvery))
+        {
+            lastWater = now;
+            Say("\uE9CA", "Drink water", "A glass now");
+            Pet.Thirst();
+        }
+        else if (Settings.StretchEvery > 0 && now - lastStretch >= TimeSpan.FromMinutes(Settings.StretchEvery)) { lastStretch = now; Say("\uE805", "Stand up", "Stretch for a minute"); }
+    }
+
     // Called a few times a second: timers, and reminders that come due.
     public void Tick()
     {
+        Remind(DateTimeOffset.Now);
         Focus.Tick();
         Timer.Tick();
         var now = DateTimeOffset.Now;

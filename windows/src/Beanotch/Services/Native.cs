@@ -116,6 +116,30 @@ static partial class Native
         SetWindowPos(hwnd, 0, 0, 0, 0, 0, 0x0020 | 0x0002 | 0x0001 | 0x0004 | 0x0010); // FRAMECHANGED | NOMOVE | NOSIZE | NOZORDER | NOACTIVATE
     }
 
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool RegisterHotKey(nint hwnd, int id, uint modifiers, uint key);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool UnregisterHotKey(nint hwnd, int id);
+
+    internal static Action? HotkeyPressed;
+
+    // Alt+Space, or Ctrl+Alt+Space when something else holds it; the shortcut that took, or null.
+    internal static string? RegisterToggleHotkey(nint hwnd)
+    {
+        UnregisterHotKey(hwnd, 1);
+        if (RegisterHotKey(hwnd, 1, 0x0001 | 0x4000, 0x20)) return "Alt+Space"; // MOD_ALT | MOD_NOREPEAT, VK_SPACE
+        return RegisterHotKey(hwnd, 1, 0x0001 | 0x0002 | 0x4000, 0x20) ? "Ctrl+Alt+Space" : null;
+    }
+
+    internal static string? UnregisterToggleHotkey(nint hwnd)
+    {
+        UnregisterHotKey(hwnd, 1);
+        return null;
+    }
+
     [LibraryImport("comctl32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static unsafe partial bool SetWindowSubclass(nint hwnd, delegate* unmanaged[Stdcall]<nint, uint, nint, nint, nuint, nuint, nint> proc, nuint id, nuint data);
@@ -129,6 +153,9 @@ static partial class Native
         switch (message)
         {
             case 0x0083 when wParam != 0: // WM_NCCALCSIZE: the client area is the whole window
+                return 0;
+            case 0x0312 when wParam == 1: // WM_HOTKEY, the panel's shortcut
+                HotkeyPressed?.Invoke();
                 return 0;
         }
         return DefSubclassProc(hwnd, message, wParam, lParam);

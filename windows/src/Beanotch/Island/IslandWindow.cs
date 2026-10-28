@@ -44,6 +44,16 @@ public sealed partial class IslandWindow : Window
     private DateTime noticeUntil;
     private (int W, int H, NotchShape Shape) placed;
     private bool hiddenForFullscreen;
+    // Opened from the keyboard: stays open until the shortcut again, Esc, or the pointer comes and goes.
+    private bool pinnedOpen;
+
+    public string? Hotkey { get; private set; }
+
+    public void HotkeyChanged() => Hotkey = model.Settings.Hotkey ? Native.RegisterToggleHotkey(hwnd) : Native.UnregisterToggleHotkey(hwnd);
+
+    // For Settings, which has no window of its own: re-register the shortcut, and say which one took.
+    public static Action? ApplyHotkey;
+    public static Func<string?>? CurrentHotkey;
     private int fullscreenVotes;
     private readonly DispatcherQueueTimer petStroke;
 
@@ -92,17 +102,26 @@ public sealed partial class IslandWindow : Window
         root.PointerEntered += (_, e) =>
         {
             collapseTimer?.Stop();
+            pinnedOpen = false;
             if (OnPet(e)) { petStroke.Start(); return; }
-            if (model.Expanded || notice?.Open is null) Expand();
+            if (model.Expanded || notice?.Open is null && model.Settings.OpenOnHover) Expand();
         };
         root.PointerMoved += (_, e) =>
         {
             if (model.Expanded) return;
             if (OnPet(e)) { if (!petStroke.IsRunning) petStroke.Start(); return; }
             petStroke.Stop();
-            if (notice?.Open is null) Expand();
+            if (notice?.Open is null && model.Settings.OpenOnHover) Expand();
         };
-        root.PointerWheelChanged += (_, e) => { if (OnPet(e)) model.Pet.Sway(); };
+        root.PointerWheelChanged += (_, e) =>
+        {
+            if (OnPet(e)) { model.Pet.Sway(); return; }
+            // Over the closed island, a scroll sets the volume, as over the Mac's notch.
+            if (model.Expanded || !model.Settings.ScrollVolume || Audio.Speaker() is not { } speaker) return;
+            var delta = e.GetCurrentPoint(root).Properties.MouseWheelDelta;
+            Audio.SetSpeaker(Math.Clamp(speaker.Level + Math.Sign(delta) * 0.04, 0, 1));
+            e.Handled = true;
+        };
         root.PointerPressed += (_, e) =>
         {
             if (model.Expanded) return;
@@ -111,7 +130,13 @@ public sealed partial class IslandWindow : Window
             else if (notice?.Open is { } link) _ = Windows.System.Launcher.LaunchUriAsync(link);
             else Expand();
         };
-        root.PointerExited += (_, _) => { petStroke.Stop(); collapseTimer?.Start(); };
+        root.PointerExited += (_, _) =>
+        {
+            petStroke.Stop();
+            if (collapseTimer is null || pinnedOpen) return;
+            collapseTimer.Interval = TimeSpan.FromSeconds(Math.Clamp(model.Settings.CloseDelay, 0.2, 5));
+            collapseTimer.Start();
+        };
         root.AllowDrop = true;
         root.DragOver += OnDragOver;
         root.Drop += OnDrop;
@@ -125,6 +150,12 @@ public sealed partial class IslandWindow : Window
         presenter.SetBorderAndTitleBar(false, false);
         AppWindow.SetPresenter(presenter);
         Native.Frameless(hwnd);
+        // Alt+Space opens and closes the panel from anywhere, as ⌥ Space does on the Mac (Ctrl+Alt+Space if another
+        // app, PowerToys Run say, already has it).
+        Native.HotkeyPressed = () => ui.TryEnqueue(() => { if (model.Expanded) Collapse(); else { Expand(); pinnedOpen = true; } });
+        HotkeyChanged();
+        ApplyHotkey = HotkeyChanged;
+        CurrentHotkey = () => Hotkey;
         AppWindow.IsShownInSwitchers = false;
         AppWindow.Title = "Beanotch";
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "Beanotch.ico"));
@@ -148,7 +179,7 @@ public sealed partial class IslandWindow : Window
             Show(new Notice("\uE734", Theme.Amber, $"{model.Pet.Name} reached level {level}",
                             unlocked == PetAccessory.None ? "Good company" : $"Unlocked: {unlocked}", TimeSpan.FromSeconds(6)));
         };
-        model.Pet.Says += (left, right) => Show(new Notice("\uE7E7", Theme.Accent, left, right, TimeSpan.FromSeconds(8), Essential: true));
+
         tick.Start();
         statsTimer = ui.CreateTimer();
         statsTimer.Interval = TimeSpan.FromSeconds(2);

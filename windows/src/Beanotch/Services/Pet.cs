@@ -22,7 +22,7 @@ public sealed class Pet(Model model)
     private AppSettings S => model.Settings;
     private (Model.PetMood Mood, DateTimeOffset Until)? reaction;
     private readonly List<DateTimeOffset> taps = [];
-    private DateTimeOffset walkUntil, nextReminder = DateTimeOffset.Now.AddMinutes(45);
+    private DateTimeOffset walkUntil;
     private static string Today => DateTime.Now.ToString("yyyy-MM-dd");
 
     public int Level => Math.Min(S.PetXp / 10 + 1, 9);
@@ -30,7 +30,6 @@ public sealed class Pet(Model model)
     // 1 while it's off at the far end of the island, 0 at home; the view walks between them.
     public double Walk => DateTimeOffset.Now < walkUntil ? 1 : 0;
     public event Action<int>? LeveledUp;
-    public event Action<string, string>? Says;
 
     // For ten minutes after each prayer time, it wears its cap.
     public bool Praying => S.PetPrayerCap && model.PrayersToday.Any(e => e.IsPrayer && DateTimeOffset.Now - e.Time is var t && t >= TimeSpan.Zero && t < TimeSpan.FromMinutes(10));
@@ -62,17 +61,6 @@ public sealed class Pet(Model model)
         if (!S.NotchPet) return;
         if (S.PetSeenDay != Today) { S.PetSeenDay = Today; Gain(1); }
         var now = DateTimeOffset.Now;
-        // Windows has no drink or stretch reminders of its own: the pet gives them, every 45 minutes at the PC.
-        if (now >= nextReminder)
-        {
-            nextReminder = now.AddMinutes(45);
-            if (Native.Idle < TimeSpan.FromMinutes(5))
-            {
-                var water = now.Minute % 2 == 0;
-                if (water) React(Model.PetMood.Thirsty, 60);
-                Says?.Invoke($"{Name}: " + (water ? "Drink water" : "Stand up"), water ? "A glass now" : "Stretch for a minute");
-            }
-        }
         if (islandFree && Walk == 0 && Mood == Model.PetMood.Happy && Native.Idle < TimeSpan.FromMinutes(1) && Random.Shared.Next(180) == 0)
             walkUntil = now.AddSeconds(6);
     }
@@ -97,6 +85,7 @@ public sealed class Pet(Model model)
     }
 
     public void Sway() => React(Model.PetMood.Sway, 1.5);
+    public void Thirst() => React(Model.PetMood.Thirsty, 60);
     public void Shake() => React(Model.PetMood.Dizzy, 3);
 
     // A file dropped on the island, which lands on the Shelf.
