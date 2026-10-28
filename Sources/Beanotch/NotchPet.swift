@@ -35,6 +35,7 @@ final class NotchPet: ObservableObject {
     private var timer: Timer?
     private var reaction: (mood: Mood, until: Date)?
     private var taps: [Date] = []
+    private var loads: [Double] = []
     private var prayingUntil = Date.distantPast
     private var fedDay: String {
         get { UserDefaults.standard.string(forKey: "petFedDay") ?? "" }
@@ -158,8 +159,11 @@ final class NotchPet: ObservableObject {
         let power = battery?()
         let phase = focusPhase?()
         if praying != (now < prayingUntil) { praying = now < prayingUntil }
+        // The load over the last quarter minute: a moment's spike (an app opening, a page loading) isn't running hot.
+        loads = (loads + [stats?.cpu ?? 0]).suffix(5)
+        let busy = loads.count == 5 && loads.reduce(0, +) / 5 > 0.9
         var next: Mood = reaction?.mood
-            ?? ((stats?.cpu ?? 0) > 0.85 ? .panic
+            ?? (busy ? .panic
             : power.map { $0.percent < 20 && !$0.plugged } == true ? .tired
             : phase == .focus ? .focus
             : phase == .rest ? .coffee

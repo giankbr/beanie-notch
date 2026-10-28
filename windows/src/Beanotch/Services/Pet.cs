@@ -42,7 +42,7 @@ public sealed class Pet(Model model)
             if (reaction is { } r && now < r.Until) return r.Mood;
             var lowBattery = PowerManager.BatteryStatus != BatteryStatus.NotPresent && PowerManager.RemainingChargePercent < 20
                              && PowerManager.PowerSupplyStatus == PowerSupplyStatus.NotPresent;
-            var mood = model.Stats.Cpu > 0.85 ? Model.PetMood.Panic
+            var mood = Busy ? Model.PetMood.Panic
                 : lowBattery ? Model.PetMood.Tired
                 : model.Focus.Running && !model.Focus.OnBreak ? Model.PetMood.Focus
                 : model.Focus.Running ? Model.PetMood.Coffee
@@ -55,9 +55,17 @@ public sealed class Pet(Model model)
         }
     }
 
-    // Once a second or so: a point for each day kept company, its reminders, and the odd stroll.
+    // The processor's load over the last quarter minute: a moment's spike (opening an app, a page loading) isn't the
+    // processor running hot.
+    private readonly Queue<(DateTimeOffset At, double Load)> loads = [];
+    private bool Busy => loads.Count >= 5 && loads.Average(l => l.Load) > 0.9;
+
+    // Once a second or so: a point for each day kept company, the processor's load, and the odd stroll.
     public void Tick(bool islandFree)
     {
+        var at = DateTimeOffset.Now;
+        if (loads.Count == 0 || at - loads.Last().At >= TimeSpan.FromSeconds(2)) loads.Enqueue((at, model.Stats.Cpu));
+        while (loads.Count > 0 && at - loads.Peek().At > TimeSpan.FromSeconds(16)) loads.Dequeue();
         if (!S.NotchPet) return;
         if (S.PetSeenDay != Today) { S.PetSeenDay = Today; Gain(1); }
         var now = DateTimeOffset.Now;
