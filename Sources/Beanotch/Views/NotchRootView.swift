@@ -255,6 +255,10 @@ extension NotchRootView {
         case .tired: "low…"
         case .charged: "zap!"
         case .hungry: "\(settings.petTitle) is hungry · click"
+        case .spin: "wheee"
+        case .wave: "hi!"
+        case .ball: ""
+        case .groove: "♪ new song"
         case .sway, .walking: ""
         }
     }

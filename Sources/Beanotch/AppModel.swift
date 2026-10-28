@@ -159,6 +159,7 @@ final class AppModel: ObservableObject {
             self?.show(Notice(icon: "iphone", color: Theme.accent, left: "From phone", right: url.lastPathComponent))
         }
         media.onTrackChange = { [weak self] track in
+            if self?.settings.notchPet == true { self?.pet.songChanged() }
             guard let self, settings.songFlash, !expanded else { return }
             let shown = Lyrics.clean(title: track.title, artist: track.artist)
             show(Notice(icon: "music.note", color: Theme.accent, left: shown.1.isEmpty ? track.app : shown.1,
