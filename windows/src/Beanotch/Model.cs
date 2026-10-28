@@ -27,6 +27,7 @@ public sealed class Model
     public SmartCopy SmartCopy { get; }
     public Ambient Ambient { get; } = new();
     public Pet Pet { get; }
+    public PhoneDrop Phone { get; } = new();
     public WeatherReport? Weather { get; private set; }
     public IReadOnlyList<CalendarEvent> Events { get; private set; } = [];
     public bool CalendarFailed { get; private set; }
@@ -61,6 +62,13 @@ public sealed class Model
         SmartCopy.Notice += n => Notice?.Invoke(n);
         Clipboard.Copied += SmartCopy.Check;
         Pet = new Pet(this);
+        // Files from the phone land on the Shelf, and the Shelf's files are offered to it.
+        Phone.Offered = () => [.. Shelf.Items];
+        Phone.FileReceived += file => ui.TryEnqueue(() =>
+        {
+            Shelf.Add([file]);
+            Notice?.Invoke(new Notice(Glyphs.Download, Ui.Theme.Accent, "From phone", Path.GetFileName(file), TimeSpan.FromSeconds(4)));
+        });
         Shelf.Items.CollectionChanged += (_, e) => { if (e.NewItems is { Count: > 0 }) Pet.Feed(); };
     }
 

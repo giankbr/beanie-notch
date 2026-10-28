@@ -80,6 +80,10 @@ public sealed partial class IslandWindow
             catch (Exception e) { log.Add($"FAIL open {tab}: {e.GetType().Name}: {e.Message}"); continue; }
             await Shot($"{index++:00}-dark-{tab.ToString().ToLowerInvariant()}", tab is Tab.Ai or Tab.Tools or Tab.Controls ? 4000 : 2000);
         }
+        model.Phone.Start();
+        shell.Open(Tab.Shelf);
+        await Shot($"{index++:00}-dark-shelf-phone", 2000);
+        model.Phone.Stop();
 
         model.Focus.Toggle();
         shell.Open(Tab.Today);

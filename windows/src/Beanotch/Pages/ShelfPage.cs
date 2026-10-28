@@ -19,6 +19,7 @@ public sealed class ShelfPage(Model model) : PanelPage(model)
 {
     private readonly StackPanel bar = H(6);
     private readonly Grid body = new();
+    private bool phone => Model.Phone.Running || Model.Phone.Problem is not null;
 
     protected override FrameworkElement Build() => Rows(8, (bar, null), (body, 1));
 
@@ -31,10 +32,20 @@ public sealed class ShelfPage(Model model) : PanelPage(model)
         bar.Children.Add(new Border { Width = S(12) });
         bar.Children.Add(IconButton(Glyphs.Grid, () => { shelf.Grid = true; Refresh(); }, 10, shelf.Grid ? Theme.Ink : Theme.Faint, "Grid"));
         bar.Children.Add(IconButton(Glyphs.List, () => { shelf.Grid = false; Refresh(); }, 10, shelf.Grid ? Theme.Faint : Theme.Ink, "List"));
+        bar.Children.Add(PillButton(phone ? "Done" : "Phone", Theme.Accent, () =>
+        {
+            if (phone) Model.Phone.Stop(); else Model.Phone.Start();
+            Refresh();
+        }, "\uE8EA"));
         bar.Children.Add(PillButton("Add Files", Theme.Accent2, () => _ = PickAsync(), Glyphs.Add));
         if (shelf.Items.Count > 0) bar.Children.Add(PillButton("Clear All", Theme.Dim, () => { shelf.Clear(); Refresh(); }));
 
         body.Children.Clear();
+        if (phone)
+        {
+            body.Children.Add(PhonePanel());
+            return;
+        }
         if (shelf.Items.Count == 0)
         {
             var empty = V(6, Center(Icon("", 20, Theme.Faint)), Center(Text("Drop files on the island to keep them handy", 11, Theme.Faint, FontWeights.Medium)));
@@ -45,6 +56,46 @@ public sealed class ShelfPage(Model model) : PanelPage(model)
         }
         var list = shelf.Grid ? GridView(shelf.Items) : ListView(shelf.Items);
         body.Children.Add(Scroll(list));
+    }
+
+    // The QR to scan, and how to use it.
+    private FrameworkElement PhonePanel()
+    {
+        var drop = Model.Phone;
+        if (drop.Problem is { } problem || drop.Address is null)
+            return Card(Center(Text(drop.Problem ?? "Starting…", 11, Theme.Faint, FontWeights.Medium)), 10, 14);
+        var qr = new Image { Width = S(132), Height = S(132), Stretch = Stretch.Fill, Source = QrImage(drop.Address) };
+        var tile = new Border { Child = qr, Background = Theme.Brush(Theme.Rgb(1, 1, 1)), CornerRadius = new CornerRadius(S(10)), Padding = new Thickness(S(6)) };
+        var text = V(6,
+            Text("Scan with your phone's camera", 13, weight: FontWeights.SemiBold),
+            Text("On the same Wi-Fi. Send photos and files here, or download what's on the Shelf. Nothing to install on the phone.", 9.5, Theme.Dim, wrap: true),
+            Text(drop.Address, 9, Theme.Faint, mono: true),
+            drop.Received > 0 ? Pill($"{drop.Received} received", Theme.Accent, dot: true) : null,
+            Text("Windows may ask once to let Beanotch through the firewall: allow it on private networks.", 8.5, Theme.Faint, wrap: true));
+        text.VerticalAlignment = VerticalAlignment.Center;
+        return Card(Columns(16, (tile, null), (text, 1)), 12, 14);
+    }
+
+    private static WriteableBitmap? QrImage(string text)
+    {
+        if (QrCode.Encode(text) is not { } modules) return null;
+        // Eight pixels a module, so scaling it down for the screen stays crisp.
+        const int scale = 8;
+        int n = modules.GetLength(0), quiet = 2, size = (n + quiet * 2) * scale;
+        var pixels = new byte[size * size * 4];
+        for (var y = 0; y < size; y++)
+            for (var x = 0; x < size; x++)
+            {
+                int mx = x / scale - quiet, my = y / scale - quiet;
+                var dark = mx >= 0 && my >= 0 && mx < n && my < n && modules[my, mx];
+                var i = (y * size + x) * 4;
+                pixels[i] = pixels[i + 1] = pixels[i + 2] = dark ? (byte)0 : (byte)255;
+                pixels[i + 3] = 255;
+            }
+        var image = new WriteableBitmap(size, size);
+        using (var stream = System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBufferExtensions.AsStream(image.PixelBuffer)) stream.Write(pixels, 0, pixels.Length);
+        image.Invalidate();
+        return image;
     }
 
     private FrameworkElement GridView(IEnumerable<string> paths)
