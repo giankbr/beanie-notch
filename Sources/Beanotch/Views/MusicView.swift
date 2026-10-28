@@ -147,12 +147,10 @@ private struct PlayerColumn: View {
 
             HStack(spacing: 10) {
                 Image(systemName: "speaker.fill").font(.system(size: 9)).foregroundStyle(Theme.dim)
-                Slider(value: $volume, in: 0...100) { editing in
+                ThemedSlider(value: Binding(get: { Double(volume) }, set: { volume = .init($0) }), range: 0...100, tint: tint) { editing in
                     editingVolume = editing
                     if !editing { media.setVolume(volume) }
                 }
-                .controlSize(.mini)
-                .tint(tint)
                 Image(systemName: "speaker.wave.3.fill").font(.system(size: 9)).foregroundStyle(Theme.dim)
                 SleepMenu()
                 OutputMenu()

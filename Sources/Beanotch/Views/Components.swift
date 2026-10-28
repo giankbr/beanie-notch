@@ -12,11 +12,10 @@ enum Theme {
 
     nonisolated(unsafe) static var mode = ThemeMode.dark
 
-    // Midnight is true black, flush with the notch; Glass lets the desktop show through, blurred (see PanelGlass).
+    // Dark is true black, flush with the notch; Glass lets the desktop show through, blurred (see PanelGlass).
     static var ink: Color { baseInk }
     static var background: Color {
         switch mode {
-        case .midnight: .black
         case .glass: Color(white: 0.09)
         case .pixel: Pixel.background
         default: baseBackground
@@ -27,7 +26,6 @@ enum Theme {
     static var panel: Color { mode == .glass ? .black.opacity(0.3) : background }
     static var surface: Color {
         switch mode {
-        case .midnight: .white.opacity(0.035)
         case .glass: .white.opacity(0.07)
         case .pixel: Pixel.card
         default: baseSurface
@@ -49,15 +47,15 @@ enum Theme {
     private static let baseInk = Color(nsColor: NSColor(name: nil) { appearance in
         appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? .white : NSColor(white: 0.08, alpha: 1)
     })
-    // Charcoal with lighter cards in the dark; a warm off-white with white cards in the light.
+    // Black, flush with the notch, with faintly lighter cards in the dark; a warm off-white with white cards in the light.
     private static let baseBackground = Color(nsColor: NSColor(name: nil) { appearance in
         appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-            ? NSColor(srgbRed: 0.055, green: 0.055, blue: 0.063, alpha: 1)
+            ? NSColor(white: 0, alpha: 1)
             : NSColor(srgbRed: 0.953, green: 0.953, blue: 0.945, alpha: 1)
     })
     private static let baseSurface = Color(nsColor: NSColor(name: nil) { appearance in
         appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-            ? NSColor(white: 1, alpha: 0.045)
+            ? NSColor(white: 1, alpha: 0.04)
             : NSColor(white: 1, alpha: 1)
     })
     private static let baseStroke = Color(nsColor: NSColor(name: nil) { appearance in
@@ -551,7 +549,15 @@ struct SearchField: View {
         }
         .padding(.horizontal, 10)
         .frame(height: 26)
-        .background(RoundedRectangle(cornerRadius: Theme.round(8), style: .continuous).fill(Theme.ink.opacity(0.06)))
+        .background {
+            if Theme.pixel {
+                PixelWell()
+            } else if Theme.keycap {
+                KeyWell(shape: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            } else {
+                RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.ink.opacity(0.06))
+            }
+        }
     }
 }
 
@@ -892,6 +898,74 @@ struct SelectedFace: View {
             PixelFace(tint: color)
         } else {
             RoundedRectangle(cornerRadius: radius, style: .continuous).fill(color)
+        }
+    }
+}
+
+// A tile that switches something on: a soft fill and hairline, a key in Keycap, a box in Pixel (lit when on).
+struct TileFace: View {
+    var on: Bool
+    var color: Color
+    var radius: CGFloat = 11
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: Theme.round(radius), style: .continuous)
+        if Theme.keycap {
+            KeyFace(shape: shape, tint: on ? color.opacity(0.22) : nil)
+        } else if Theme.pixel {
+            if on { PixelFace(tint: color.opacity(0.35)) } else { PixelWell(fill: Pixel.card, edge: Pixel.edge, shade: nil) }
+        } else {
+            shape.fill(on ? color.opacity(0.13) : Theme.surface).overlay(shape.strokeBorder(on ? color.opacity(0.5) : Theme.stroke))
+        }
+    }
+}
+
+// The system slider, except in Keycap and Pixel: a sunken track, a lit fill and a key or a block to drag.
+struct ThemedSlider: View {
+    @Binding var value: Double
+    var range: ClosedRange<Double> = 0...1
+    var tint = Theme.accent
+    var onEditingChanged: (Bool) -> Void = { _ in }
+    @State private var dragging = false
+
+    var body: some View {
+        if !Theme.keycap && !Theme.pixel {
+            Slider(value: $value, in: range, onEditingChanged: onEditingChanged).controlSize(.mini).tint(tint)
+        } else {
+            GeometryReader { geo in
+                let knob: CGFloat = Theme.pixel ? 12 : 14
+                let span = max(range.upperBound - range.lowerBound, 0.0001)
+                let fraction = min(max((value - range.lowerBound) / span, 0), 1)
+                let x = fraction * (geo.size.width - knob)
+                ZStack(alignment: .leading) {
+                    Group {
+                        if Theme.pixel { PixelWell() } else { KeyWell(shape: Capsule()) }
+                    }
+                    .frame(height: Theme.pixel ? 8 : 6)
+                    Rectangle().fill(tint)
+                        .frame(width: max(0, x + knob / 2 - 2), height: Theme.pixel ? 4 : 3)
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.round(1.5)))
+                        .padding(.leading, 2)
+                    Group {
+                        if Theme.pixel { PixelFace(base: Color(white: 0.93)) } else { KeyFace(shape: Circle(), base: Color(white: 0.93)) }
+                    }
+                    .frame(width: knob, height: knob)
+                    .offset(x: x)
+                }
+                .frame(maxHeight: .infinity)
+                .contentShape(Rectangle())
+                .gesture(DragGesture(minimumDistance: 0)
+                    .onChanged { g in
+                        if !dragging { dragging = true; onEditingChanged(true) }
+                        let f = min(max((g.location.x - knob / 2) / max(geo.size.width - knob, 1), 0), 1)
+                        value = range.lowerBound + f * span
+                    }
+                    .onEnded { _ in
+                        dragging = false
+                        onEditingChanged(false)
+                    })
+            }
+            .frame(height: 16)
         }
     }
 }

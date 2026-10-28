@@ -523,18 +523,17 @@ struct SettingsView: View {
     }
 }
 
-// A tiny panel in each theme: light, dark, half-and-half, true black, frosted, or with a key in the corner.
+// A tiny panel in each theme: light, black, half-and-half, frosted, or with a key in the corner.
 private struct ThemeSwatch: View {
     let mode: ThemeMode
 
     var body: some View {
-        let dark = Color(red: 0.07, green: 0.07, blue: 0.08), light = Color(red: 0.95, green: 0.95, blue: 0.94)
+        let dark = Color.black, light = Color(red: 0.95, green: 0.95, blue: 0.94)
         GeometryReader { geo in
             ZStack {
                 switch mode {
                 case .dark: dark
                 case .light: light
-                case .midnight: Color.black
                 case .keycap:
                     ZStack(alignment: .bottomTrailing) {
                         dark

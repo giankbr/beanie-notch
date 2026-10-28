@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 enum ThemeMode: String, CaseIterable {
-    case system, light, dark, midnight, glass, keycap, pixel
+    case system, light, dark, glass, keycap, pixel
 
     var title: String { rawValue.capitalized }
 
@@ -10,7 +10,7 @@ enum ThemeMode: String, CaseIterable {
         switch self {
         case .system: nil
         case .light: NSAppearance(named: .aqua)
-        case .dark, .midnight, .glass, .keycap, .pixel: NSAppearance(named: .darkAqua)
+        case .dark, .glass, .keycap, .pixel: NSAppearance(named: .darkAqua)
         }
     }
 }
@@ -187,6 +187,7 @@ final class Settings: ObservableObject {
 
     init() {
         let d = Self.defaults
+        // Midnight became Dark itself.
         theme = ThemeMode(rawValue: d.string(forKey: "theme") ?? "") ?? .dark
         layout = LayoutStyle(rawValue: d.string(forKey: "layout") ?? "") ?? .studio
         size = PanelSize(rawValue: d.string(forKey: "size") ?? "") ?? .regular

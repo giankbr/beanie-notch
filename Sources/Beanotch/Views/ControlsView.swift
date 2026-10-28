@@ -64,8 +64,7 @@ private struct ToggleRow: View {
             }
             .padding(settings.size == .compact ? 7 : 9)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: Theme.round(11), style: .continuous).fill(on ? color.opacity(0.13) : Theme.surface))
-            .overlay(RoundedRectangle(cornerRadius: Theme.round(11), style: .continuous).strokeBorder(on ? color.opacity(0.5) : Theme.stroke))
+            .background(TileFace(on: on, color: color))
             .contentShape(Rectangle())
             .animation(.easeOut(duration: 0.15), value: on)
         }
@@ -87,9 +86,7 @@ private struct DisplaysCard: View {
                     Image(systemName: screen.builtIn ? "laptopcomputer" : "display").font(.system(size: 10)).foregroundStyle(Theme.dim)
                         .frame(width: 14)
                     Text(screen.name).font(.app(size: 9.5)).lineLimit(1).frame(width: 96, alignment: .leading)
-                    Slider(value: Binding(get: { screen.level }, set: { displays.set(screen, $0) }), in: 0...1)
-                        .controlSize(.mini)
-                        .tint(Theme.accent)
+                    ThemedSlider(value: Binding(get: { Double(screen.level) }, set: { displays.set(screen, .init($0)) }))
                     Text("\(Int((screen.level * 100).rounded()))").font(.mono(size: 9)).foregroundStyle(Theme.faint)
                         .frame(width: 22, alignment: .trailing)
                 }
