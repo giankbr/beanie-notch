@@ -34,6 +34,14 @@ final class MediaController: ObservableObject {
     var onTrackChange: ((NowPlaying) -> Void)?
     private var sleepTimer: Timer?
 
+    // What the system's Now Playing last said, and what Music or Spotify last said themselves. The system follows
+    // one app at a time and can stay on a paused browser tab while Music plays; the players' own broadcasts need no
+    // permission and say what they're doing, so whichever changed to playing most recently wins.
+    private var system: (state: NowPlaying, at: Date)?
+    private var player: (state: NowPlaying, at: Date)?
+    // Commands go to the player straight when that's what's showing; MediaRemote only reaches the system's choice.
+    private var direct: String?
+
     private var helper: Process?
     private var keepAlive: Pipe?
     private var buffer = Data()
@@ -53,7 +61,72 @@ final class MediaController: ObservableObject {
     init() {
         start()
         refreshVolume()
+        let center = DistributedNotificationCenter.default()
+        for (name, app) in [("com.apple.Music.playerInfo", "Music"), ("com.spotify.client.PlaybackStateChanged", "Spotify")] {
+            center.addObserver(forName: Notification.Name(name), object: nil, queue: .main) { [weak self] note in
+                let info = note.userInfo ?? [:]
+                MainActor.assumeIsolated { self?.heard(app, info) }
+            }
+        }
     }
+
+    // A player's own broadcast: its state, track and length (Spotify says where it is; Music is asked).
+    private func heard(_ app: String, _ info: [AnyHashable: Any]) {
+        let state = info["Player State"] as? String ?? ""
+        guard state != "Stopped", let title = info["Name"] as? String, !title.isEmpty else {
+            if player?.state.app == app { player = nil; choose() }
+            return
+        }
+        let playing = state == "Playing"
+        let length = ((info["Total Time"] ?? info["Duration"]) as? Double ?? 0) / 1000
+        // Spotify sends its position; for Music, carry on from where this track was, or start it from the top.
+        var elapsed = info["Playback Position"] as? Double
+            ?? (player?.state.app == app && player?.state.title == title ? player!.state.position() : 0)
+        if elapsed > length, length > 0 { elapsed = 0 }
+        let next = NowPlaying(app: app, playing: playing, title: title, artist: info["Artist"] as? String ?? "",
+                              album: info["Album"] as? String ?? "", duration: length, elapsed: elapsed,
+                              timestamp: Date().timeIntervalSince1970)
+        player = (next, Date())
+        if app == "Music" && playing { askPosition() }
+        choose()
+    }
+
+    // Music doesn't broadcast where it is in a track; asking needs the Automation permission, which macOS asks once.
+    private func askPosition() {
+        queue.async {
+            let position = Self.script("tell application \"Music\" to get player position")?.doubleValue
+            Task { @MainActor in
+                guard let position, var current = self.player, current.state.app == "Music" else { return }
+                current.state.elapsed = position
+                current.state.timestamp = Date().timeIntervalSince1970
+                self.player = current
+                self.choose()
+            }
+        }
+    }
+
+    private func choose() {
+        let sys = system.map { (s: $0.state, at: $0.at) }
+        let own = player.map { (s: $0.state, at: $0.at) }
+        let pick: NowPlaying?
+        var isDirect = false
+        switch (sys, own) {
+        case let (a?, b?) where b.s.playing && (!a.s.playing || a.s.title.isEmpty || b.at > a.at) && a.s.app != b.s.app:
+            pick = b.s; isDirect = true
+        case let (a?, b?) where !a.s.playing && a.s.title.isEmpty:
+            pick = b.s; isDirect = true
+        case let (a?, _):
+            pick = a.s
+        case let (nil, b?):
+            pick = b.s; isDirect = true
+        default:
+            pick = nil
+        }
+        direct = isDirect ? pick?.app : nil
+        show(pick, artwork: isDirect ? nil : pendingArtwork)
+    }
+
+    private var pendingArtwork: Data?
 
     func setActive(_ active: Bool) {
         if active { refreshVolume() }
@@ -107,9 +180,8 @@ final class MediaController: ObservableObject {
 
     private func apply(_ json: [String: Any]) {
         if json["empty"] != nil {
-            now = nil
-            artwork = nil
-            lyrics.clear()
+            system = nil
+            choose()
             return
         }
         let next = NowPlaying(
@@ -122,15 +194,43 @@ final class MediaController: ObservableObject {
             elapsed: json["elapsed"] as? Double ?? 0,
             timestamp: json["timestamp"] as? Double ?? Date().timeIntervalSince1970
         )
+        // A new playing state, or a new track, counts as the system changing; the clock ticking along doesn't.
+        if system?.state.playing != next.playing || system?.state.title != next.title { system = (next, Date()) }
+        else { system?.state = next }
+        pendingArtwork = (json["artwork"] as? String).flatMap { Data(base64Encoded: $0) }
+        choose()
+    }
+
+    private func show(_ next: NowPlaying?, artwork data: Data?) {
+        guard let next else {
+            now = nil
+            artwork = nil
+            lyrics.clear()
+            return
+        }
         if next.title != now?.title || next.artist != now?.artist {
             artwork = nil
             if next.playing, !next.title.isEmpty { onTrackChange?(next) }
+            if direct != nil { fetchArtwork(next) }
         }
-        if let encoded = json["artwork"] as? String, let data = Data(base64Encoded: encoded) {
-            artwork = NSImage(data: data)
-        }
+        if let data { artwork = NSImage(data: data) }
         if next != now { now = next }
         lyrics.load(title: next.title, artist: next.artist, duration: next.duration)
+    }
+
+    // A player's own broadcast carries no picture: the cover comes from Apple's free iTunes search.
+    private func fetchArtwork(_ track: NowPlaying) {
+        var url = URLComponents(string: "https://itunes.apple.com/search")!
+        url.queryItems = [.init(name: "term", value: "\(track.artist) \(track.title)"), .init(name: "entity", value: "song"), .init(name: "limit", value: "1")]
+        guard let search = url.url else { return }
+        Task {
+            guard let (data, _) = try? await URLSession.shared.data(from: search),
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let small = (json["results"] as? [[String: Any]])?.first?["artworkUrl100"] as? String,
+                  let big = URL(string: small.replacingOccurrences(of: "100x100", with: "600x600")),
+                  let (image, _) = try? await URLSession.shared.data(from: big) else { return }
+            if now?.title == track.title { artwork = NSImage(data: image) }
+        }
     }
 
     func playPause() {
@@ -140,12 +240,16 @@ final class MediaController: ObservableObject {
             n.playing.toggle()
             now = n
         }
-        send("2")
+        if let app = direct { tell(app, "playpause") } else { send("2") }
     }
 
-    func next() { send("4") }
-    func previous() { send("5") }
-    func seek(_ t: Double) { send("seek:\(t)") }
+    func next() { if let app = direct { tell(app, "next track") } else { send("4") } }
+    func previous() { if let app = direct { tell(app, "previous track") } else { send("5") } }
+    func seek(_ t: Double) { if let app = direct { tell(app, "set player position to \(t)") } else { send("seek:\(t)") } }
+
+    private func tell(_ app: String, _ command: String) {
+        queue.async { _ = Self.script("tell application \"\(app)\" to \(command)") }
+    }
 
     func skip(_ seconds: Double) {
         guard let n = now else { return }
@@ -165,7 +269,7 @@ final class MediaController: ObservableObject {
         sleepAt = end
         let t = Timer(fire: end, interval: 0, repeats: false) { [weak self] _ in
             MainActor.assumeIsolated {
-                self?.send("1")
+                if let app = self?.direct { self?.tell(app, "pause") } else { self?.send("1") }
                 self?.sleepAt = nil
             }
         }
