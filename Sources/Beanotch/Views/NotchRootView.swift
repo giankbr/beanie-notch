@@ -55,14 +55,14 @@ struct NotchRootView: View {
             // Hidden while open, and out of the way of clicks too: it sits over the Mini tabs.
             closedContent
                 .frame(width: model.closedWidth, height: model.closedHeight)
-                .overlay(alignment: .trailing) {
+                .overlay(alignment: .leading) {
                     if settings.notchPet {
                         PetView(mood: pet.mood, kind: settings.petKind, accessory: settings.petAccessory, praying: pet.praying,
-                                offset: model.closedWidth / 2 - 8 - 17 - pet.walk * (model.closedWidth - NotchPet.slot - 16))
-                            .scaleEffect(x: pet.mood == .walking && pet.walk == 0 ? -1 : 1, y: 1)
-                            .offset(x: -pet.walk * (model.closedWidth - NotchPet.slot - 16))
+                                offset: -(model.closedWidth / 2 - 8 - 17) + pet.walk * (model.closedWidth - NotchPet.slot - 16))
+                            .scaleEffect(x: pet.mood == .walking && pet.walk == 1 ? -1 : 1, y: 1)
+                            .offset(x: pet.walk * (model.closedWidth - NotchPet.slot - 16))
                             .animation(.linear(duration: 5.5), value: pet.walk)
-                            .padding(.trailing, 8).allowsHitTesting(false)
+                            .padding(.leading, 8).allowsHitTesting(false)
                     }
                 }
                 .opacity(model.expanded ? 0 : 1)
@@ -223,11 +223,11 @@ struct NotchRootView: View {
         } else if model.showsMiniPlayer {
             MiniPlayer().transition(.emerge)
         } else if settings.notchPet {
-            // Nothing else to show: the pet's word on the left, the pet itself in its corner.
+            // Nothing else to show: the pet in its corner on the left, its word on the right.
             Ears {
-                Text(petLine).font(.app(size: 9.5, weight: .semibold)).foregroundStyle(.white.opacity(0.6)).lineLimit(1)
-            } right: {
                 EmptyView()
+            } right: {
+                Text(petLine).font(.app(size: 9.5, weight: .semibold)).foregroundStyle(.white.opacity(0.6)).lineLimit(1)
             }
             .transition(.emerge)
         }
@@ -269,10 +269,10 @@ private struct Ears<Left: View, Right: View>: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            left.frame(maxWidth: .infinity, alignment: .leading)
+            // Clear of the pet's corner, on the left.
+            left.frame(maxWidth: .infinity, alignment: .leading).padding(.leading, settings.notchPet ? NotchPet.slot : 0)
             Color.clear.frame(width: model.closedSize.width)
-            // Clear of the pet's corner.
-            right.frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, settings.notchPet ? NotchPet.slot : 0)
+            right.frame(maxWidth: .infinity, alignment: .trailing)
         }
         .padding(.horizontal, 12)
         .frame(height: model.closedSize.height)
@@ -289,13 +289,12 @@ private struct NotchLyrics: View {
         Ears {
             HStack(spacing: 7) {
                 Group {
+                    // The cover when there is one; nothing in its place otherwise (a browser's own icon isn't one).
                     if let art = media.artwork {
                         Image(nsImage: art).resizable().aspectRatio(contentMode: .fill)
-                    } else {
-                        Image(systemName: "music.note").font(.system(size: 9)).foregroundStyle(.white.opacity(0.5))
                     }
                 }
-                .frame(width: 16, height: 16)
+                .frame(width: media.artwork == nil ? 0 : 16, height: 16)
                 .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                 TimelineView(.periodic(from: .now, by: 0.5)) { context in
                     let i = media.now.flatMap { lyrics.index(at: $0.position(at: context.date)) }
@@ -328,14 +327,13 @@ private struct MiniPlayer: View {
             Group {
                 if let art = media.artwork {
                     Image(nsImage: art).resizable().aspectRatio(contentMode: .fill)
-                } else {
-                    Image(systemName: "music.note").font(.system(size: 9)).foregroundStyle(Theme.dim)
                 }
             }
-            .frame(width: 16, height: 16)
+            .frame(width: media.artwork == nil ? 0 : 16, height: 16)
             .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+            .padding(.leading, settings.notchPet ? NotchPet.slot : 0)
             Spacer()
-            Equalizer(playing: true).padding(.trailing, settings.notchPet ? NotchPet.slot : 0)
+            Equalizer(playing: true)
         }
         .padding(.horizontal, 10)
         .frame(height: model.closedSize.height)

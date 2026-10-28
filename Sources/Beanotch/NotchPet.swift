@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-// A coffee bean that lives in the right corner of the closed notch, whatever else shows there, and reacts to the Mac:
+// A coffee bean that lives in the left corner of the closed notch, whatever else shows there, and reacts to the Mac:
 // it dozes when nobody's there, sweats when the processor is flat out, munches files put on the Shelf, wants water
 // when it's time to drink, bobs along to music, jumps at each alert and yawns when you're up past midnight.
 @MainActor
@@ -136,7 +136,7 @@ final class NotchPet: ObservableObject {
         if level > before { onLevelUp?(level) }
     }
 
-    // Now and then, with nothing else going on, it walks to the other end of the notch and back.
+    // Now and then, with nothing else going on, it walks from its corner on the left to the other end and back.
     private func stroll() {
         guard walk == 0, notchIsFree?() == true else { return }
         walk = 1

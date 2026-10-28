@@ -127,6 +127,28 @@ final class MediaController: ObservableObject {
     }
 
     private var pendingArtwork: Data?
+    private var dropArtwork = false
+
+    // Whether a picture is just the app's own icon, compared small against what Finder shows for the app.
+    nonisolated private static func isAppIcon(_ data: Data, _ bundle: String) -> Bool {
+        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundle),
+              let given = NSImage(data: data).flatMap(Self.pixels), let icon = Self.pixels(NSWorkspace.shared.icon(forFile: url.path)) else { return false }
+        let difference = zip(given, icon).reduce(0) { $0 + abs(Int($1.0) - Int($1.1)) }
+        return Double(difference) / Double(given.count) < 28
+    }
+
+    nonisolated private static func pixels(_ image: NSImage) -> [UInt8]? {
+        guard let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+        let side = 12
+        var out = [UInt8](repeating: 0, count: side * side * 4)
+        let ok: Bool = out.withUnsafeMutableBytes { buffer in
+            guard let ctx = CGContext(data: buffer.baseAddress, width: side, height: side, bitsPerComponent: 8, bytesPerRow: side * 4,
+                                      space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return false }
+            ctx.draw(cg, in: CGRect(x: 0, y: 0, width: side, height: side))
+            return true
+        }
+        return ok ? out : nil
+    }
 
     func setActive(_ active: Bool) {
         if active { refreshVolume() }
@@ -156,7 +178,18 @@ final class MediaController: ObservableObject {
         guard (try? process.run()) != nil else { return }
         helper = process
         keepAlive = input
+        // macOS doesn't always announce a change of player (a browser tab starting, say); a nudge every two seconds
+        // has the helper report again, so the notch never sticks on the last one.
+        poll?.invalidate()
+        let t = Timer(timeInterval: 2, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { try? self?.keepAlive?.fileHandleForWriting.write(contentsOf: Data("x".utf8)) }
+        }
+        t.tolerance = 0.5
+        RunLoop.main.add(t, forMode: .common)
+        poll = t
     }
+
+    private var poll: Timer?
 
     private func helperExited() {
         helper = nil
@@ -198,6 +231,9 @@ final class MediaController: ObservableObject {
         if system?.state.playing != next.playing || system?.state.title != next.title { system = (next, Date()) }
         else { system?.state = next }
         pendingArtwork = (json["artwork"] as? String).flatMap { Data(base64Encoded: $0) }
+        // A browser with nothing better (a page without a cover) gives its own icon; that isn't the song's.
+        if let data = pendingArtwork, let bundle = json["bundle"] as? String, Self.isAppIcon(data, bundle) { pendingArtwork = nil; dropArtwork = true }
+        else if pendingArtwork != nil { dropArtwork = false }
         choose()
     }
 
@@ -214,6 +250,7 @@ final class MediaController: ObservableObject {
             if direct != nil { fetchArtwork(next) }
         }
         if let data { artwork = NSImage(data: data) }
+        else if dropArtwork && direct == nil { artwork = nil }
         if next != now { now = next }
         lyrics.load(title: next.title, artist: next.artist, duration: next.duration)
     }

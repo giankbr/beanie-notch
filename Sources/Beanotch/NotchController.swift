@@ -355,7 +355,7 @@ final class NotchController {
 
     // The pet's corner at the right end of the closed notch, which moves as the notch grows and shrinks.
     private var petRect: NSRect {
-        NSRect(x: screenFrame.midX + model.closedWidth / 2 - NotchPet.slot - 6, y: screenFrame.maxY - model.closedHeight,
+        NSRect(x: screenFrame.midX - model.closedWidth / 2 + 4, y: screenFrame.maxY - model.closedHeight,
                width: NotchPet.slot + 2, height: model.closedHeight)
     }
 
