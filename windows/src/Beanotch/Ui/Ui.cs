@@ -14,8 +14,12 @@ namespace Beanotch.Ui;
 // buildable (and checkable) without the XAML compiler.
 public static class Ui
 {
-    // Mac points to Windows pixels: the same nominal size reads smaller on Windows.
-    public const double K = 1.3;
+    // Mac points to Windows pixels: the same nominal size reads smaller on Windows. On a small screen (a laptop at a
+    // high scaling, a virtual machine's window) it shrinks, so the open panel takes about the share of the screen it
+    // takes on a MacBook rather than nearly all of it.
+    public static double K { get; private set; } = 1.3;
+
+    public static void FitTo(double screenWidth) => K = Math.Clamp(1.3 * Math.Min(1, screenWidth * 0.62 / (680 * 1.3)), 0.85, 1.3);
     public static double S(double v) => Math.Round(v * K, 1);
 
     private static readonly FontFamily SystemText = new("Segoe UI Variable Text, Segoe UI");

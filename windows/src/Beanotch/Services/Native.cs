@@ -7,6 +7,11 @@ static partial class Native
     [LibraryImport("user32.dll")]
     internal static partial uint GetDpiForWindow(nint hwnd);
 
+    [LibraryImport("user32.dll")]
+    private static partial uint GetDpiForSystem();
+
+    internal static double SystemDpi() => Math.Max(96, GetDpiForSystem());
+
     [LibraryImport("gdi32.dll")]
     private static partial nint CreateRoundRectRgn(int left, int top, int right, int bottom, int width, int height);
 
@@ -91,6 +96,8 @@ static partial class Native
         uint square = 1, noBorder = 0xFFFFFFFE;
         DwmSetWindowAttribute(hwnd, 33, ref square, 4);   // DWMWA_WINDOW_CORNER_PREFERENCE = DWMWCP_DONOTROUND
         DwmSetWindowAttribute(hwnd, 34, ref noBorder, 4); // DWMWA_BORDER_COLOR = DWMWA_COLOR_NONE
+        uint noFrame = 1;
+        DwmSetWindowAttribute(hwnd, 2, ref noFrame, 4);   // DWMWA_NCRENDERING_POLICY = DWMNCRP_DISABLED: no shadow or edge at all
         SetWindowPos(hwnd, 0, 0, 0, 0, 0, 0x0020 | 0x0002 | 0x0001 | 0x0004 | 0x0010); // FRAMECHANGED | NOMOVE | NOSIZE | NOZORDER | NOACTIVATE
     }
 

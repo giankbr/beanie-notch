@@ -59,6 +59,9 @@ public sealed partial class App : Application, IXamlMetadataProvider
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         Resources.MergedDictionaries.Add(new XamlControlsResources());
+        // The main screen's width in effective pixels decides how big everything is drawn.
+        var area = Microsoft.UI.Windowing.DisplayArea.Primary.WorkArea;
+        Ui.Ui.FitTo(area.Width / (Services.Native.SystemDpi() / 96.0));
         window = new IslandWindow();
         window.Activate();
     }
