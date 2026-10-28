@@ -62,6 +62,14 @@ public sealed class Model
         SmartCopy.Notice += n => Notice?.Invoke(n);
         Clipboard.Copied += SmartCopy.Check;
         Pet = new Pet(this);
+        // A new song: a little jig.
+        var song = "";
+        Media.Changed += () => ui.TryEnqueue(() =>
+        {
+            if (Media.Title == song) return;
+            song = Media.Title;
+            if (Media.Playing && song.Length > 0 && Settings.NotchPet) Pet.SongChanged();
+        });
         // Files from the phone land on the Shelf, and the Shelf's files are offered to it.
         Phone.Offered = () => [.. Shelf.Items];
         Phone.FileReceived += file => ui.TryEnqueue(() =>
@@ -79,6 +87,8 @@ public sealed class Model
     {
         Happy, Sleepy, Panic, Eating, Dancing, Surprised, Late, Thirsty,
         Love, Dizzy, Sad, Party, Focus, Coffee, Tired, Charged, Hungry, Sway, Walking,
+        // A twirl at a double click, a wave when you're back at the PC, a game with its ball, a jig at a new song.
+        Spin, Wave, Ball, Groove,
     }
 
     // How the island's pet is feeling, as on the Mac.

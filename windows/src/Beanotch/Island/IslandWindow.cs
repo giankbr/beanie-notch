@@ -253,7 +253,7 @@ public sealed partial class IslandWindow : Window
         if (model.Expanded) return null;
         var scale = Native.GetDpiForWindow(hwnd) / 96.0 * Ui.Ui.K;
         var at = AppWindow.Position;
-        return (new Windows.Foundation.Point(at.X + AppWindow.Size.Width - 34 * scale, at.Y + 15 * scale), scale);
+        return (new Windows.Foundation.Point(at.X + 34 * scale, at.Y + 15 * scale), scale);
     }
 
     private async Task CheckForUpdate()

@@ -3,7 +3,7 @@ using Windows.System.Power;
 namespace Beanotch.Services;
 
 // Things to wear, unlocked by level; the cap for prayer and the focus headband come on by themselves.
-public enum PetAccessory { None, Scarf, Glasses, Cap, Crown }
+public enum PetAccessory { None, Scarf, Glasses, Cap, Sunglasses, Crown, Headphones, Bow, Santa }
 
 // The island's pet, as on the Mac: it reacts to what's done to it and to the PC, gets hungry once a day, earns points
 // for focus sessions, meals, petting and days kept company, and every ten points is a level that unlocks something
@@ -15,7 +15,11 @@ public sealed class Pet(Model model)
         PetAccessory.Scarf => 2,
         PetAccessory.Glasses => 3,
         PetAccessory.Cap => 4,
+        PetAccessory.Sunglasses => 5,
         PetAccessory.Crown => 6,
+        PetAccessory.Headphones => 7,
+        PetAccessory.Bow => 8,
+        PetAccessory.Santa => 9,
         _ => 1,
     };
 
@@ -23,6 +27,7 @@ public sealed class Pet(Model model)
     private (Model.PetMood Mood, DateTimeOffset Until)? reaction;
     private readonly List<DateTimeOffset> taps = [];
     private DateTimeOffset walkUntil;
+    private bool away;
     private static string Today => DateTime.Now.ToString("yyyy-MM-dd");
 
     public int Level => Math.Min(S.PetXp / 10 + 1, 9);
@@ -69,8 +74,15 @@ public sealed class Pet(Model model)
         if (!S.NotchPet) return;
         if (S.PetSeenDay != Today) { S.PetSeenDay = Today; Gain(1); }
         var now = DateTimeOffset.Now;
-        if (islandFree && Walk == 0 && Mood == Model.PetMood.Happy && Native.Idle < TimeSpan.FromMinutes(1) && Random.Shared.Next(180) == 0)
+        // Back after five minutes away: a wave hello.
+        var idle = Native.Idle;
+        if (idle > TimeSpan.FromMinutes(5)) away = true;
+        else if (away && idle < TimeSpan.FromSeconds(5)) { away = false; React(Model.PetMood.Wave, 2.6); }
+        if (islandFree && Walk == 0 && Mood == Model.PetMood.Happy && idle < TimeSpan.FromMinutes(1) && Random.Shared.Next(180) == 0)
             walkUntil = now.AddSeconds(6);
+        // Left to itself a while (you're reading, say), it now and then plays with its ball.
+        else if (Mood == Model.PetMood.Happy && idle > TimeSpan.FromSeconds(15) && idle < TimeSpan.FromSeconds(150) && Random.Shared.Next(300) == 0)
+            React(Model.PetMood.Ball, 5);
     }
 
     // A click: it hops and shows a heart, takes its meal if it was hungry, and gets dizzy from five in a row.
@@ -80,6 +92,7 @@ public sealed class Pet(Model model)
         taps.RemoveAll(t => now - t > TimeSpan.FromSeconds(1.5));
         taps.Add(now);
         if (taps.Count >= 5) { taps.Clear(); React(Model.PetMood.Dizzy, 3); }
+        else if (taps.Count == 2 && now - taps[0] < TimeSpan.FromSeconds(0.45)) React(Model.PetMood.Spin, 0.9);
         else if (Mood == Model.PetMood.Hungry) { S.PetFedDay = Today; Gain(1); React(Model.PetMood.Eating, 3); }
         else React(Model.PetMood.Love, 1.6);
     }
@@ -93,6 +106,7 @@ public sealed class Pet(Model model)
     }
 
     public void Sway() => React(Model.PetMood.Sway, 1.5);
+    public void SongChanged() => React(Model.PetMood.Groove, 2.2);
     public void Thirst() => React(Model.PetMood.Thirsty, 60);
     public void Shake() => React(Model.PetMood.Dizzy, 3);
 

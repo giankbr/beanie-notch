@@ -47,7 +47,7 @@ public sealed partial class IslandWindow
         Show(new Notice(Glyphs.Screenshot, Theme.Accent2, "Screenshot", "On the Shelf", TimeSpan.FromSeconds(10)));
         await Shot("03c-closed-pet-notice", 600);
         notice = null;
-        foreach (var kind in new[] { PetKind.Cat, PetKind.Frog, PetKind.Ghost })
+        foreach (var kind in new[] { PetKind.Cat, PetKind.Frog, PetKind.Ghost, PetKind.Dog, PetKind.Panda, PetKind.Bunny, PetKind.Robot })
         {
             model.Settings.PetKind = kind;
             Update();
@@ -68,6 +68,11 @@ public sealed partial class IslandWindow
         model.Pet.React(new Notice(Glyphs.Done, Theme.Good, "Done · 12s", "npm test", TimeSpan.Zero));
         model.Settings.PetAccessory = PetAccessory.Crown;
         await Shot("03g-closed-pet-party-crown", 700);
+        model.Settings.PetKind = PetKind.Bunny;
+        model.Settings.PetAccessory = PetAccessory.Headphones;
+        model.Pet.SongChanged();
+        await Shot("03h-closed-pet-groove", 700);
+        model.Settings.PetKind = PetKind.Bean;
         model.Settings.PetAccessory = PetAccessory.None;
         model.Settings.NotchPet = false;
         Update();
