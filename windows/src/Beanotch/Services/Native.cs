@@ -176,9 +176,10 @@ static partial class Native
 
     // The MacBook notch's outline: flat along the top edge of the screen, rounded at the bottom, and with a concave
     // shoulder on each side where it meets the top edge. The body sits between the shoulders.
-    internal static void Notch(nint hwnd, int width, int height, int ear, int radius)
+    internal static void Notch(nint hwnd, int width, int height, int ear, int radius, bool floating = false)
     {
-        var body = CreateRoundRectRgn(ear, -radius, width - ear + 1, height + 1, radius * 2, radius * 2);
+        // Floating is rounded at the top too; otherwise the top corners run off the screen's edge, square.
+        var body = CreateRoundRectRgn(ear, floating ? 0 : -radius, width - ear + 1, height + 1, radius * 2, radius * 2);
         if (ear > 0)
         {
             foreach (var (left, centre) in new[] { (0, 0), (width - ear, width) })

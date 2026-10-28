@@ -14,6 +14,7 @@ public sealed class AppSettings
     public AccentChoice Accent { get; set; } = AccentChoice.Mint;
     public AppFont Font { get; set; } = AppFont.System;
     public PanelSize Size { get; set; } = PanelSize.Regular;
+    public NotchShape Shape { get; set; } = NotchShape.Drop;
     public bool ClipboardHistory { get; set; } = true;
     public bool ScreenshotsToShelf { get; set; } = true;
     public bool Lyrics { get; set; } = true;

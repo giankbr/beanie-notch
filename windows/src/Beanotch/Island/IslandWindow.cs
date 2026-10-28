@@ -42,7 +42,7 @@ public sealed partial class IslandWindow : Window
     // Alerts that can wait, held while a call is on.
     private readonly List<Notice> held = [];
     private DateTime noticeUntil;
-    private (int W, int H) placed;
+    private (int W, int H, NotchShape Shape) placed;
     private bool hiddenForFullscreen;
     private readonly DispatcherQueueTimer petStroke;
 
@@ -295,20 +295,23 @@ public sealed partial class IslandWindow : Window
         FadeIn(closed.View, 3);
     }
 
-    // Always hangs from the very top of the screen, centred, like the MacBook notch. The panel narrows on small screens
-    // so it never runs off the sides.
+    // Hangs from the very top of the screen, centred, like the MacBook notch (or just below it, floating). The panel
+    // narrows on small screens so it never runs off the sides.
     private void Place(double width, double height, double radius, double ear)
     {
+        var shape = model.Settings.Shape;
+        if (shape != NotchShape.Drop) ear = 0;
         var scale = Native.GetDpiForWindow(hwnd) / 96.0 * Ui.Ui.K;
         var display = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Primary);
         width = Math.Min(width, display.WorkArea.Width / scale - 2 * ear - 24);
         int e = (int)Math.Round(ear * scale);
         int w = (int)Math.Round(width * scale) + 2 * e, h = (int)Math.Round(height * scale);
         root.Padding = new Thickness(ear * Ui.Ui.K, 0, ear * Ui.Ui.K, 0);
-        if (placed == (w, h)) return;
-        placed = (w, h);
-        AppWindow.MoveAndResize(new RectInt32(display.OuterBounds.X + (display.OuterBounds.Width - w) / 2, display.OuterBounds.Y, w, h));
-        Native.Notch(hwnd, w, h, e, (int)Math.Round(Math.Min(radius * scale, h / 2.0)));
+        if (placed == (w, h, shape)) return;
+        placed = (w, h, shape);
+        var drop = shape == NotchShape.Floating ? (int)Math.Round(8 * scale) : 0;
+        AppWindow.MoveAndResize(new RectInt32(display.OuterBounds.X + (display.OuterBounds.Width - w) / 2, display.OuterBounds.Y + drop, w, h));
+        Native.Notch(hwnd, w, h, e, (int)Math.Round(Math.Min(radius * scale, h / 2.0)), shape == NotchShape.Floating);
     }
 
     private void OnDragOver(object sender, DragEventArgs e)

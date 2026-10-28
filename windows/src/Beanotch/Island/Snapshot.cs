@@ -13,6 +13,13 @@ public sealed partial class IslandWindow
 {
     public static string? SnapshotFolder => Environment.GetEnvironmentVariable("BEANOTCH_SNAPSHOT") is { Length: > 0 } dir ? dir : null;
 
+    // The whole screen, to see how the island meets its top edge.
+    private static async Task DesktopShot(string dir, string name)
+    {
+        await File.WriteAllTextAsync(Path.Combine(dir, name + ".ready"), "");
+        for (var i = 0; i < 30 && !File.Exists(Path.Combine(dir, name + ".done")); i++) await Task.Delay(200);
+    }
+
     private async Task SnapshotAsync(string dir)
     {
         Directory.CreateDirectory(dir);
@@ -45,6 +52,13 @@ public sealed partial class IslandWindow
             model.Settings.PetKind = kind;
             Update();
             await Shot($"03d-closed-pet-{kind.ToString().ToLowerInvariant()}", 700);
+        }
+        foreach (var shape in new[] { NotchShape.Seamless, NotchShape.Floating, NotchShape.Drop })
+        {
+            model.Settings.Shape = shape;
+            Update();
+            await Task.Delay(800);
+            if (shape != NotchShape.Drop) await DesktopShot(dir, $"03h-shape-{shape.ToString().ToLowerInvariant()}");
         }
         model.Settings.PetKind = PetKind.Bean;
         model.Pet.Tap();

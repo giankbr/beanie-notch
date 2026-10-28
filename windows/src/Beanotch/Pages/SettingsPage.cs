@@ -129,10 +129,38 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
             return Choice(fontNames[(int)font], S0.Font == font, face, () => { S0.Font = font; Save(rebuild: true); });
         }));
 
+        var shapes = Cells(Enum.GetValues<NotchShape>().Select(shape =>
+            Choice(shape.ToString(), S0.Shape == shape, ShapeSketch(shape), () => { S0.Shape = shape; Save(rebuild: true); })));
+
         return V(8,
             Group(Picker("Theme", "The island itself always stays black", themes), tint),
+            Group(Picker("Notch shape", "How the island meets the top of the screen", shapes)),
             Group(Row(null, "Panel size", "How big the island opens", size),
                   Picker("Font", "Segoe UI is Windows' own; the others ship with Beanotch, as on the Mac", fonts)));
+    }
+
+    // The shape in miniature: the top of the screen, and the island hanging from it.
+    private static Grid ShapeSketch(NotchShape shape)
+    {
+        var g = new Grid { Background = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.04)) };
+        g.Children.Add(new Border { Height = S(2), VerticalAlignment = VerticalAlignment.Top, Background = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.25)) });
+        var r = S(6);
+        g.Children.Add(new Border
+        {
+            Width = S(44), Height = S(14), Background = Theme.Brush(Theme.Black),
+            HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(0, shape == NotchShape.Floating ? S(6) : 0, 0, 0),
+            CornerRadius = shape == NotchShape.Floating ? new CornerRadius(r) : new CornerRadius(0, 0, r, r),
+        });
+        if (shape == NotchShape.Drop)
+            foreach (var side in new[] { -1, 1 })
+                g.Children.Add(new Border
+                {
+                    Width = S(5), Height = S(5), Background = Theme.Brush(Theme.Black),
+                    HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Top,
+                    Margin = new Thickness(side * S(49), 0, 0, 0), CornerRadius = new CornerRadius(0, 0, side < 0 ? S(5) : 0, side > 0 ? S(5) : 0),
+                });
+        return g;
     }
 
     // A pick with a picture, like the Mac's: a small preview over its name, outlined in the accent when chosen.
