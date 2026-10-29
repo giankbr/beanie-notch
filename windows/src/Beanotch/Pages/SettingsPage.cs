@@ -136,9 +136,11 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
                 GradientStops = { new() { Color = Theme.Primary(palette), Offset = 0 }, new() { Color = Theme.Secondary(palette), Offset = 1 } },
             };
         }
-        var solids = H(4, [.. swatches.Children.Take(Theme.Solids.Length)]);
-        var palettes = H(4, [.. swatches.Children.Skip(Theme.Solids.Length)]);
+        // An element has one parent: off the first row before onto the two.
+        var all = swatches.Children.ToList();
         swatches.Children.Clear();
+        var solids = H(4, [.. all.Take(Theme.Solids.Length)]);
+        var palettes = H(4, [.. all.Skip(Theme.Solids.Length)]);
         // Accents that follow the song, the wallpaper, or a colour of your own.
         Button Chip(AccentChoice accent, string glyph, string title)
         {
