@@ -74,7 +74,7 @@ public sealed class PrayerPage(Model model) : PanelPage(model)
         for (var i = 0; i < entries.Count; i++)
         {
             var e = entries[i];
-            var isNext = e.Time == next.Time;
+            var isNext = IsNext(e, next);
             var name = Text(Model.Label(e), 8.5, isNext ? Theme.Accent : Theme.Dim, FontWeights.Medium);
             var time = Text(Model.Clock(e.Time), 11, isNext ? Theme.Ink : e.Time < DateTimeOffset.Now ? Theme.Faint : Theme.Ink, FontWeights.SemiBold);
             name.HorizontalAlignment = time.HorizontalAlignment = HorizontalAlignment.Center;
@@ -162,7 +162,7 @@ public sealed class PrayerPage(Model model) : PanelPage(model)
         {
             var c = At(i);
             var e = entries[i];
-            if (e.Time == next.Time)
+            if (IsNext(e, next))
             {
                 Dot(c, 9, Theme.WithAlpha(Theme.Accent, 0.2));
                 Dot(c, 5, Theme.Accent);
@@ -184,6 +184,10 @@ public sealed class PrayerPage(Model model) : PanelPage(model)
             arc.Children.Add(dot);
         }
     }
+
+    // The next one is lit: after Isha that's tomorrow's Fajr, so today's Fajr stands in for it.
+    private static bool IsNext(PrayerEntry e, PrayerEntry next) =>
+        e.Time == next.Time || next.Time.Date > DateTimeOffset.Now.Date && e.Name == next.Name;
 
     // Great-circle bearing to the Kaaba, in degrees from north.
     public static double Qibla(double lat, double lng)

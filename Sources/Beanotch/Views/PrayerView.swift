@@ -97,7 +97,7 @@ private struct SunArcPage: View {
     private func labels(_ now: Date) -> some View {
         HStack(spacing: 0) {
             ForEach(prayer.today) { entry in
-                let isNext = entry.time == prayer.next?.time
+                let isNext = SunArc.isNext(entry, prayer.next)
                 VStack(spacing: 0) {
                     Text(prayer.label(entry)).font(.app(size: 8.5, weight: .medium)).lineLimit(1)
                         .foregroundStyle(isNext ? Theme.accent : Theme.dim)
@@ -122,6 +122,12 @@ private struct SunArc: View {
     let entries: [PrayerTimes.Entry]
     let next: PrayerTimes.Entry?
     let now: Date
+
+    // The next one is lit: after Isha that's tomorrow's Fajr, so today's Fajr stands in for it.
+    static func isNext(_ entry: PrayerTimes.Entry, _ next: PrayerTimes.Entry?) -> Bool {
+        guard let next else { return false }
+        return entry.time == next.time || Calendar.current.isDateInTomorrow(next.time) && entry.name == next.name
+    }
 
     var body: some View {
         Canvas { g, size in
@@ -176,7 +182,7 @@ private struct SunArc: View {
             }
             for (i, entry) in entries.enumerated() {
                 let c = point(Double(i))
-                if entry.time == next?.time {
+                if Self.isNext(entry, next) {
                     g.fill(Path(ellipseIn: CGRect(x: c.x - 9, y: c.y - 9, width: 18, height: 18)), with: .color(Theme.accent.opacity(0.2)))
                     g.fill(Path(ellipseIn: CGRect(x: c.x - 5, y: c.y - 5, width: 10, height: 10)), with: .color(Theme.accent))
                 } else {
