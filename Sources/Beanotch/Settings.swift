@@ -16,7 +16,7 @@ enum ThemeMode: String, CaseIterable {
 }
 
 enum LayoutStyle: String, CaseIterable {
-    case studio, sidebar, tabs, classic, minimal, launcher
+    case studio, sidebar, tabs, classic, minimal, launcher, slide
 
     var title: String {
         switch self {
@@ -26,6 +26,7 @@ enum LayoutStyle: String, CaseIterable {
         case .tabs: "Top tabs"
         case .minimal: "Minimal"
         case .launcher: "Launcher"
+        case .slide: "Slide"
         }
     }
 
@@ -37,6 +38,7 @@ enum LayoutStyle: String, CaseIterable {
         case .classic: "Greeting and a dock"
         case .minimal: "Just the page; switch from the title"
         case .launcher: "A grid of tiles to start from"
+        case .slide: "No menu; swipe between pages"
         }
     }
 }

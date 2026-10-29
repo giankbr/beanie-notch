@@ -625,6 +625,14 @@ private struct LayoutSketch: View {
                         }
                         RoundedRectangle(cornerRadius: 2).fill(block)
                     }
+                case .slide:
+                    VStack(spacing: 3) {
+                        RoundedRectangle(cornerRadius: 2).fill(block)
+                        HStack(spacing: 2) {
+                            Capsule().fill(accent).frame(width: 8, height: 3)
+                            ForEach(0..<3, id: \.self) { _ in Circle().fill(block).frame(width: 3, height: 3) }
+                        }
+                    }
                 case .launcher:
                     VStack(spacing: 2) {
                         ForEach(0..<2, id: \.self) { row in

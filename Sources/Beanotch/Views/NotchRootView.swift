@@ -444,6 +444,8 @@ struct ExpandedView: View {
                         }
                     }
                     .animation(.snappy(duration: 0.25), value: model.launcherGrid)
+                } else if settings.layout == .slide {
+                    slide
                 } else if settings.layout == .sidebar {
                     HStack(spacing: 12) {
                         Rail()
@@ -476,8 +478,37 @@ struct ExpandedView: View {
     // Dashboard pages scroll when the panel is shorter than them; the rest size or scroll their own content
     // (the player's artwork and the camera preview take their size from the panel, so they can't be measured).
     private var page: some View {
+        pageContent(model.tab)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .overlay(alignment: .top) { permissions }
+            .transition(.opacity)
+    }
+
+    // Slide: no menu at all. The pages sit side by side; a sideways swipe, or a click on the dots, moves between them.
+    private var slide: some View {
+        VStack(spacing: 7) {
+            ScrollView(.horizontal) {
+                LazyHStack(spacing: 0) {
+                    ForEach(model.visibleTabs) { tab in
+                        pageContent(tab)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .containerRelativeFrame(.horizontal)
+                            .id(tab)
+                    }
+                }
+                .scrollTargetLayout()
+            }
+            .scrollIndicators(.never)
+            .scrollTargetBehavior(.paging)
+            .scrollPosition(id: Binding(get: { model.tab }, set: { if let tab = $0 { model.tab = tab } }))
+            .overlay(alignment: .top) { permissions }
+            PageDots()
+        }
+    }
+
+    @ViewBuilder private func pageContent(_ tab: Tab) -> some View {
         Group {
-            switch model.tab {
+            switch tab {
             case .home: HomeView()
             case .today: FitOrScroll { TodayView() }
             case .prayer: FitOrScroll { PrayerView() }
@@ -488,9 +519,40 @@ struct ExpandedView: View {
             case .controls: FitOrScroll { ControlsView() }
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .overlay(alignment: .top) { permissions }
-        .transition(.opacity)
+    }
+}
+
+// Under the Slide layout's pages: a dot for each, the open one drawn long, and the way to Settings at the end.
+private struct PageDots: View {
+    @EnvironmentObject var model: AppModel
+
+    var body: some View {
+        ZStack {
+            HStack(spacing: 4) {
+                ForEach(model.visibleTabs) { tab in
+                    let active = tab == model.tab
+                    Button { withAnimation(.snappy(duration: 0.3)) { model.tab = tab } } label: {
+                        Capsule().fill(active ? Theme.accent : Theme.ink.opacity(0.22))
+                            .frame(width: active ? 16 : 6, height: 6)
+                            .padding(3)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .help(tab.title)
+                }
+            }
+            .animation(.snappy(duration: 0.3), value: model.tab)
+            HStack {
+                Spacer()
+                Button { model.openSettings(nil) } label: {
+                    Image(systemName: "gearshape.fill").font(.system(size: 9, weight: .semibold)).foregroundStyle(Theme.faint)
+                        .frame(width: 18, height: 14).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help("Settings and tools")
+            }
+        }
+        .frame(height: 14)
     }
 }
 

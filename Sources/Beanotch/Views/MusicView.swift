@@ -58,6 +58,7 @@ struct MusicView: View {
 // Always square: a 16:9 video thumbnail is cropped to its centre rather than stretching the box.
 private struct Artwork: View {
     @EnvironmentObject var media: MediaController
+    @EnvironmentObject var settings: Settings
     let tint: Color
     var side: CGFloat?
 
@@ -75,7 +76,8 @@ private struct Artwork: View {
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: (side ?? 190) > 100 ? 14 : 10, style: .continuous))
-            .shadow(color: tint.opacity(0.45), radius: (side ?? 190) > 100 ? 20 : 10, y: 6)
+            // No glow in the compact size, where the page's edge is close enough to cut it off.
+            .shadow(color: tint.opacity(settings.size == .compact ? 0 : 0.45), radius: (side ?? 190) > 100 ? 20 : 10, y: 6)
         if let side {
             square.frame(width: side, height: side)
         } else {
