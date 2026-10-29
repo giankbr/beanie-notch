@@ -18,10 +18,10 @@ struct SettingsView: View {
     private static let waterSteps = [0, 30, 60, 90]
     private static let stretchSteps = [0, 45, 60, 90]
 
-    @State private var section: Section = .appearance
+    private var section: Section { model.settingsSection }
 
     enum Section: String, CaseIterable, Identifiable {
-        case appearance, pages, notch, inNotch, ai, shelf, wellbeing, prayer, system
+        case appearance, pages, notch, inNotch, ai, shelf, wellbeing, prayer, system, tools
         var id: String { rawValue }
         var title: String {
             switch self {
@@ -34,6 +34,7 @@ struct SettingsView: View {
             case .wellbeing: "Wellbeing"
             case .prayer: "Prayer times"
             case .system: "System"
+            case .tools: "Tools"
             }
         }
         var icon: String {
@@ -47,6 +48,7 @@ struct SettingsView: View {
             case .wellbeing: "heart.fill"
             case .prayer: "moon.fill"
             case .system: "gearshape.fill"
+            case .tools: "wrench.and.screwdriver.fill"
             }
         }
     }
@@ -81,14 +83,19 @@ struct SettingsView: View {
             .frame(maxHeight: .infinity, alignment: .top)
             .overlay(alignment: .trailing) { Rectangle().fill(Theme.stroke).frame(width: 1).offset(x: 6) }
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 8) {
-                    content
+            // Tools fill the space and scroll their own lists; every other section scrolls as a whole.
+            if section == .tools {
+                ToolsView().frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 8) {
+                        content
+                    }
+                    .padding(.bottom, 2)
                 }
-                .padding(.bottom, 2)
+                .scrollIndicators(.never)
+                .id(section)
             }
-            .scrollIndicators(.never)
-            .id(section)
         }
     }
 
@@ -96,7 +103,7 @@ struct SettingsView: View {
         let active = section == item
         // Without the Prayer page, its section only keeps the place, for the weather.
         let plain = item == .prayer && !model.prayerOn
-        return Button { withAnimation(.snappy(duration: 0.2)) { section = item } } label: {
+        return Button { withAnimation(.snappy(duration: 0.2)) { model.settingsSection = item } } label: {
             HStack(spacing: 7) {
                 TabIcon(name: plain ? "location.fill" : item.icon, size: 10, weight: .semibold).frame(width: 14)
                     .foregroundStyle(active ? Theme.accent : Theme.dim)
@@ -123,6 +130,7 @@ struct SettingsView: View {
         case .wellbeing: wellbeing
         case .prayer: prayerSection
         case .system: system
+        case .tools: EmptyView()
         }
     }
 
@@ -187,7 +195,7 @@ struct SettingsView: View {
     // Pages to keep in the menus; the rest disappear from every layout.
     private var pages: some View {
         card {
-            ForEach(Tab.allCases.filter { $0 != .settings }) { tab in
+            ForEach(Tab.allCases) { tab in
                 row(tab.icon, tab.title, caption(for: tab)) {
                     Toggle("", isOn: Binding(
                         get: { !settings.hiddenTabs.contains(tab.rawValue) },
@@ -209,8 +217,6 @@ struct SettingsView: View {
         case .clipboard: "History and notes"
         case .ai: "Claude Code and Codex usage"
         case .controls: "Quick switches, brightness, batteries, Shortcuts"
-        case .tools: "Uninstaller, large files, camera mirror"
-        case .settings: ""
         }
     }
 

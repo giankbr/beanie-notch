@@ -55,6 +55,7 @@ struct DockBar: View {
             }
             Rectangle().fill(Theme.stroke).frame(width: 1, height: 12).padding(.horizontal, 3)
             button("bolt.fill", "Full clean", active: cleaner.cleaning != nil) { cleaner.clean(.all) }
+            button("gearshape.fill", "Settings and tools", active: false) { model.openSettings(nil) }
             button("chevron.up", "Close", active: false) { model.expanded = false }
         }
         .padding(3)

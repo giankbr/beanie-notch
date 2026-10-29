@@ -3,7 +3,7 @@ import Combine
 import SwiftUI
 
 enum Tab: String, CaseIterable, Identifiable {
-    case home, today, prayer, shelf, clipboard, music, ai, controls, tools, settings
+    case home, today, prayer, shelf, clipboard, music, ai, controls
     var id: String { rawValue }
 
     var icon: String {
@@ -16,8 +16,6 @@ enum Tab: String, CaseIterable, Identifiable {
         case .music: "music.note"
         case .ai: "sparkles"
         case .controls: "switch.2"
-        case .tools: "wrench.and.screwdriver.fill"
-        case .settings: "gearshape.fill"
         }
     }
 
@@ -41,8 +39,6 @@ enum Tab: String, CaseIterable, Identifiable {
         case .music: "Now Playing"
         case .ai: "AI"
         case .controls: "Controls"
-        case .tools: "Tools"
-        case .settings: "Settings"
         }
     }
 }
@@ -272,9 +268,8 @@ final class AppModel: ObservableObject {
             }
         }
         settings.$hiddenTabs.sink { [weak self] hidden in
-            guard let self, hidden.contains(tab.rawValue), tab != .settings else { return }
-            tab = .home
-            if hidden.contains(Tab.home.rawValue) { tab = Tab.allCases.first { !hidden.contains($0.rawValue) } ?? .settings }
+            guard let self, hidden.contains(tab.rawValue) else { return }
+            tab = Tab.allCases.first { !hidden.contains($0.rawValue) } ?? .music
         }.store(in: &sinks)
         settings.$keyboardAlerts.sink { [weak self] on in self?.keyboard.enabled = on }.store(in: &sinks)
         settings.$waterEvery.sink { [weak self] v in self?.health.waterEvery = v }.store(in: &sinks)
@@ -414,8 +409,15 @@ final class AppModel: ObservableObject {
 
     var showsPrayerCountdown: Bool { prayerOn && settings.prayerCountdown && prayer.soon != nil }
 
-    // The pages in the menus, without the ones switched off. Settings always stays.
-    var visibleTabs: [Tab] { Tab.allCases.filter { $0 == .settings || !settings.hiddenTabs.contains($0.rawValue) } }
+    // The pages in the menus, without the ones switched off; with all of them off, Now Playing stays.
+    var visibleTabs: [Tab] {
+        let shown = Tab.allCases.filter { !settings.hiddenTabs.contains($0.rawValue) }
+        return shown.isEmpty ? [.music] : shown
+    }
+
+    // Settings and Tools live in a window of their own; the app delegate opens it.
+    @Published var settingsSection: SettingsView.Section = .appearance
+    var openSettings: (SettingsView.Section?) -> Void = { _ in }
 
     // With the Prayer page off, everything about prayer goes: the header time, the countdown, the alerts, the
     // Hijri date.

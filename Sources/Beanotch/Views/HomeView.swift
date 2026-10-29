@@ -137,7 +137,7 @@ private struct CleanupCard: View {
                 figure: largeFiles.scanned ? formatBytes(largeFiles.total) : nil,
                 busy: largeFiles.scanning, action: largeFiles.scanned ? "Review" : "Scan", enabled: true) {
                 if !largeFiles.scanned { largeFiles.scan() }
-                model.tab = .tools
+                model.openSettings(.tools)
             }
         }
         .padding(12)

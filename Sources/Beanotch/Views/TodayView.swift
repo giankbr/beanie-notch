@@ -5,15 +5,22 @@ struct TodayView: View {
     @EnvironmentObject var settings: Settings
     @State private var page = 0
 
+    // Compact keeps to the agenda and the timer: no strip, and the switcher stands in for the card's title.
+    private var compact: Bool { settings.size == .compact }
+
     var body: some View {
         VStack(spacing: 10) {
-            TodayStrip()
+            if !compact { TodayStrip() }
             HStack(alignment: .top, spacing: 10) {
                 VStack(alignment: .leading, spacing: 8) {
-                    CardHeader(title: ["Up next", "Tasks", "Month", "Rates"][page],
-                               subtitle: ["Calendar · next 24 hours", "End with a time for a reminder", "Dots mark days with events",
-                                          "In \(Rates.local)"][page]) {
+                    if compact {
                         Segmented(options: ["Agenda", "Tasks", "Month", "Rates"], selection: $page).fixedSize()
+                    } else {
+                        CardHeader(title: ["Up next", "Tasks", "Month", "Rates"][page],
+                                   subtitle: ["Calendar · next 24 hours", "End with a time for a reminder", "Dots mark days with events",
+                                              "In \(Rates.local)"][page]) {
+                            Segmented(options: ["Agenda", "Tasks", "Month", "Rates"], selection: $page).fixedSize()
+                        }
                     }
                     switch page {
                     case 0: CalendarPanel()
@@ -25,7 +32,7 @@ struct TodayView: View {
                 .padding(12)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .card()
-                TimePanel().frame(width: settings.size == .compact ? 200 : 230)
+                TimePanel().frame(width: compact ? 214 : 230)
             }
             .frame(maxHeight: .infinity)
         }

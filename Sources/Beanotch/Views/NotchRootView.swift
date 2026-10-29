@@ -364,7 +364,11 @@ struct ExpandedView: View {
             HStack(spacing: 0) {
                 EarTabs(tabs: Array(model.visibleTabs.prefix((model.visibleTabs.count + 1) / 2))).frame(maxWidth: .infinity, alignment: .leading)
                 Color.clear.frame(width: model.closedSize.width + 16)
-                EarTabs(tabs: Array(model.visibleTabs.dropFirst((model.visibleTabs.count + 1) / 2))).frame(maxWidth: .infinity, alignment: .trailing)
+                HStack(spacing: 2) {
+                    EarTabs(tabs: Array(model.visibleTabs.dropFirst((model.visibleTabs.count + 1) / 2)))
+                    EarButton(icon: "gearshape.fill", help: "Settings and tools") { model.openSettings(nil) }
+                }
+                .frame(maxWidth: .infinity, alignment: .trailing)
             }
             .padding(.horizontal, inset)
             .frame(height: model.closedSize.height)
@@ -458,8 +462,6 @@ struct ExpandedView: View {
             case .music: MusicView()
             case .ai: AIView()
             case .controls: FitOrScroll { ControlsView() }
-            case .tools: ToolsView()
-            case .settings: SettingsView()
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -495,8 +497,7 @@ private struct Header: View {
             HStack(spacing: 4) {
                 MessagesMenu()
                 KeepAwakeMenu()
-                IconButton(icon: "ruler") { model.measure() }.help("Measure anything on screen; the size is copied")
-                IconButton(icon: "eyedropper") { model.pickColor() }.help("Pick a color from the screen; its hex code is copied")
+                IconButton(icon: "gearshape") { model.openSettings(nil) }.help("Settings and tools")
             }
             .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 4 }
             if meeting.inCall {
@@ -519,9 +520,10 @@ private struct Header: View {
                 }
                 .buttonStyle(.plain)
             }
+            // Cleanup news belongs with Overview; without that page, the header keeps quiet about it.
             if cleaner.cleaning != nil {
                 Pill(text: "Cleaning \(Int(cleaner.progress * 100))%", color: Theme.accent, icon: "sparkles")
-            } else if cleaner.total > 0 {
+            } else if cleaner.total > 0, model.visibleTabs.contains(.home) {
                 Pill(text: "\(formatBytes(cleaner.total)) can be freed", color: Theme.amber, dot: true)
             }
         }
@@ -612,8 +614,7 @@ private struct StudioSidebar: View {
             group("System")
             item(.ai)
             item(.controls)
-            item(.tools)
-            item(.settings)
+            settingsRow
             Spacer(minLength: 4)
             if settings.size == .large { DiskCard() }
         }
@@ -636,6 +637,22 @@ private struct StudioSidebar: View {
     }
 
     private func shown(_ tab: Tab) -> Bool { model.visibleTabs.contains(tab) }
+
+    // Settings and Tools open in their own window.
+    private var settingsRow: some View {
+        Button { model.openSettings(nil) } label: {
+            HStack(spacing: 8) {
+                TabIcon(name: "gearshape.fill", size: 10.5).frame(width: 15).foregroundStyle(Theme.dim)
+                Text("Settings").font(.app(size: 11)).lineLimit(1).foregroundStyle(Theme.ink.opacity(0.75))
+                Spacer(minLength: 0)
+                Image(systemName: "arrow.up.forward").font(.system(size: 7.5, weight: .bold)).foregroundStyle(Theme.faint)
+            }
+            .padding(.horizontal, 8)
+            .frame(height: settings.size == .large ? 23 : settings.size == .regular ? 21 : 19)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
 
     @ViewBuilder private func item(_ tab: Tab, count: String? = nil, live: Bool = false) -> some View {
         if shown(tab) { row(tab, count: count, live: live) }
@@ -880,8 +897,6 @@ private struct LauncherGrid: View {
         case .music: media.now.map { Lyrics.clean(title: $0.title, artist: $0.artist).0 } ?? "Nothing playing"
         case .ai: "Claude Code · Codex"
         case .controls: toggles.darkMode ? "Dark mode on" : "Quick switches"
-        case .tools: "Uninstall · large files"
-        case .settings: "Look and behaviour"
         }
     }
 }
@@ -908,6 +923,24 @@ private struct EarTabs: View {
                 .help(tab.title)
             }
         }
+    }
+}
+
+// A button beside the Mini tabs, drawn like them.
+private struct EarButton: View {
+    let icon: String
+    let help: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            TabIcon(name: icon, size: 10.5, weight: .semibold)
+                .foregroundStyle(Color.white.opacity(0.55))
+                .frame(width: 26, height: 22)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(help)
     }
 }
 

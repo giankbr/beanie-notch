@@ -50,7 +50,7 @@ enum PanelSize: String, CaseIterable {
     var body: CGSize {
         switch self {
         case .mini: CGSize(width: 640, height: 168)
-        case .compact: CGSize(width: 600, height: 270)
+        case .compact: CGSize(width: 520, height: 250)
         case .regular: CGSize(width: 680, height: 300)
         case .large: CGSize(width: 780, height: 350)
         }
@@ -231,8 +231,25 @@ final class Settings: ObservableObject {
         waterEvery = d.object(forKey: "waterEvery") as? Int ?? 0
         eyeBreaks = d.bool(forKey: "eyeBreaks")
         stretchEvery = d.object(forKey: "stretchEvery") as? Int ?? 0
+        simplify(d)
         applyAccent()
         Theme.font = font
+    }
+
+    // Once, for everyone: the simpler notch. Top tabs, the compact panel, and Now Playing, Today and Shelf; the other
+    // pages are a switch away in Settings › Pages. Prayer stays on where it was already in use, since its alerts and
+    // header times go with the page.
+    private func simplify(_ d: UserDefaults) {
+        guard !d.bool(forKey: "simpleNotch") else { return }
+        let fresh = Bundle.main.bundleIdentifier.flatMap { d.persistentDomain(forName: $0) }?.isEmpty ?? true
+        layout = .tabs
+        size = .compact
+        hiddenTabs.formUnion([Tab.home, .clipboard, .ai, .controls].map(\.rawValue))
+        if fresh { hiddenTabs.insert(Tab.prayer.rawValue) }
+        d.set(layout.rawValue, forKey: "layout")
+        d.set(size.rawValue, forKey: "size")
+        d.set(Array(hiddenTabs).sorted(), forKey: "hiddenTabs")
+        d.set(true, forKey: "simpleNotch")
     }
 
     func setHotkey(code: Int, modifiers: Int, label: String) {
