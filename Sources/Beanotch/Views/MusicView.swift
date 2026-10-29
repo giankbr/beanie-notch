@@ -283,7 +283,7 @@ private struct LyricsColumn: View {
     }
 }
 
-private struct ProgressTrack: View {
+struct ProgressTrack: View {
     var value: Double
     var color: Color
     var onSeek: (Double) -> Void

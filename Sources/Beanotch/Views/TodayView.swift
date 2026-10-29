@@ -437,7 +437,7 @@ private struct TimerPage: View {
 }
 
 // A ring of progress with one round button in its middle, for Focus and Timer.
-private struct TimerRing: View {
+struct TimerRing: View {
     let progress: Double
     let colors: [Color]
     let icon: String

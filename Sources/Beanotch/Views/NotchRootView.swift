@@ -16,7 +16,7 @@ struct NotchRootView: View {
     @EnvironmentObject var pet: NotchPet
     @EnvironmentObject var weather: Weather
 
-    private var usesWeather: Bool { settings.idleLeft == .weather || settings.idleRight == .weather }
+    private var usesWeather: Bool { [settings.idleLeft, settings.idleRight].contains { $0 == .weather } }
 
     private var size: CGSize {
         model.expanded ? model.openSize : CGSize(width: model.closedWidth, height: model.closedHeight)
@@ -248,13 +248,28 @@ struct NotchRootView: View {
 
 // One side of the idle notch: the time, the date, the weather or the battery, small and quiet.
 struct IdleItemView: View {
+    @EnvironmentObject var model: AppModel
     @EnvironmentObject var weather: Weather
     @EnvironmentObject var power: PowerMonitor
     let item: IdleItem
 
     var body: some View {
-        switch item {
-        case .nothing, .pet: EmptyView()
+        switch model.resolved(item) {
+        case .nothing, .pet, .auto: EmptyView()
+        case .event:
+            if let line = model.eventLine {
+                HStack(spacing: 4) {
+                    Image(systemName: "calendar").font(.system(size: 9, weight: .semibold)).foregroundStyle(Theme.accent2)
+                    Text(line).font(.app(size: 10, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
+                }
+            }
+        case .prayer:
+            if let line = model.prayerLine {
+                HStack(spacing: 4) {
+                    Image(systemName: "moon.fill").font(.system(size: 9, weight: .semibold)).foregroundStyle(Theme.accent2)
+                    Text(line).font(.app(size: 10, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
+                }
+            }
         case .time:
             TimelineView(.everyMinute) { context in
                 Text(context.date.formatted(date: .omitted, time: .shortened)).font(.app(size: 10.5, weight: .semibold))
@@ -475,6 +490,8 @@ struct ExpandedView: View {
                     .animation(.snappy(duration: 0.25), value: model.launcherGrid)
                 } else if settings.layout == .slide {
                     slide
+                } else if settings.layout == .glance {
+                    GlanceView().overlay(alignment: .top) { permissions }
                 } else if settings.layout == .sidebar {
                     HStack(spacing: 12) {
                         Rail()

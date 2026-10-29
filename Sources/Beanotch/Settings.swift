@@ -16,7 +16,7 @@ enum ThemeMode: String, CaseIterable {
 }
 
 enum LayoutStyle: String, CaseIterable {
-    case studio, sidebar, tabs, classic, minimal, launcher, slide
+    case studio, sidebar, tabs, classic, minimal, launcher, slide, glance
 
     var title: String {
         switch self {
@@ -27,6 +27,7 @@ enum LayoutStyle: String, CaseIterable {
         case .minimal: "Minimal"
         case .launcher: "Launcher"
         case .slide: "Slide"
+        case .glance: "Glance"
         }
     }
 
@@ -39,6 +40,7 @@ enum LayoutStyle: String, CaseIterable {
         case .minimal: "Just the page; switch from the title"
         case .launcher: "A grid of tiles to start from"
         case .slide: "No menu; swipe between pages"
+        case .glance: "One page of cards, no menu"
         }
     }
 }
@@ -59,18 +61,22 @@ enum PanelSize: String, CaseIterable {
     }
 }
 
-// What sits on one side of the camera when nothing's going on. The pet only lives on the left.
+// What sits on one side of the camera when nothing's going on. The pet only lives on the left; Auto picks what
+// matters right now.
 enum IdleItem: String, CaseIterable {
-    case nothing, pet, time, date, weather, battery
+    case nothing, auto, pet, time, date, weather, battery, event, prayer
 
     var title: String {
         switch self {
         case .nothing: "Nothing"
+        case .auto: "Auto"
         case .pet: "Pet"
         case .time: "Time"
         case .date: "Date"
         case .weather: "Weather"
         case .battery: "Battery"
+        case .event: "Event"
+        case .prayer: "Prayer"
         }
     }
 

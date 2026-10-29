@@ -668,6 +668,12 @@ private struct LayoutSketch: View {
                         }
                         RoundedRectangle(cornerRadius: 2).fill(block)
                     }
+                case .glance:
+                    HStack(spacing: 2) {
+                        RoundedRectangle(cornerRadius: 2).fill(accent)
+                        RoundedRectangle(cornerRadius: 2).fill(block)
+                        RoundedRectangle(cornerRadius: 2).fill(block).frame(width: 10)
+                    }
                 case .slide:
                     VStack(spacing: 3) {
                         RoundedRectangle(cornerRadius: 2).fill(block)

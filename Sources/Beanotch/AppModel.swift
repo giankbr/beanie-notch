@@ -409,13 +409,35 @@ final class AppModel: ObservableObject {
             && activityWidth == 64))
     }
 
+    // Auto, made concrete: a meeting or a prayer within half an hour, the battery when it's low or charging, and
+    // otherwise the time.
+    func resolved(_ item: IdleItem) -> IdleItem {
+        guard item == .auto else { return item }
+        if let soon = nextEvent, soon.start.timeIntervalSinceNow < 1800 { return .event }
+        if prayerOn, let next = prayer.next, next.time.timeIntervalSinceNow < 1800 { return .prayer }
+        if power.present, power.charging || power.percent < 20 { return .battery }
+        return .time
+    }
+
+    // The next event that hasn't started yet, for the idle notch.
+    var nextEvent: CalendarFeed.Item? { calendar.items.first { $0.start > Date() } }
+
+    // The words an event or a prayer shows beside the camera.
+    var eventLine: String? { nextEvent.map { "\($0.title.prefix(14)) \($0.start.formatted(date: .omitted, time: .shortened))" } }
+    var prayerLine: String? {
+        guard prayerOn, let next = prayer.next else { return nil }
+        return "\(prayer.label(next)) \(next.time.formatted(date: .omitted, time: .shortened))"
+    }
+
     // The room one idle item takes beside the camera; nothing when it has nothing to say.
     func idleWidth(_ item: IdleItem) -> CGFloat {
-        switch item {
-        case .nothing, .pet: 0
+        switch resolved(item) {
+        case .nothing, .pet, .auto: 0
         case .time, .date: 56
         case .weather: weather.report == nil ? 0 : 54
         case .battery: power.present ? 64 : 0
+        case .event: eventLine.map { min(130, CGFloat($0.count) * 6.2 + 16) } ?? 0
+        case .prayer: prayerLine.map { CGFloat($0.count) * 6.2 + 16 } ?? 0
         }
     }
 
