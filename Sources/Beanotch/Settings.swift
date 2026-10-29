@@ -52,7 +52,7 @@ enum PanelSize: String, CaseIterable {
     var body: CGSize {
         switch self {
         case .mini: CGSize(width: 640, height: 168)
-        case .compact: CGSize(width: 520, height: 250)
+        case .compact: CGSize(width: 520, height: 206)
         case .regular: CGSize(width: 680, height: 300)
         case .large: CGSize(width: 780, height: 350)
         }
