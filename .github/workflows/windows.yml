@@ -67,7 +67,7 @@ jobs:
             $bmp.Save((Join-Path $dir "00-desktop-$at`s.png"))
           }
           # The notch shapes, photographed whole as the app reaches each.
-          foreach ($shape in "03h-shape-seamless", "03h-shape-floating") {
+          foreach ($shape in "00-bar-pill", "00-bar-squircle", "03h-shape-seamless", "03h-shape-floating") {
             $ready = Join-Path $dir "$shape.ready"
             for ($i = 0; $i -lt 120 -and -not (Test-Path $ready); $i++) { Start-Sleep -Milliseconds 500 }
             if (Test-Path $ready) {

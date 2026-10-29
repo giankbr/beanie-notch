@@ -37,6 +37,7 @@ public sealed class Shell
         applyTheme();
         pages.Clear();
         glance = null;
+        bar = null;
         Build();
         Shown();
     }
@@ -84,6 +85,13 @@ public sealed class Shell
                 };
                 var top = Columns(8, (tray, 1), (extras, null));
                 layout = Rows(8, (top, null), (host, 1));
+                break;
+            }
+            case PanelLayout.Bar:
+            {
+                // One slim row, its own gear at the end.
+                nav = new StackPanel();
+                layout = host;
                 break;
             }
             case PanelLayout.Glance:
@@ -160,9 +168,15 @@ public sealed class Shell
     }
 
     private GlancePage? glance;
+    private BarPage? bar;
 
-    // The page showing: Glance's cards, or the open tab's page.
-    private PanelPage Current => Layout == PanelLayout.Glance ? glance ??= new GlancePage(model) : PageFor(model.Tab);
+    // The page showing: Glance's cards, Bar's row, or the open tab's page.
+    private PanelPage Current => Layout switch
+    {
+        PanelLayout.Glance => glance ??= new GlancePage(model),
+        PanelLayout.Bar => bar ??= new BarPage(model),
+        _ => PageFor(model.Tab),
+    };
 
     private PanelPage PageFor(Tab tab)
     {

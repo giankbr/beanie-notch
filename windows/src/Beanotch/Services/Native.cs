@@ -224,6 +224,37 @@ static partial class Native
         SetWindowRgn(hwnd, body, true);
     }
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct Point { public int X, Y; }
+
+    [LibraryImport("gdi32.dll")]
+    private static partial nint CreatePolygonRgn([In] Point[] points, int count, int mode);
+
+    // Square along the top edge, with superellipse corners at the bottom (the Mac's continuous curve, not a circle's
+    // quarter), as a polygon fine enough to look smooth.
+    internal static void Squircle(nint hwnd, int width, int height, int radius)
+    {
+        const double n = 4;
+        var points = new List<Point> { new() { X = 0, Y = 0 }, new() { X = width, Y = 0 } };
+        void Corner(double cx, double cy, double fromDegrees)
+        {
+            for (var i = 0; i <= 16; i++)
+            {
+                var a = (fromDegrees + i * 90.0 / 16) * Math.PI / 180;
+                double c = Math.Cos(a), s = Math.Sin(a);
+                points.Add(new Point
+                {
+                    X = (int)Math.Round(cx + radius * Math.Sign(c) * Math.Pow(Math.Abs(c), 2 / n)),
+                    Y = (int)Math.Round(cy + radius * Math.Sign(s) * Math.Pow(Math.Abs(s), 2 / n)),
+                });
+            }
+        }
+        Corner(width - radius, height - radius, 0);
+        Corner(radius, height - radius, 90);
+        var region = CreatePolygonRgn([.. points], points.Count, 2 /* WINDING */);
+        SetWindowRgn(hwnd, region, true);
+    }
+
     [LibraryImport("user32.dll", EntryPoint = "SendMessageTimeoutW", StringMarshalling = StringMarshalling.Utf16)]
     private static partial nint SendMessageTimeout(nint hwnd, uint msg, nint wParam, string lParam, uint flags, uint timeout, out nint result);
 

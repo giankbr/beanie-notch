@@ -17,6 +17,12 @@ public sealed class AppSettings
     public AppFont Font { get; set; } = AppFont.System;
     public PanelSize Size { get; set; } = PanelSize.Regular;
     public NotchShape Shape { get; set; } = NotchShape.Drop;
+    // Custom's own width and height, in Mac points like the other sizes.
+    public double CustomWidth { get; set; } = 600;
+    public double CustomHeight { get; set; } = 260;
+    // Pages lay out for a narrow panel at Compact, or a Custom that small.
+    [JsonIgnore]
+    public bool CompactPages => Size == PanelSize.Compact || Size == PanelSize.Custom && CustomWidth < 600;
     public PanelLayout Layout { get; set; } = PanelLayout.Studio;
     // Opening: on hover (else on a click), how long the panel waits once the pointer leaves, and the global shortcut.
     public bool OpenOnHover { get; set; } = true;

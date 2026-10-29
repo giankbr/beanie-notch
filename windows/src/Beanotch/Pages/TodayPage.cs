@@ -31,7 +31,7 @@ public sealed class TodayPage(Model model, Action<Tab> open) : PanelPage(model)
         var leftCard = Card(left, 12, 12);
         var rightCard = Card(right, 12, 12);
         // Compact keeps to the agenda and the timer, without the strip across the top.
-        var compact = Model.Settings.Size == PanelSize.Compact;
+        var compact = Model.Settings.CompactPages;
         rightCard.Width = S(compact ? 236 : 250);
         return Rows(10, (compact ? null : Card(strip, 0, 12), null), (Columns(10, (leftCard, 1), (rightCard, null)), 1));
     }

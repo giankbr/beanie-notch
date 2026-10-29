@@ -8,14 +8,16 @@ public enum ThemeMode { System, Light, Dark, Glass, Keycap, Pixel }
 // Segoe UI is Windows' own; the others ship with the app, as on the Mac (all under the SIL Open Font License).
 public enum AppFont { System, BeVietnam, Inter, Jakarta }
 
-public enum PanelSize { Compact, Regular, Large }
+// Custom takes its width and height from two sliders in Settings.
+public enum PanelSize { Compact, Regular, Large, Custom }
 
 // As on the Mac: Drop curves out of the top edge, Seamless meets it square, Floating hangs just below it, rounded all round.
-public enum NotchShape { Drop, Seamless, Floating }
+// Pill floats like Floating, rounded into a capsule; Squircle meets the top edge with deep, smooth corners.
+public enum NotchShape { Drop, Seamless, Floating, Pill, Squircle }
 
 // How the open panel finds its pages, as on the Mac: a labelled side menu, a rail of icons, tabs along the top, a row
 // of round buttons, a grid of tiles to pick from, no menu at all with the pages swiped sideways, or one page of cards.
-public enum PanelLayout { Studio, Compact, TopTabs, Classic, Launcher, Slide, Glance }
+public enum PanelLayout { Studio, Compact, TopTabs, Classic, Launcher, Slide, Glance, Bar }
 
 // What sits on one side of the closed island when nothing's going on. The pet only lives on the left; Auto picks what
 // matters right now.

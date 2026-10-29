@@ -162,7 +162,23 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
         }
         var tint = Picker("Accent", "Buttons, highlights and the mini player", V(6, solids, palettes, chips));
 
-        var size = Segmented(["Compact", "Regular", "Large"], (int)S0.Size, i => { S0.Size = (PanelSize)i; Save(rebuild: true); });
+        var size = Segmented(["Compact", "Regular", "Large", "Custom"], (int)S0.Size, i => { S0.Size = (PanelSize)i; Save(rebuild: true); });
+        // Custom's two sliders; the panel takes the new size the next time it opens, the pages once you let go.
+        Slider Sizer(double value, double min, double max, Action<double> set)
+        {
+            var slider = new Slider { Minimum = min, Maximum = max, StepFrequency = 10, Value = value, Width = S(180) };
+            slider.ValueChanged += (_, e) => { set(e.NewValue); S0.Save(); };
+            slider.PointerCaptureLost += (_, _) => Save(rebuild: true);
+            return slider;
+        }
+        var custom = S0.Size == PanelSize.Custom
+            ? new[]
+            {
+                Row(null, "Width", $"{S0.CustomWidth:0} points", Sizer(S0.CustomWidth, 460, 820, v => S0.CustomWidth = v)),
+                Row(null, "Height", S0.Layout == PanelLayout.Bar ? "Bar keeps its own slim height" : $"{S0.CustomHeight:0} points",
+                    Sizer(S0.CustomHeight, 180, 380, v => S0.CustomHeight = v)),
+            }
+            : [];
         string[] fontNames = ["Segoe UI", "Be Vietnam", "Inter", "Jakarta"];
         var fonts = Cells(Enum.GetValues<AppFont>().Select(font =>
         {
@@ -188,8 +204,8 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
             Group(Picker("Theme", "The island itself always stays black", themes), tint),
             Group(Picker("Layout", "How the panel finds its pages", layouts),
                   Picker("Notch shape", "How the island meets the top of the screen", shapes)),
-            Group(Row(null, "Panel size", "How big the island opens", size),
-                  Picker("Font", "Segoe UI is Windows' own; the others ship with Beanotch, as on the Mac", fonts)));
+            Group([Row(null, "Panel size", "How big the island opens", size), .. custom,
+                  Picker("Font", "Segoe UI is Windows' own; the others ship with Beanotch, as on the Mac", fonts)]));
     }
 
     // The layout in miniature: where the menu sits, and the page.
@@ -220,6 +236,11 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
                 g.Children.Add(Block(S(16), S(4), L, T, 0, 0, 0.4));
                 for (var i = 0; i < 3; i++) g.Children.Add(Block(S(4), S(4), HorizontalAlignment.Right, T, 0, 0, i == 0 ? 0.45 : 0.25) is var dot ? Shift(dot, i) : null);
                 g.Children.Add(new Border { Margin = new Thickness(0, S(8), 0, 0), CornerRadius = new CornerRadius(S(2)), Background = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.12)) });
+                break;
+            case PanelLayout.Bar:
+                g.Children.Add(Block(S(10), S(8), L, T, 0, 0, 0.45));
+                g.Children.Add(Block(S(32), S(8), L, T, S(12), 0, 0.2));
+                g.Children.Add(Block(S(12), S(8), L, T, S(46), 0, 0.2));
                 break;
             case PanelLayout.Glance:
                 for (var i = 0; i < 3; i++)
@@ -259,8 +280,14 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
         {
             Width = S(44), Height = S(14), Background = Theme.Brush(Theme.Black),
             HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(0, shape == NotchShape.Floating ? S(6) : 0, 0, 0),
-            CornerRadius = shape == NotchShape.Floating ? new CornerRadius(r) : new CornerRadius(0, 0, r, r),
+            Margin = new Thickness(0, shape is NotchShape.Floating or NotchShape.Pill ? S(6) : 0, 0, 0),
+            CornerRadius = shape switch
+            {
+                NotchShape.Floating => new CornerRadius(r),
+                NotchShape.Pill => new CornerRadius(S(7)),
+                NotchShape.Squircle => new CornerRadius(0, 0, S(9), S(9)),
+                _ => new CornerRadius(0, 0, r, r),
+            },
         });
         if (shape == NotchShape.Drop)
             foreach (var side in new[] { -1, 1 })

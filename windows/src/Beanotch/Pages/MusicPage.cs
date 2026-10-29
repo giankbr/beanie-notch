@@ -55,7 +55,7 @@ public sealed class MusicPage(Model model) : PanelPage(model)
         var volumeRow = Columns(8, (Icon(Glyphs.Volume, 10, Theme.Dim), null), (volume, 1));
 
         // Compact sits on the panel itself, with no card around it, and keeps to the main controls.
-        var compact = Model.Settings.Size == PanelSize.Compact;
+        var compact = Model.Settings.CompactPages;
         var player = Rows(8, (head, null), (null, 1), (progress, null), (times, null), (controls, null), (compact ? null : volumeRow, null));
         player.Width = S(compact ? 230 : 260);
 

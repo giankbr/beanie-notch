@@ -61,6 +61,17 @@ public sealed partial class IslandWindow
         await Shot("00-glance-aurora", 2000);
         model.Focus.Reset();
         model.Settings.Accent = AccentChoice.Mint;
+        // The slim Bar, and the new shapes.
+        model.Settings.Layout = PanelLayout.Bar;
+        foreach (var shape in new[] { NotchShape.Pill, NotchShape.Squircle })
+        {
+            model.Settings.Shape = shape;
+            shell.Rebuild();
+            Collapse();
+            Expand();
+            await DesktopShot(dir, $"00-bar-{shape.ToString().ToLowerInvariant()}");
+        }
+        model.Settings.Shape = NotchShape.Drop;
         Collapse();
         // Then everything else at the earlier defaults, every page on, for the rest of the photos.
         model.Settings.HiddenTabs.Clear();

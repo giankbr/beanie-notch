@@ -23,9 +23,12 @@ public sealed partial class IslandWindow : Window
     private const double ClosedHeight = 30, ClosedRadius = 10, ClosedEar = 6, OpenRadius = 22, OpenEar = 14;
 
     // The open panel at each size, a little taller than the Mac's since Windows sets text larger.
-    private (double Width, double Height) Open => model.Settings.Size switch
+    private (double Width, double Height) Open => (OpenSize.Width, model.Settings.Layout == PanelLayout.Bar ? 92 : OpenSize.Height);
+
+    private (double Width, double Height) OpenSize => model.Settings.Size switch
     {
         PanelSize.Compact => (560, 250),
+        PanelSize.Custom => (Math.Clamp(model.Settings.CustomWidth, 460, 820), Math.Clamp(model.Settings.CustomHeight, 180, 380)),
         PanelSize.Large => (780, 390),
         _ => (680, 336),
     };
@@ -388,6 +391,10 @@ public sealed partial class IslandWindow : Window
     {
         var shape = model.Settings.Shape;
         if (shape != NotchShape.Drop) ear = 0;
+        // Pill: a capsule while closed, and nearly one open; Squircle's corners run deeper.
+        if (shape == NotchShape.Pill) radius = model.Expanded ? Math.Max(radius * 1.6, 34) : height / 2;
+        if (shape == NotchShape.Squircle) radius += model.Expanded ? 12 : 4;
+        var floating = shape is NotchShape.Floating or NotchShape.Pill;
         var scale = Native.GetDpiForWindow(hwnd) / 96.0 * Ui.Ui.K;
         var display = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Primary);
         width = Math.Min(width, display.WorkArea.Width / scale - 2 * ear - 24);
@@ -396,9 +403,11 @@ public sealed partial class IslandWindow : Window
         root.Padding = new Thickness(ear * Ui.Ui.K, 0, ear * Ui.Ui.K, 0);
         if (placed == (w, h, shape)) return;
         placed = (w, h, shape);
-        var drop = shape == NotchShape.Floating ? (int)Math.Round(8 * scale) : 0;
+        var drop = floating ? (int)Math.Round(8 * scale) : 0;
         AppWindow.MoveAndResize(new RectInt32(display.OuterBounds.X + (display.OuterBounds.Width - w) / 2, display.OuterBounds.Y + drop, w, h));
-        Native.Notch(hwnd, w, h, e, (int)Math.Round(Math.Min(radius * scale, h / 2.0)), shape == NotchShape.Floating);
+        var corner = (int)Math.Round(Math.Min(radius * scale, h / 2.0));
+        if (shape == NotchShape.Squircle) Native.Squircle(hwnd, w, h, corner);
+        else Native.Notch(hwnd, w, h, e, corner, floating);
     }
 
     private void OnDragOver(object sender, DragEventArgs e)
