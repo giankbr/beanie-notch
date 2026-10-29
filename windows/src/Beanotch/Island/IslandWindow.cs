@@ -25,7 +25,7 @@ public sealed partial class IslandWindow : Window
     // The open panel at each size, a little taller than the Mac's since Windows sets text larger.
     private (double Width, double Height) Open => model.Settings.Size switch
     {
-        PanelSize.Compact => (560, 290),
+        PanelSize.Compact => (560, 250),
         PanelSize.Large => (780, 390),
         _ => (680, 336),
     };
