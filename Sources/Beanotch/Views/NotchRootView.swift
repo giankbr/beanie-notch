@@ -578,7 +578,7 @@ private struct PageDots: View {
                 ForEach(model.visibleTabs) { tab in
                     let active = tab == model.tab
                     Button { withAnimation(.snappy(duration: 0.3)) { model.tab = tab } } label: {
-                        Capsule().fill(active ? Theme.accent : Theme.ink.opacity(0.22))
+                        Capsule().fill(active ? Theme.accentFill : AnyShapeStyle(Theme.ink.opacity(0.22)))
                             .frame(width: active ? 16 : 6, height: 6)
                             .padding(3)
                             .contentShape(Rectangle())

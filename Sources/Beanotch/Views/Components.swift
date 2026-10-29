@@ -5,6 +5,11 @@ enum Theme {
     // Set from Settings; the panel is rebuilt when they change.
     nonisolated(unsafe) static var accent = AccentChoice.mint.primary
     nonisolated(unsafe) static var accent2 = AccentChoice.mint.secondary
+    // A palette accent is drawn as a gradient from the one to the other where there's room for it.
+    nonisolated(unsafe) static var gradient = false
+    static var accentFill: AnyShapeStyle {
+        gradient ? AnyShapeStyle(LinearGradient(colors: [accent, accent2], startPoint: .leading, endPoint: .trailing)) : AnyShapeStyle(accent)
+    }
 
     static let good = Color(red: 0.33, green: 0.86, blue: 0.62)
     static let amber = Color(red: 0.98, green: 0.68, blue: 0.22)

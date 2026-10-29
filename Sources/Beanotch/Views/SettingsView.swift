@@ -148,17 +148,26 @@ struct SettingsView: View {
                     }
                 }
                 pickerRow("Accent", "Buttons, highlights and the mini player") {
-                    HStack(spacing: 4) {
-                        ForEach(AccentChoice.allCases, id: \.self) { option in
-                            Button { settings.accent = option } label: {
-                                Circle().fill(option.primary).frame(width: 14, height: 14)
-                                    .overlay(Circle().strokeBorder(Theme.background, lineWidth: settings.accent == option ? 2 : 0))
-                                    .overlay(Circle().strokeBorder(option.primary, lineWidth: settings.accent == option ? 1 : 0).padding(-2))
-                                    .padding(4)
-                                    .contentShape(Circle())
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 4) {
+                            ForEach(AccentChoice.solids, id: \.self) { option in swatch(option, AnyShapeStyle(option.primary)) }
+                        }
+                        // Two colours each, drawn as a gradient.
+                        HStack(spacing: 4) {
+                            ForEach(AccentChoice.palettes, id: \.self) { option in
+                                swatch(option, AnyShapeStyle(LinearGradient(colors: [option.primary, option.secondary], startPoint: .topLeading, endPoint: .bottomTrailing)))
                             }
-                            .buttonStyle(.plain)
-                            .help(option.rawValue.capitalized)
+                        }
+                        // Accents that follow the song, the wallpaper, or a colour of your own.
+                        HStack(spacing: 6) {
+                            accentChip(.artwork, "music.note")
+                            accentChip(.wallpaper, "photo")
+                            accentChip(.custom, "eyedropper")
+                            if settings.accent == .custom {
+                                ColorPicker("", selection: Binding(get: { Color(nsColor: NSColor(hex: settings.customAccent) ?? .systemOrange) },
+                                                                   set: { settings.customAccent = NSColor($0).hex }), supportsOpacity: false)
+                                    .labelsHidden()
+                            }
                         }
                     }
                 }
@@ -465,6 +474,35 @@ struct SettingsView: View {
                 }
             }
         }
+    }
+
+    private func swatch(_ option: AccentChoice, _ fill: AnyShapeStyle) -> some View {
+        let on = settings.accent == option
+        return Button { settings.accent = option } label: {
+            Circle().fill(fill).frame(width: 14, height: 14)
+                .overlay(Circle().strokeBorder(Theme.background, lineWidth: on ? 2 : 0))
+                .overlay(Circle().strokeBorder(option.primary, lineWidth: on ? 1 : 0).padding(-2))
+                .padding(4)
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .help(option.title)
+    }
+
+    private func accentChip(_ option: AccentChoice, _ icon: String) -> some View {
+        let on = settings.accent == option
+        return Button { settings.accent = option } label: {
+            HStack(spacing: 4) {
+                Image(systemName: icon).font(.system(size: 8.5, weight: .semibold))
+                Text(option.title).font(.app(size: 9.5, weight: on ? .semibold : .regular))
+            }
+            .foregroundStyle(on ? Theme.accent : Theme.dim)
+            .padding(.horizontal, 8)
+            .frame(height: 22)
+            .background(Capsule().fill(on ? Theme.accent.opacity(0.14) : Theme.ink.opacity(0.06)))
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 
     // A title over a row of visual choices.

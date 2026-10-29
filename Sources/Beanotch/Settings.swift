@@ -97,8 +97,27 @@ enum MusicShows: String, CaseIterable {
     }
 }
 
+// One colour each; then palettes drawn as a two-colour gradient; then accents that follow the song's cover, the
+// wallpaper, or a colour of your own.
 enum AccentChoice: String, CaseIterable {
     case mint, ocean, sunset, rose, lime, violet, teal, gold, crimson, graphite
+    case aurora, dusk, matcha, sakura, kopi, batik, neon, mono
+    case artwork, wallpaper, custom
+
+    static let solids: [AccentChoice] = [.mint, .ocean, .sunset, .rose, .lime, .violet, .teal, .gold, .crimson, .graphite]
+    static let palettes: [AccentChoice] = [.aurora, .dusk, .matcha, .sakura, .kopi, .batik, .neon, .mono]
+
+    var isPalette: Bool { Self.palettes.contains(self) }
+    var isDynamic: Bool { self == .artwork || self == .wallpaper }
+
+    var title: String {
+        switch self {
+        case .artwork: "From the song"
+        case .wallpaper: "From the wallpaper"
+        case .custom: "Custom"
+        default: rawValue.capitalized
+        }
+    }
 
     var primary: Color {
         switch self {
@@ -112,6 +131,16 @@ enum AccentChoice: String, CaseIterable {
         case .gold: Color(red: 0.95, green: 0.76, blue: 0.3)
         case .crimson: Color(red: 0.94, green: 0.33, blue: 0.36)
         case .graphite: Color(red: 0.62, green: 0.65, blue: 0.7)
+        case .aurora: Color(red: 0.2, green: 0.85, blue: 0.78)
+        case .dusk: Color(red: 1.0, green: 0.56, blue: 0.26)
+        case .matcha: Color(red: 0.55, green: 0.78, blue: 0.38)
+        case .sakura: Color(red: 1.0, green: 0.7, blue: 0.79)
+        case .kopi: Color(red: 0.8, green: 0.6, blue: 0.43)
+        case .batik: Color(red: 0.36, green: 0.42, blue: 0.9)
+        case .neon: Color(red: 0.62, green: 1.0, blue: 0.27)
+        case .mono: Color(red: 0.9, green: 0.9, blue: 0.92)
+        // The dynamic ones stand in with mint until their colour is known.
+        case .artwork, .wallpaper, .custom: Color(red: 0.33, green: 0.86, blue: 0.68)
         }
     }
 
@@ -127,7 +156,32 @@ enum AccentChoice: String, CaseIterable {
         case .gold: Color(red: 1.0, green: 0.55, blue: 0.35)
         case .crimson: Color(red: 1.0, green: 0.62, blue: 0.3)
         case .graphite: Color(red: 0.45, green: 0.7, blue: 1.0)
+        case .aurora: Color(red: 0.58, green: 0.42, blue: 1.0)
+        case .dusk: Color(red: 1.0, green: 0.36, blue: 0.6)
+        case .matcha: Color(red: 0.86, green: 0.84, blue: 0.62)
+        case .sakura: Color(red: 0.93, green: 0.42, blue: 0.58)
+        case .kopi: Color(red: 0.93, green: 0.74, blue: 0.46)
+        case .batik: Color(red: 0.93, green: 0.73, blue: 0.3)
+        case .neon: Color(red: 0.25, green: 1.0, blue: 0.72)
+        case .mono: Color(red: 0.58, green: 0.58, blue: 0.62)
+        case .artwork, .wallpaper, .custom: Color(red: 0.6, green: 0.5, blue: 1.0)
         }
+    }
+}
+
+extension NSColor {
+    // "#RRGGBB", for a custom accent kept in the settings (`hex` is the way back).
+    convenience init?(hex: String) {
+        let digits = hex.trimmingCharacters(in: CharacterSet(charactersIn: "# "))
+        guard digits.count == 6, let value = UInt32(digits, radix: 16) else { return nil }
+        self.init(srgbRed: CGFloat(value >> 16 & 0xFF) / 255, green: CGFloat(value >> 8 & 0xFF) / 255, blue: CGFloat(value & 0xFF) / 255, alpha: 1)
+    }
+
+    // The same colour a little further round the wheel: the second colour of an accent made from one.
+    func turned(by amount: CGFloat) -> NSColor {
+        var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0
+        (usingColorSpace(.sRGB) ?? self).getHue(&h, saturation: &s, brightness: &b, alpha: nil)
+        return NSColor(hue: (h + amount).truncatingRemainder(dividingBy: 1), saturation: s, brightness: b, alpha: 1)
     }
 }
 
@@ -172,6 +226,22 @@ final class Settings: ObservableObject {
             save(accent.rawValue, "accent")
             applyAccent()
         }
+    }
+    // A colour of your own, as "#RRGGBB".
+    @Published var customAccent: String {
+        didSet {
+            save(customAccent, "customAccent")
+            applyAccent()
+        }
+    }
+    // The colour the song's cover or the wallpaper gave, for the accents that follow them.
+    @Published private(set) var dynamicAccent: String?
+
+    func setDynamicAccent(_ color: NSColor?) {
+        let hex = color?.hex
+        guard hex != dynamicAccent else { return }
+        dynamicAccent = hex
+        applyAccent()
     }
     @Published var openOnHover: Bool { didSet { save(openOnHover, "openOnHover") } }
     @Published var closeDelay: Double { didSet { save(closeDelay, "closeDelay") } }
@@ -245,7 +315,10 @@ final class Settings: ObservableObject {
     @Published var stretchEvery: Int { didSet { save(stretchEvery, "stretchEvery") } }
 
     // Changes whenever the look changes, so the panel can rebuild with the new colors.
-    var styleKey: String { "\(theme.rawValue)-\(accent.rawValue)-\(layout.rawValue)-\(notchStyle.rawValue)-\(font.rawValue)" }
+    var styleKey: String {
+        let colour = accent == .custom ? customAccent : accent.isDynamic ? dynamicAccent ?? "" : ""
+        return "\(theme.rawValue)-\(accent.rawValue)\(colour)-\(layout.rawValue)-\(notchStyle.rawValue)-\(font.rawValue)"
+    }
 
     init() {
         let d = Self.defaults
@@ -254,6 +327,7 @@ final class Settings: ObservableObject {
         layout = LayoutStyle(rawValue: d.string(forKey: "layout") ?? "") ?? .studio
         size = PanelSize(rawValue: d.string(forKey: "size") ?? "") ?? .regular
         accent = AccentChoice(rawValue: d.string(forKey: "accent") ?? "") ?? .mint
+        customAccent = d.string(forKey: "customAccent") ?? "#FF7A59"
         openOnHover = d.object(forKey: "openOnHover") as? Bool ?? true
         closeDelay = d.object(forKey: "closeDelay") as? Double ?? 1.2
         miniPlayer = d.object(forKey: "miniPlayer") as? Bool ?? true
@@ -342,8 +416,19 @@ final class Settings: ObservableObject {
 
     private func applyAccent() {
         Theme.mode = theme
-        Theme.accent = accent.primary
-        Theme.accent2 = accent.secondary
+        let own = accent == .custom ? NSColor(hex: customAccent) : accent.isDynamic ? dynamicAccent.flatMap { NSColor(hex: $0) } : nil
+        if let own {
+            Theme.accent = Color(nsColor: own)
+            Theme.accent2 = Color(nsColor: own.turned(by: 0.1))
+        } else if accent == .mono, theme == .light {
+            // White on white would vanish: Mono turns to graphite in the light theme.
+            Theme.accent = Color(red: 0.22, green: 0.22, blue: 0.25)
+            Theme.accent2 = Color(red: 0.45, green: 0.45, blue: 0.5)
+        } else {
+            Theme.accent = accent.primary
+            Theme.accent2 = accent.secondary
+        }
+        Theme.gradient = accent.isPalette
     }
 
     private func save(_ value: Any, _ key: String) {

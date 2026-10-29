@@ -292,7 +292,7 @@ struct ProgressTrack: View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
                 Capsule().fill(Theme.ink.opacity(0.12))
-                Capsule().fill(color).frame(width: geo.size.width * min(max(value, 0), 1))
+                Capsule().fill(color == Theme.accent ? Theme.accentFill : AnyShapeStyle(color)).frame(width: geo.size.width * min(max(value, 0), 1))
             }
             .frame(height: 4)
             .frame(maxHeight: .infinity)

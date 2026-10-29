@@ -316,7 +316,7 @@ final class MediaController: ObservableObject {
     }
 
     // The average of the artwork's most colorful pixels, evened out so it reads on black and on white.
-    nonisolated private static func tint(of image: NSImage) -> NSColor? {
+    nonisolated static func tint(of image: NSImage) -> NSColor? {
         guard let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
         let side = 16
         var pixels = [UInt8](repeating: 0, count: side * side * 4)

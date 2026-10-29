@@ -272,6 +272,20 @@ final class AppModel: ObservableObject {
             guard let self, hidden.contains(tab.rawValue) else { return }
             tab = Tab.allCases.first { !hidden.contains($0.rawValue) } ?? .music
         }.store(in: &sinks)
+        // The accents that follow something: the song's cover as it changes, the wallpaper when the desktop does.
+        media.$tint.sink { [weak self] tint in
+            guard let self, settings.accent == .artwork else { return }
+            settings.setDynamicAccent(tint.map { NSColor($0) })
+        }.store(in: &sinks)
+        settings.$accent.sink { [weak self] accent in
+            DispatchQueue.main.async { MainActor.assumeIsolated { self?.followAccent(accent) } }
+        }.store(in: &sinks)
+        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.activeSpaceDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.readWallpaper() }
+        }
+        wallpaperTimer = Timer.scheduledTimer(withTimeInterval: 600, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.readWallpaper() }
+        }
         settings.$keyboardAlerts.sink { [weak self] on in self?.keyboard.enabled = on }.store(in: &sinks)
         settings.$waterEvery.sink { [weak self] v in self?.health.waterEvery = v }.store(in: &sinks)
         settings.$eyeBreaks.sink { [weak self] v in self?.health.eyeBreaks = v }.store(in: &sinks)
@@ -427,6 +441,30 @@ final class AppModel: ObservableObject {
     var prayerLine: String? {
         guard prayerOn, let next = prayer.next else { return nil }
         return "\(prayer.label(next)) \(next.time.formatted(date: .omitted, time: .shortened))"
+    }
+
+    private var wallpaperTimer: Timer?
+
+    private func followAccent(_ accent: AccentChoice) {
+        switch accent {
+        case .artwork: settings.setDynamicAccent(media.tint.map { NSColor($0) })
+        case .wallpaper: readWallpaper()
+        default: settings.setDynamicAccent(nil)
+        }
+    }
+
+    // The wallpaper's most colourful pixels, the way a song's cover gives its tint, read off the main thread.
+    private func readWallpaper() {
+        guard settings.accent == .wallpaper, let screen = NSScreen.main, let url = NSWorkspace.shared.desktopImageURL(for: screen) else { return }
+        let settings = settings
+        Task.detached(priority: .utility) {
+            guard let image = NSImage(contentsOf: url), let tint = MediaController.tint(of: image)?.usingColorSpace(.sRGB) else { return }
+            let rgb = (tint.redComponent, tint.greenComponent, tint.blueComponent)
+            await MainActor.run {
+                guard settings.accent == .wallpaper else { return }
+                settings.setDynamicAccent(NSColor(srgbRed: rgb.0, green: rgb.1, blue: rgb.2, alpha: 1))
+            }
+        }
     }
 
     // The room one idle item takes beside the camera; nothing when it has nothing to say.
