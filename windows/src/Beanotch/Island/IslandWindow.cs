@@ -241,6 +241,12 @@ public sealed partial class IslandWindow : Window
             }
         };
         Update();
+        // A new version in a Windows notification too, for when the island is out of sight.
+        if (SnapshotFolder is null)
+        {
+            Toast.Register(ui);
+            Toast.Invoked = action => { if (action == "update") _ = model.Updater.InstallAsync(); };
+        }
 
         if (SnapshotFolder is { } dir)
         {
@@ -271,6 +277,7 @@ public sealed partial class IslandWindow : Window
         model.Settings.Save();
         Show(new Notice(Glyphs.Download, Theme.Accent2, $"Beanotch {latest}", "Click to update", TimeSpan.FromSeconds(15),
                         Essential: true, Open: InstallUpdate));
+        Toast.Show($"Beanotch {latest} is out", "Update now, and the island is back a few seconds later.", "Update", "update");
     }
 
     private void Show(Notice n)

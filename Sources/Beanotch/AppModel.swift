@@ -178,6 +178,7 @@ final class AppModel: ObservableObject {
                               left: ok ? "Shortcut done" : "Shortcut failed", right: name))
         }
         updater.onNewVersion = { [weak self] version in
+            UpdateBanner.shared.post(version: version)
             self?.show(Notice(icon: "arrow.down.app.fill", color: Theme.accent2, left: "Beanotch \(version)",
                               right: "Click to update", duration: 15, essential: true, open: AppModel.installUpdate))
         }

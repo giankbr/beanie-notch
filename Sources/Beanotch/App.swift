@@ -40,6 +40,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         model = AppModel()
         controller = NotchController(model: model)
         settingsWindow = SettingsWindow(model: model)
+        UpdateBanner.shared.setUp()
+        UpdateBanner.shared.onUpdate = { [weak self] in self?.model.updater.install() }
         model.openSettings = { [weak self] section in self?.settingsWindow.show(section) }
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
