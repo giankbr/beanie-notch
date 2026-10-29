@@ -2,11 +2,11 @@
 
 Windows laptops don't have a notch, so Beanotch for Windows is a small island at the top centre of the screen. Hover it to open the panels. It's built natively with WinUI 3 rather than ported from the Mac app.
 
-> **Status: beta.** It builds on every push (see the Windows workflow in GitHub Actions) but hasn't been tried on real hardware yet. Expect rough edges.
+It builds and is photographed on every push (see the Windows workflow in GitHub Actions), and ships with each release next to the Mac disk image. The installer isn't code-signed yet, so SmartScreen asks once: **More info › Run anyway**.
 
 ## What's in it
 
-The same panels as the Mac app, in its Studio layout and palette:
+The same panels as the Mac app, in the same layouts, themes and palette:
 
 | Page | What it does |
 |---|---|

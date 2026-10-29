@@ -146,9 +146,9 @@ macOS asks for access only when a feature needs it:
 | Local network | Phone drop |
 
 
-### Windows (beta)
+### Windows
 
-A beta for Windows 10 and 11 lives in [`windows/`](windows): a small island at the top centre of the screen with now playing and lyrics, clipboard history, prayer times and AI usage. Download `Beanotch-Setup-x64.exe` (or `-arm64`) from the [latest release](../../releases/latest), next to the Mac disk image.
+Beanotch for Windows 10 and 11 lives in [`windows/`](windows): a notch-style island at the top centre of the screen with the same pages, layouts, themes and idle choices as on the Mac. Download `Beanotch-Setup-x64.exe` (or `-arm64`) from the [latest release](../../releases/latest), next to the Mac disk image.
 
 ## Build
 
