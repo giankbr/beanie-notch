@@ -337,7 +337,10 @@ struct Panel<Content: View>: View {
 }
 
 enum NotchStyle: String, CaseIterable {
-    case drop, seamless, floating
+    case drop, seamless, floating, pill, squircle
+
+    // Pill and Floating leave the notch be and hang the panel just under it.
+    var floats: Bool { self == .floating || self == .pill }
 
     var title: String { rawValue.capitalized }
 
@@ -348,7 +351,9 @@ enum NotchStyle: String, CaseIterable {
 // The panel's outline, opening out of the notch in one of three ways:
 // - drop: notch-wide inside the menu bar, widening below it with soft shoulders;
 // - seamless: full width from the screen's top edge, its top corners flaring out like the notch's own;
-// - floating: the notch stays as it is and the panel is a separate card just under the menu bar.
+// - floating: the notch stays as it is and the panel is a separate card just under the menu bar;
+// - pill: the same, with corners rounded nearly into a capsule, like the iPhone's island;
+// - squircle: full width from the screen's top edge, with deep, continuously curved corners at the bottom.
 struct NotchShape: Shape {
     var style: NotchStyle
     var neckWidth: CGFloat
@@ -370,6 +375,10 @@ struct NotchShape: Shape {
         case .drop: return drop(rect, nw: nw, nh: nh, shoulder: shoulder, body: body)
         case .seamless: return seamless(rect)
         case .floating: return floating(rect, nw: nw, nh: nh, body: body)
+        case .pill: return floating(rect, nw: nw, nh: nh, body: body, round: true)
+        case .squircle:
+            let r = min(radius + 12, rect.height / 2.2)
+            return UnevenRoundedRectangle(bottomLeadingRadius: r, bottomTrailingRadius: r, style: .continuous).path(in: rect)
         }
     }
 
@@ -427,11 +436,12 @@ struct NotchShape: Shape {
         return p
     }
 
-    private func floating(_ rect: CGRect, nw: CGFloat, nh: CGFloat, body: CGFloat) -> Path {
+    private func floating(_ rect: CGRect, nw: CGFloat, nh: CGFloat, body: CGFloat, round: Bool = false) -> Path {
         let gap: CGFloat = 8
         var p = closed(CGRect(x: rect.midX - nw / 2, y: rect.minY, width: nw, height: nh))
         let card = CGRect(x: rect.minX, y: nh + gap, width: rect.width, height: max(0, body - gap))
-        p.addRoundedRect(in: card, cornerSize: CGSize(width: radius, height: radius), style: .continuous)
+        let corner = round ? min(max(radius * 1.6, 34), card.height / 2.3) : radius
+        p.addRoundedRect(in: card, cornerSize: CGSize(width: corner, height: corner), style: .continuous)
         return p
     }
 }

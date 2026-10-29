@@ -13,7 +13,7 @@ struct MusicView: View {
         } else if let now = media.now {
             let tint = media.tint ?? Theme.accent
             // Compact sits on the panel itself, with no card around it, and keeps to the main controls.
-            let compact = settings.size == .compact
+            let compact = settings.compactPages
             let showsLyrics = lyrics.state == .synced || lyrics.state == .plain || lyrics.state == .loading
             // Narrow layouts drop the lyrics column rather than squeeze or spill the player.
             ViewThatFits(in: .horizontal) {
@@ -77,7 +77,7 @@ private struct Artwork: View {
             }
             .clipShape(RoundedRectangle(cornerRadius: (side ?? 190) > 100 ? 14 : 10, style: .continuous))
             // No glow in the compact size, where the page's edge is close enough to cut it off.
-            .shadow(color: tint.opacity(settings.size == .compact ? 0 : 0.45), radius: (side ?? 190) > 100 ? 20 : 10, y: 6)
+            .shadow(color: tint.opacity(settings.compactPages ? 0 : 0.45), radius: (side ?? 190) > 100 ? 20 : 10, y: 6)
         if let side {
             square.frame(width: side, height: side)
         } else {

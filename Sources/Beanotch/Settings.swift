@@ -16,7 +16,7 @@ enum ThemeMode: String, CaseIterable {
 }
 
 enum LayoutStyle: String, CaseIterable {
-    case studio, sidebar, tabs, classic, minimal, launcher, slide, glance
+    case studio, sidebar, tabs, classic, minimal, launcher, slide, glance, bar
 
     var title: String {
         switch self {
@@ -28,6 +28,7 @@ enum LayoutStyle: String, CaseIterable {
         case .launcher: "Launcher"
         case .slide: "Slide"
         case .glance: "Glance"
+        case .bar: "Bar"
         }
     }
 
@@ -41,12 +42,13 @@ enum LayoutStyle: String, CaseIterable {
         case .launcher: "A grid of tiles to start from"
         case .slide: "No menu; swipe between pages"
         case .glance: "One page of cards, no menu"
+        case .bar: "One slim row: music, timer, what's next"
         }
     }
 }
 
 enum PanelSize: String, CaseIterable {
-    case mini, compact, regular, large
+    case mini, compact, regular, large, custom
 
     var title: String { rawValue.capitalized }
 
@@ -57,6 +59,8 @@ enum PanelSize: String, CaseIterable {
         case .compact: CGSize(width: 520, height: 206)
         case .regular: CGSize(width: 680, height: 300)
         case .large: CGSize(width: 780, height: 350)
+        // Custom's own size is in the settings; this is where its sliders start.
+        case .custom: CGSize(width: 600, height: 230)
         }
     }
 }
@@ -221,6 +225,14 @@ final class Settings: ObservableObject {
     }
     @Published var layout: LayoutStyle { didSet { save(layout.rawValue, "layout") } }
     @Published var size: PanelSize { didSet { save(size.rawValue, "size") } }
+    // Custom's own width and height, in points, set with two sliders.
+    @Published var customWidth: Double { didSet { save(customWidth, "customWidth") } }
+    @Published var customHeight: Double { didSet { save(customHeight, "customHeight") } }
+
+    // The panel's page area as picked: one of the sizes, or Custom's own.
+    var panelBody: CGSize { size == .custom ? CGSize(width: customWidth, height: customHeight) : size.body }
+    // Pages lay out for a narrow panel at Compact, or a Custom that small.
+    var compactPages: Bool { size == .compact || size == .custom && customWidth < 600 }
     @Published var accent: AccentChoice {
         didSet {
             save(accent.rawValue, "accent")
@@ -326,6 +338,8 @@ final class Settings: ObservableObject {
         theme = ThemeMode(rawValue: d.string(forKey: "theme") ?? "") ?? .dark
         layout = LayoutStyle(rawValue: d.string(forKey: "layout") ?? "") ?? .studio
         size = PanelSize(rawValue: d.string(forKey: "size") ?? "") ?? .regular
+        customWidth = d.object(forKey: "customWidth") as? Double ?? 600
+        customHeight = d.object(forKey: "customHeight") as? Double ?? 230
         accent = AccentChoice(rawValue: d.string(forKey: "accent") ?? "") ?? .mint
         customAccent = d.string(forKey: "customAccent") ?? "#FF7A59"
         openOnHover = d.object(forKey: "openOnHover") as? Bool ?? true

@@ -59,7 +59,7 @@ private struct UsageView: View {
 
             HStack(alignment: .top, spacing: 10) {
                 ClaudeCard(provider: claude)
-                ToolsCard(codex: codex).frame(width: settings.size == .compact ? 200 : 236)
+                ToolsCard(codex: codex).frame(width: settings.compactPages ? 200 : 236)
             }
             .frame(maxHeight: .infinity)
         }
@@ -276,7 +276,7 @@ private struct AskView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .card()
 
-            SessionsCard().frame(width: settings.size == .compact || settings.size == .mini ? 190 : 220)
+            SessionsCard().frame(width: settings.compactPages || settings.size == .mini ? 190 : 220)
         }
         .onAppear { focused = true }
         .task(id: model.aiFile) {

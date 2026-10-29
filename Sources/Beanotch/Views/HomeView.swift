@@ -29,7 +29,7 @@ struct HomeView: View {
                 HStack(alignment: .top, spacing: 10) {
                     CleanupCard().frame(maxHeight: .infinity, alignment: .top)
                     QuickSettingsCard()
-                        .frame(width: settings.size == .compact ? 190 : 220)
+                        .frame(width: settings.compactPages ? 190 : 220)
                         .frame(maxHeight: .infinity, alignment: .top)
                 }
                 .fixedSize(horizontal: false, vertical: true)

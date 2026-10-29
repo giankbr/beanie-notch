@@ -6,7 +6,7 @@ struct TodayView: View {
     @State private var page = 0
 
     // Compact keeps to the agenda and the timer: no strip, and the switcher stands in for the card's title.
-    private var compact: Bool { settings.size == .compact }
+    private var compact: Bool { settings.compactPages }
 
     var body: some View {
         VStack(spacing: 10) {

@@ -197,6 +197,14 @@ struct SettingsView: View {
                 row("arrow.up.left.and.arrow.down.right", "Panel size", "How big the panel opens") {
                     Segmented(options: PanelSize.allCases.map(\.title), selection: index($settings.size, PanelSize.allCases))
                 }
+                if settings.size == .custom {
+                    row("arrow.left.and.right", "Width", "\(Int(settings.customWidth)) points") {
+                        ThemedSlider(value: $settings.customWidth, range: 460...820).frame(width: 180)
+                    }
+                    row("arrow.up.and.down", "Height", settings.layout == .bar ? "Bar keeps its own slim height" : "\(Int(settings.customHeight)) points") {
+                        ThemedSlider(value: $settings.customHeight, range: 180...360).frame(width: 180)
+                    }
+                }
                 pickerRow("Font", "SF Pro matches the icons; the others ship with Beanotch") {
                     Segmented(options: AppFont.allCases.map(\.title), selection: index($settings.font, AppFont.allCases))
                 }
@@ -706,6 +714,14 @@ private struct LayoutSketch: View {
                         }
                         RoundedRectangle(cornerRadius: 2).fill(block)
                     }
+                case .bar:
+                    HStack(spacing: 2) {
+                        RoundedRectangle(cornerRadius: 2).fill(accent).frame(width: 10)
+                        RoundedRectangle(cornerRadius: 2).fill(block)
+                        RoundedRectangle(cornerRadius: 2).fill(block).frame(width: 12)
+                    }
+                    .frame(height: 9)
+                    .frame(maxHeight: .infinity, alignment: .top)
                 case .glance:
                     HStack(spacing: 2) {
                         RoundedRectangle(cornerRadius: 2).fill(accent)

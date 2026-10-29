@@ -16,7 +16,7 @@ struct ControlsView: View {
                     DisplaysCard()
                     BatteryCard()
                 }
-                ShortcutsCard().frame(width: settings.size == .compact ? 180 : 210)
+                ShortcutsCard().frame(width: settings.compactPages ? 180 : 210)
             }
             .frame(maxHeight: .infinity)
         }
@@ -51,7 +51,7 @@ private struct ToggleRow: View {
     private func tile(_ icon: String, _ title: String, _ on: Bool, color: Color = Theme.accent,
                       action: @escaping () -> Void) -> some View {
         // Icon over the label, or beside it when the panel is short.
-        let layout = settings.size == .compact ? AnyLayout(HStackLayout(spacing: 6)) : AnyLayout(VStackLayout(alignment: .leading, spacing: 5))
+        let layout = settings.compactPages ? AnyLayout(HStackLayout(spacing: 6)) : AnyLayout(VStackLayout(alignment: .leading, spacing: 5))
         return Button(action: action) {
             layout {
                 Image(systemName: icon).font(.system(size: 13, weight: .semibold))
@@ -62,7 +62,7 @@ private struct ToggleRow: View {
                     Text(on ? "On" : "Off").font(.app(size: 8.5)).foregroundStyle(on ? color : Theme.faint)
                 }
             }
-            .padding(settings.size == .compact ? 7 : 9)
+            .padding(settings.compactPages ? 7 : 9)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(TileFace(on: on, color: color))
             .contentShape(Rectangle())

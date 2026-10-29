@@ -440,7 +440,7 @@ struct ExpandedView: View {
             }
             .padding(.horizontal, inset)
             .frame(height: model.closedSize.height)
-            .padding(.top, settings.notchStyle == .floating ? 8 : 0)
+            .padding(.top, settings.notchStyle.floats ? 8 : 0)
             page
                 .padding(.horizontal, inset)
                 .padding(.top, 6)
@@ -451,7 +451,7 @@ struct ExpandedView: View {
     private var full: some View {
         VStack(spacing: 0) {
             // The menu bar's height: the notch and the menu bar items live there.
-            Color.clear.frame(height: model.closedSize.height + (settings.notchStyle == .floating ? 8 : 0))
+            Color.clear.frame(height: model.closedSize.height + (settings.notchStyle.floats ? 8 : 0))
             Group {
                 if settings.layout == .classic {
                     VStack(spacing: 8) {
@@ -490,6 +490,8 @@ struct ExpandedView: View {
                     .animation(.snappy(duration: 0.25), value: model.launcherGrid)
                 } else if settings.layout == .slide {
                     slide
+                } else if settings.layout == .bar {
+                    BarView().overlay(alignment: .top) { permissions }
                 } else if settings.layout == .glance {
                     GlanceView().overlay(alignment: .top) { permissions }
                 } else if settings.layout == .sidebar {
@@ -510,7 +512,7 @@ struct ExpandedView: View {
                     }
                 }
             }
-            .padding(.horizontal, 12 + (settings.notchStyle == .seamless ? NotchStyle.ear : 0))
+            .padding(.horizontal, 12 + (settings.notchStyle == .seamless ? NotchStyle.ear : settings.notchStyle == .pill ? 6 : 0))
             .padding(.top, 8)
             .padding(.bottom, 12)
         }

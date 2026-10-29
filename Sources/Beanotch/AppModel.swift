@@ -86,7 +86,9 @@ final class AppModel: ObservableObject {
     @Published private(set) var volume: LevelHUD?
 
     var openSize: CGSize {
-        let body = settings.size.body
+        var body = settings.panelBody
+        // Bar is one slim row, whatever the size.
+        if settings.layout == .bar, settings.size != .mini { body.height = 84 }
         // Studio's labelled sidebar needs room of its own.
         var extra: CGFloat = settings.layout == .studio && settings.size != .mini ? 96 : 0
         if settings.notchStyle == .seamless { extra += NotchStyle.ear * 2 }
