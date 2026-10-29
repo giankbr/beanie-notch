@@ -408,9 +408,20 @@ final class AppModel: ObservableObject {
             && activityWidth == 64))
     }
 
+    // With nothing going on: the time or the weather either side of the camera, when that's the idle choice.
+    var idleShows: IdleShows? {
+        guard activityWidth == 0, !settings.notchPet else { return nil }
+        switch settings.idle {
+        case .clock: return .clock
+        case .weather: return weather.report == nil ? nil : .weather
+        default: return nil
+        }
+    }
+
     var closedWidth: CGFloat {
         // Both sides grow alike so the camera stays centred.
-        closedSize.width + (petShows ? max(activityWidth, NotchPet.slot * 2) : activityWidth)
+        let idle: CGFloat = idleShows == .clock ? 110 : idleShows == .weather ? 84 : 0
+        return closedSize.width + (petShows ? max(activityWidth, NotchPet.slot * 2) : activityWidth == 0 ? idle : activityWidth)
     }
 
     // Each side of the camera gets room for the longer of its two texts, so neither is cut short.

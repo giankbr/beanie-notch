@@ -14,6 +14,7 @@ struct NotchRootView: View {
     @EnvironmentObject var devRuns: DevRuns
     @EnvironmentObject var meeting: MeetingWatcher
     @EnvironmentObject var pet: NotchPet
+    @EnvironmentObject var weather: Weather
 
     private var size: CGSize {
         model.expanded ? model.openSize : CGSize(width: model.closedWidth, height: model.closedHeight)
@@ -73,6 +74,10 @@ struct NotchRootView: View {
         .animation(.smooth(duration: 0.4, extraBounce: 0.1), value: model.closedWidth)
         .animation(.smooth(duration: 0.4, extraBounce: 0.1), value: model.closedHeight)
         .animation(.smooth(duration: 0.4), value: settings.size)
+        // Weather for the idle notch, asked again every half hour (the report itself keeps it from asking more).
+        .task(id: settings.idle == .weather ? Int(Date().timeIntervalSince1970 / 1800) : -1) {
+            if settings.idle == .weather { weather.refresh(for: prayer.place) }
+        }
     }
 
     @ViewBuilder private var closedContent: some View {
@@ -222,6 +227,25 @@ struct NotchRootView: View {
             NotchLyrics().transition(.emerge)
         } else if model.showsMiniPlayer {
             MiniPlayer().transition(.emerge)
+        } else if model.idleShows == .clock {
+            Ears {
+                Text(Date().formatted(.dateTime.weekday(.abbreviated).day())).font(.app(size: 10, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.6)).lineLimit(1)
+            } right: {
+                TimelineView(.everyMinute) { context in
+                    Text(context.date.formatted(date: .omitted, time: .shortened)).font(.app(size: 10.5, weight: .semibold))
+                        .monospacedDigit().foregroundStyle(.white).lineLimit(1)
+                }
+            }
+            .transition(.emerge)
+        } else if model.idleShows == .weather, let report = weather.report {
+            Ears {
+                Image(systemName: Weather.symbol(report.code)).symbolRenderingMode(.hierarchical)
+                    .font(.system(size: 11, weight: .semibold)).foregroundStyle(.white)
+            } right: {
+                Text("\(Int(report.temp.rounded()))°").font(.app(size: 10.5, weight: .semibold)).monospacedDigit().foregroundStyle(.white)
+            }
+            .transition(.emerge)
         } else if model.petShows {
             // Nothing else to show: the pet in its corner on the left, its word on the right.
             Ears {

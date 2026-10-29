@@ -57,6 +57,33 @@ enum PanelSize: String, CaseIterable {
     }
 }
 
+// What the closed notch shows when nothing's going on: just the notch, the pet, the time, or the weather.
+enum IdleShows: String, CaseIterable {
+    case nothing, pet, clock, weather
+
+    var title: String {
+        switch self {
+        case .nothing: "Nothing"
+        case .pet: "Pet"
+        case .clock: "Time"
+        case .weather: "Weather"
+        }
+    }
+}
+
+// What the closed notch shows while music plays: nothing extra, the cover and a beat, or the line being sung.
+enum MusicShows: String, CaseIterable {
+    case off, beat, lyrics
+
+    var title: String {
+        switch self {
+        case .off: "Nothing"
+        case .beat: "Cover & beat"
+        case .lyrics: "Lyrics"
+        }
+    }
+}
+
 enum AccentChoice: String, CaseIterable {
     case mint, ocean, sunset, rose, lime, violet, teal, gold, crimson, graphite
 
@@ -169,7 +196,27 @@ final class Settings: ObservableObject {
     @Published var meetingMode: Bool { didSet { save(meetingMode, "meetingMode") } }
     @Published var smartCopy: Bool { didSet { save(smartCopy, "smartCopy") } }
     @Published var quakeAlerts: Bool { didSet { save(quakeAlerts, "quakeAlerts") } }
-    @Published var notchPet: Bool { didSet { save(notchPet, "notchPet") } }
+    @Published var notchPet: Bool {
+        didSet {
+            save(notchPet, "notchPet")
+            if notchPet, idle != .pet { idle = .pet } else if !notchPet, idle == .pet { idle = .nothing }
+        }
+    }
+    // The pet is one of the idle choices; picking it (or anything else) switches the pet on (or off).
+    @Published var idle: IdleShows {
+        didSet {
+            save(idle.rawValue, "idle")
+            if notchPet != (idle == .pet) { notchPet = idle == .pet }
+        }
+    }
+    // The mini player and lyrics-in-the-notch switches as one choice.
+    var musicShows: MusicShows {
+        get { !miniPlayer ? .off : lyricsInNotch ? .lyrics : .beat }
+        set {
+            miniPlayer = newValue != .off
+            lyricsInNotch = newValue == .lyrics
+        }
+    }
     @Published var petKind: PetKind { didSet { save(petKind.rawValue, "petKind") } }
     // Empty for the kind's own name ("Bean").
     @Published var petName: String { didSet { save(petName, "petName") } }
@@ -223,6 +270,7 @@ final class Settings: ObservableObject {
         smartCopy = d.object(forKey: "smartCopy") as? Bool ?? true
         quakeAlerts = d.object(forKey: "quakeAlerts") as? Bool ?? true
         notchPet = d.bool(forKey: "notchPet")
+        idle = d.bool(forKey: "notchPet") ? .pet : IdleShows(rawValue: d.string(forKey: "idle") ?? "").flatMap { $0 == .pet ? nil : $0 } ?? .nothing
         petKind = PetKind(rawValue: d.string(forKey: "petKind") ?? "") ?? .bean
         petName = d.string(forKey: "petName") ?? ""
         petAccessory = PetAccessory(rawValue: d.string(forKey: "petAccessory") ?? "") ?? .none

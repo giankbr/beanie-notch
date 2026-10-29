@@ -28,10 +28,10 @@ final class SettingsWindow {
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
         window.isReleasedWhenClosed = false
-        window.contentMinSize = NSSize(width: 620, height: 400)
-        window.setContentSize(NSSize(width: 760, height: 520))
+        window.contentMinSize = NSSize(width: 560, height: 360)
+        window.setContentSize(NSSize(width: 640, height: 430))
         window.center()
-        window.setFrameAutosaveName("BeanotchSettings")
+        window.setFrameAutosaveName("BeanotchSettingsWindow")
         model.settings.$theme.sink { [weak window] theme in window?.appearance = theme.appearance }.store(in: &sinks)
         self.window = window
         return window
@@ -46,10 +46,11 @@ private struct SettingsWindowView: View {
             .font(.app(size: 11))
             .foregroundStyle(Theme.ink)
             .symbolRenderingMode(.monochrome)
-            // Clear of the window's buttons at the top left.
-            .padding(EdgeInsets(top: 34, leading: 14, bottom: 14, trailing: 16))
+            // Just clear of the window's buttons at the top left; the title bar's own strip isn't kept.
+            .padding(EdgeInsets(top: 30, leading: 10, bottom: 10, trailing: 12))
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Theme.background)
+            .ignoresSafeArea()
             .id(settings.styleKey)
     }
 }
