@@ -99,15 +99,18 @@ Beanotch is written in Swift and SwiftUI with no third-party dependencies. The d
 
 ### Look
 
-- Six layouts:
+- Seven layouts:
   - **Studio**: a labelled side menu.
   - **Compact**: an icon rail.
   - **Top tabs**: tabs along the top.
   - **Classic**: a greeting and a dock.
   - **Minimal**: just the page; the title is the menu.
   - **Launcher**: opens on a grid of live tiles.
+  - **Slide**: no menu at all; swipe sideways between pages.
 - Every page fits every layout and size, and scrolls when the panel is too short for it.
-- **Pages:** switch off any page you don't use in Settings › Pages. Turning off Prayer also removes prayer times from the header and the notch, and the Hijri date.
+- **Settings and Tools** open in a window of their own, from the gear in the notch or the menu bar (⌘,).
+- **Idle:** pick what sits either side of the camera when nothing's going on (the pet, time, date, weather or battery, or nothing at all), and what music adds.
+- **Pages:** switch off any page you don't use in Settings › Pages; a fresh install starts with Today, Shelf and Now Playing. Turning off Prayer also removes prayer times from the header and the notch, and the Hijri date.
 - Dark and light themes, 10 accent colors and 3 panel sizes.
 - Three notch shapes: drop, seamless and floating.
 - Flat buttons that light up under the pointer, and segmented controls with a sliding thumb.
