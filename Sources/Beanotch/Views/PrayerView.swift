@@ -5,10 +5,7 @@ struct PrayerView: View {
 
     var body: some View {
         if let place = prayer.place {
-            VStack(spacing: 10) {
-                NextPanel(place: place)
-                Timeline()
-            }
+            SunArcPage(place: place)
         } else {
             Panel {
                 Placeholder(icon: "location", title: "Where are you?",
@@ -50,63 +47,149 @@ struct CityMenu: View {
     }
 }
 
-// The next prayer with a bar filling from the one before it, and the place with its qibla beside it.
-private struct NextPanel: View {
+// The day as the sun's path: a dot for each time along an arc that rises at sunrise, peaks at noon and sets at
+// Maghrib, the part already gone in the accent and a marker for now. The next prayer and its countdown sit above it,
+// the place and the qibla in a corner, and every time under its dot.
+private struct SunArcPage: View {
     @EnvironmentObject var prayer: PrayerTimes
     var place: PrayerTimes.Place
 
     var body: some View {
-        HStack(spacing: 14) {
-            if let next = prayer.next {
-                TimelineView(.periodic(from: .now, by: 30)) { context in
-                    let now = context.date
-                    let previous = prayer.today.last { $0.isPrayer && $0.time <= now }?.time ?? Calendar.current.startOfDay(for: now)
-                    let span = max(next.time.timeIntervalSince(previous), 1)
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text("NEXT PRAYER").font(.app(size: 8.5, weight: .semibold)).tracking(0.9).foregroundStyle(Theme.faint)
-                        HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Text(prayer.label(next)).font(.app(size: 24, weight: .bold)).foregroundStyle(Theme.accent)
-                            Text(next.time.formatted(date: .omitted, time: .shortened)
-                                 + (Calendar.current.isDateInTomorrow(next.time) ? " · tomorrow" : ""))
-                                .font(.app(size: 15, weight: .semibold)).monospacedDigit()
-                            Spacer(minLength: 4)
-                            Text(countdown(to: next.time, from: now)).font(.mono(size: 10, weight: .semibold)).foregroundStyle(Theme.dim)
-                        }
-                        SegmentMeter(value: min(1, now.timeIntervalSince(previous) / span), color: Theme.accent, segments: 30)
-                        if let fast = prayer.fasting(at: now) {
-                            Text(fast).font(.app(size: 9.5, weight: .semibold)).foregroundStyle(Theme.accent2).lineLimit(1)
-                        } else {
-                            Text(prayer.method.title + (prayer.hanafi ? " · Hanafi" : "") + " · since the last prayer")
-                                .font(.app(size: 9)).foregroundStyle(Theme.faint).lineLimit(1)
-                        }
-                    }
-                }
+        TimelineView(.periodic(from: .now, by: 30)) { context in
+            let now = context.date
+            VStack(alignment: .leading, spacing: 6) {
+                header(now)
+                SunArc(entries: prayer.today, next: prayer.next, now: now)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                labels(now)
             }
-            Rectangle().fill(Theme.stroke).frame(width: 1)
-            HStack(spacing: 10) {
-                Compass(bearing: place.qibla)
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 4) {
-                        Image(systemName: prayer.locating ? "location.circle" : "location.fill").font(.system(size: 8.5))
-                        Text(place.name).font(.app(size: 11, weight: .semibold)).lineLimit(1)
-                    }
-                    Text("Qibla \(Int(place.qibla.rounded()))° \(place.qiblaDirection)").font(.app(size: 9.5)).foregroundStyle(Theme.dim)
-                    CityMenu(label: "Change place").foregroundStyle(Theme.accent)
-                    if let error = prayer.locationError {
-                        Text(error).font(.app(size: 8.5)).foregroundStyle(Theme.amber).lineLimit(1)
-                    }
-                }
-            }
-            .frame(width: 190, alignment: .leading)
+            .padding(.horizontal, 4)
         }
-        .padding(12)
-        .fixedSize(horizontal: false, vertical: true)
-        .card()
+    }
+
+    private func header(_ now: Date) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            if let next = prayer.next {
+                let fasting = prayer.fasting(at: now)
+                VStack(alignment: .leading, spacing: 1) {
+                    HStack(alignment: .firstTextBaseline, spacing: 7) {
+                        Text(prayer.label(next)).font(.app(size: 20, weight: .bold)).foregroundStyle(Theme.accent)
+                        Text(countdown(to: next.time, from: now)).font(.app(size: 12, weight: .semibold)).foregroundStyle(Theme.dim)
+                    }
+                    Text(fasting ?? (next.time.formatted(date: .omitted, time: .shortened)
+                         + (Calendar.current.isDateInTomorrow(next.time) ? " tomorrow" : "") + " · " + prayer.method.title))
+                        .font(.app(size: 9.5)).foregroundStyle(fasting == nil ? Theme.faint : Theme.accent2).lineLimit(1)
+                }
+            }
+            Spacer(minLength: 6)
+            HStack(spacing: 7) {
+                VStack(alignment: .trailing, spacing: 0) {
+                    Text("\(place.name) · Qibla \(Int(place.qibla.rounded()))° \(place.qiblaDirection)")
+                        .font(.app(size: 10, weight: .semibold)).lineLimit(1)
+                    CityMenu(label: "Change place").foregroundStyle(Theme.accent)
+                }
+                Compass(bearing: place.qibla).scaleEffect(0.66).frame(width: 31, height: 31)
+            }
+        }
+    }
+
+    // Each time under its dot, in even columns, the next one lit and the ones gone by faded.
+    private func labels(_ now: Date) -> some View {
+        HStack(spacing: 0) {
+            ForEach(prayer.today) { entry in
+                let isNext = entry.time == prayer.next?.time
+                VStack(spacing: 0) {
+                    Text(prayer.label(entry)).font(.app(size: 8.5, weight: .medium)).lineLimit(1)
+                        .foregroundStyle(isNext ? Theme.accent : Theme.dim)
+                    Text(entry.time.formatted(date: .omitted, time: .shortened))
+                        .font(.app(size: 11, weight: .semibold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.8)
+                        .foregroundStyle(isNext ? Theme.ink : entry.time < now ? Theme.faint : Theme.ink.opacity(0.85))
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
     }
 
     private func countdown(to time: Date, from now: Date) -> String {
         let minutes = max(0, Int((time.timeIntervalSince(now) / 60).rounded(.up)))
         return minutes >= 60 ? "in \(minutes / 60)h \(minutes % 60)m" : "in \(minutes) min"
+    }
+}
+
+// The arc itself. The times sit evenly across (so close ones like Imsak and Fajr don't crowd), each as high as the sun
+// is then: above the horizon between sunrise and Maghrib, a little under it before and after.
+private struct SunArc: View {
+    let entries: [PrayerTimes.Entry]
+    let next: PrayerTimes.Entry?
+    let now: Date
+
+    var body: some View {
+        Canvas { g, size in
+            let n = entries.count
+            guard n > 1 else { return }
+            let horizon = size.height * 0.74, lift = size.height * 0.64, dip = size.height * 0.2
+            let rise = entries.first { $0.name == "Sunrise" || $0.name == "Terbit" }?.time
+            let set = entries.first { $0.name == "Maghrib" }?.time
+            func x(_ position: Double) -> CGFloat { CGFloat((position + 0.5) / Double(n)) * size.width }
+            // How high the sun stands: a half sine across the daylight, a shallow dip either side of it.
+            func elevation(_ t: Date) -> Double {
+                guard let rise, let set, set > rise else { return 0 }
+                if t >= rise && t <= set { return sin(.pi * t.timeIntervalSince(rise) / set.timeIntervalSince(rise)) }
+                let away = t < rise ? rise.timeIntervalSince(t) : t.timeIntervalSince(set)
+                return -min(1, away / 7200)
+            }
+            // A point on the arc at a position along the row of times, between two of them by time.
+            func point(_ position: Double) -> CGPoint {
+                let i = min(max(Int(position.rounded(.down)), 0), n - 1), j = min(i + 1, n - 1)
+                let f = position - Double(i)
+                let t = entries[i].time.addingTimeInterval(entries[j].time.timeIntervalSince(entries[i].time) * f)
+                let e = elevation(t)
+                return CGPoint(x: x(position), y: horizon - CGFloat(e >= 0 ? e * lift : e * dip))
+            }
+            // Where now falls along the row.
+            let nowAt: Double = {
+                guard let k = entries.lastIndex(where: { $0.time <= now }) else { return 0 }
+                if k == n - 1 { return Double(n - 1) }
+                let span = entries[k + 1].time.timeIntervalSince(entries[k].time)
+                return Double(k) + now.timeIntervalSince(entries[k].time) / max(span, 1)
+            }()
+            func arc(_ a: Double, _ b: Double) -> Path {
+                var p = Path()
+                let steps = max(2, Int((b - a) * 24))
+                for s in 0...steps {
+                    let pt = point(a + (b - a) * Double(s) / Double(steps))
+                    if s == 0 { p.move(to: pt) } else { p.addLine(to: pt) }
+                }
+                return p
+            }
+
+            var line = Path()
+            line.move(to: CGPoint(x: 0, y: horizon))
+            line.addLine(to: CGPoint(x: size.width, y: horizon))
+            g.stroke(line, with: .color(Theme.ink.opacity(0.12)), style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
+            g.stroke(arc(0, Double(n - 1)), with: .color(Theme.ink.opacity(0.16)), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+            if nowAt > 0 {
+                let shading: GraphicsContext.Shading = Theme.gradient
+                    ? .linearGradient(Gradient(colors: [Theme.accent, Theme.accent2]), startPoint: .zero, endPoint: CGPoint(x: size.width, y: 0))
+                    : .color(Theme.accent)
+                g.stroke(arc(0, nowAt), with: shading, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+            }
+            for (i, entry) in entries.enumerated() {
+                let c = point(Double(i))
+                if entry.time == next?.time {
+                    g.fill(Path(ellipseIn: CGRect(x: c.x - 9, y: c.y - 9, width: 18, height: 18)), with: .color(Theme.accent.opacity(0.2)))
+                    g.fill(Path(ellipseIn: CGRect(x: c.x - 5, y: c.y - 5, width: 10, height: 10)), with: .color(Theme.accent))
+                } else {
+                    let color = entry.time < now ? Theme.accent.opacity(0.7) : Theme.ink.opacity(entry.isPrayer ? 0.45 : 0.25)
+                    g.fill(Path(ellipseIn: CGRect(x: c.x - 3.2, y: c.y - 3.2, width: 6.4, height: 6.4)), with: .color(color))
+                }
+            }
+            // Now: the sun while it's up, the moon while it's down.
+            let at = point(nowAt)
+            let mark = at.y <= horizon ? "sun.max.fill" : "moon.fill"
+            g.draw(Text(Image(systemName: mark)).font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.amber),
+                   at: CGPoint(x: at.x, y: at.y - 13))
+        }
     }
 }
 
@@ -130,49 +213,3 @@ private struct Compass: View {
     }
 }
 
-// The whole day across: each time in its own tile, the next one lit, the ones gone by dimmed.
-private struct Timeline: View {
-    @EnvironmentObject var prayer: PrayerTimes
-
-    var body: some View {
-        TimelineView(.periodic(from: .now, by: 60)) { context in
-            HStack(spacing: 6) {
-                ForEach(prayer.today) { entry in
-                    let isNext = entry.time == prayer.next?.time
-                    let past = entry.time < context.date
-                    VStack(alignment: .leading, spacing: 4) {
-                        Image(systemName: Self.symbol(entry.name))
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(isNext ? Theme.accent : entry.isPrayer ? Theme.dim : Theme.faint)
-                        Spacer(minLength: 0)
-                        Text(entry.name).font(.app(size: 9.5, weight: .medium)).lineLimit(1)
-                            .foregroundStyle(isNext ? Theme.accent : Theme.dim)
-                        Text(entry.time.formatted(date: .omitted, time: .shortened))
-                            .font(.app(size: 14, weight: .semibold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.8)
-                            .foregroundStyle(isNext ? Theme.ink : past ? Theme.faint : Theme.ink)
-                    }
-                    .padding(10)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                    .background(RoundedRectangle(cornerRadius: Theme.round(11), style: .continuous)
-                        .fill(isNext ? Theme.accent.opacity(0.14) : Theme.surface))
-                    .overlay(RoundedRectangle(cornerRadius: Theme.round(11), style: .continuous)
-                        .strokeBorder(isNext ? Theme.accent.opacity(0.55) : Theme.stroke))
-                    .opacity(past && !isNext ? 0.6 : 1)
-                }
-            }
-        }
-    }
-
-    private static func symbol(_ name: String) -> String {
-        switch name {
-        case "Imsak": "moon.stars.fill"
-        case "Subuh", "Fajr": "sun.horizon.fill"
-        case "Terbit", "Sunrise": "sunrise.fill"
-        case "Dzuhur", "Dhuhr": "sun.max.fill"
-        case "Ashar", "Asr": "sun.min.fill"
-        case "Maghrib": "sunset.fill"
-        case "Isya", "Isha": "moon.fill"
-        default: "clock"
-        }
-    }
-}
