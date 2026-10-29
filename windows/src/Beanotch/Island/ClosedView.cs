@@ -166,11 +166,28 @@ public sealed class ClosedView
         return Math.Clamp(110 + (leftText.Length + rightText.Length) * 6.6 + (leftGlyph is null ? 0 : 18), 150, 260);
     }
 
+    // Auto, made concrete: a meeting or a prayer within half an hour, the battery when it's low or charging, and
+    // otherwise the time.
+    private IdleItem Resolve(IdleItem item)
+    {
+        if (item != IdleItem.Auto) return item;
+        var now = DateTimeOffset.Now;
+        if (model.NextEvent is { } e && e.Start - now < TimeSpan.FromMinutes(30)) return IdleItem.Event;
+        if (model.Visible(Tab.Prayer) && model.NextPrayer.Time - now < TimeSpan.FromMinutes(30)) return IdleItem.Prayer;
+        if (PowerManager.BatteryStatus != BatteryStatus.NotPresent
+            && (PowerManager.PowerSupplyStatus != PowerSupplyStatus.NotPresent || PowerManager.RemainingChargePercent < 20)) return IdleItem.Battery;
+        return IdleItem.Time;
+    }
+
     // One idle side: its icon (shown on the left) and its words.
     private (string? Glyph, string Text) Item(IdleItem item)
     {
-        switch (item)
+        switch (Resolve(item))
         {
+            case IdleItem.Event when model.NextEvent is { } e:
+                return (Glyphs.Calendar, $"{(e.Title.Length > 14 ? e.Title[..14] + "…" : e.Title)} {Model.Clock(e.Start)}");
+            case IdleItem.Prayer when model.Visible(Tab.Prayer):
+                return (Glyphs.Moon, $"{model.Label(model.NextPrayer)} {Model.Clock(model.NextPrayer.Time)}");
             case IdleItem.Time: return (Glyphs.Clock, DateTime.Now.ToString("HH.mm"));
             case IdleItem.Date: return (Glyphs.Calendar, DateTime.Now.ToString("ddd d"));
             case IdleItem.Weather when model.Weather is { } w: return (Glyphs.Sun, $"{Math.Round(w.Temp)}°");

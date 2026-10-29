@@ -49,6 +49,10 @@ public sealed partial class IslandWindow
             shell.Open(tab);
             await Shot($"00-slide-{tab.ToString().ToLowerInvariant()}", 1500);
         }
+        model.Settings.Layout = PanelLayout.Glance;
+        shell.Rebuild();
+        shell.Shown();
+        await Shot("00-glance", 2000);
         Collapse();
         // Then everything else at the earlier defaults, every page on, for the rest of the photos.
         model.Settings.HiddenTabs.Clear();
@@ -57,7 +61,7 @@ public sealed partial class IslandWindow
         shell.Rebuild();
 
         await Shot("01-closed-idle", 3000);
-        foreach (var (l, r) in new[] { (IdleItem.Date, IdleItem.Time), (IdleItem.Battery, IdleItem.Time), (IdleItem.Weather, IdleItem.Nothing), (IdleItem.Nothing, IdleItem.Time) })
+        foreach (var (l, r) in new[] { (IdleItem.Date, IdleItem.Time), (IdleItem.Battery, IdleItem.Time), (IdleItem.Weather, IdleItem.Nothing), (IdleItem.Nothing, IdleItem.Time), (IdleItem.Auto, IdleItem.Nothing), (IdleItem.Prayer, IdleItem.Time) })
         {
             (model.Settings.IdleLeft, model.Settings.IdleRight) = (l, r);
             Update();

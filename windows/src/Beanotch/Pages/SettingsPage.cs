@@ -186,6 +186,10 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
                 for (var i = 0; i < 3; i++) g.Children.Add(Block(S(4), S(4), HorizontalAlignment.Right, T, 0, 0, i == 0 ? 0.45 : 0.25) is var dot ? Shift(dot, i) : null);
                 g.Children.Add(new Border { Margin = new Thickness(0, S(8), 0, 0), CornerRadius = new CornerRadius(S(2)), Background = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.12)) });
                 break;
+            case PanelLayout.Glance:
+                for (var i = 0; i < 3; i++)
+                    g.Children.Add(Block(i == 2 ? S(10) : S(17), double.NaN, L, C, i * S(19), 0, i == 0 ? 0.4 : 0.2));
+                break;
             case PanelLayout.Slide:
                 g.Children.Add(new Border { Margin = new Thickness(0, 0, 0, S(8)), CornerRadius = new CornerRadius(S(2)), Background = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.12)) });
                 for (var i = 0; i < 3; i++)

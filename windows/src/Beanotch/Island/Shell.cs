@@ -36,6 +36,7 @@ public sealed class Shell
     {
         applyTheme();
         pages.Clear();
+        glance = null;
         Build();
         Shown();
     }
@@ -83,6 +84,15 @@ public sealed class Shell
                 };
                 var top = Columns(8, (tray, 1), (extras, null));
                 layout = Rows(8, (top, null), (host, 1));
+                break;
+            }
+            case PanelLayout.Glance:
+            {
+                // One page of cards, no menu: the way to Settings under it.
+                nav = new StackPanel();
+                var gear = IconButton(Glyphs.Settings, () => model.OpenSettings(Tab.Settings), 9, Theme.Faint, "Settings and tools", 20);
+                gear.HorizontalAlignment = HorizontalAlignment.Right;
+                layout = Rows(6, (host, 1), (gear, null));
                 break;
             }
             case PanelLayout.Slide:
@@ -149,6 +159,11 @@ public sealed class Shell
         yield return (Tab.Controls, Glyphs.Controls, "Controls", null);
     }
 
+    private GlancePage? glance;
+
+    // The page showing: Glance's cards, or the open tab's page.
+    private PanelPage Current => Layout == PanelLayout.Glance ? glance ??= new GlancePage(model) : PageFor(model.Tab);
+
     private PanelPage PageFor(Tab tab)
     {
         if (pages.TryGetValue(tab, out var page)) return page;
@@ -195,7 +210,7 @@ public sealed class Shell
         }
         else
         {
-            var page = PageFor(model.Tab);
+            var page = Current;
             if (Layout == PanelLayout.Slide)
                 host.ChildrenTransitions = [new EntranceThemeTransition { FromHorizontalOffset = slideFrom * S(60), FromVerticalOffset = 0 }];
             host.Children.Add(page.View);
@@ -232,7 +247,7 @@ public sealed class Shell
 
     public void Update()
     {
-        if (!(Layout == PanelLayout.Launcher && grid)) PageFor(model.Tab).Refresh();
+        if (!(Layout == PanelLayout.Launcher && grid)) Current.Refresh();
     }
 
     public void Tick()
@@ -244,7 +259,7 @@ public sealed class Shell
         if (model.Visible(Tab.Prayer)) pills.Children.Add(Pill($"{next.Name} {Model.Clock(next.Time)}", Theme.Accent2, Glyphs.Moon));
         // Cleanup news belongs with Overview; without that page, the header keeps quiet about it.
         if (model.Cleaner.Total > 0 && model.Visible(Tab.Home)) pills.Children.Add(Pill($"{Format.Bytes(model.Cleaner.Total)} can be freed", Theme.Amber, dot: true));
-        if (!(Layout == PanelLayout.Launcher && grid)) PageFor(model.Tab).Tick();
+        if (!(Layout == PanelLayout.Launcher && grid)) Current.Tick();
     }
 
     private void BuildSidebar()
