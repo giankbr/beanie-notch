@@ -37,9 +37,7 @@ public static partial class Tint
     // The desktop picture's colour, from the file Windows shows (a solid colour or a slideshow has none).
     public static async Task<Color?> WallpaperAsync()
     {
-        var path = new char[260];
-        if (!SystemParametersInfo(0x73, (uint)path.Length, path, 0)) return null; // SPI_GETDESKWALLPAPER
-        var file = new string(path).TrimEnd('\0');
+        var file = WallpaperPath();
         if (file.Length == 0 || !File.Exists(file)) return null;
         try
         {
@@ -82,7 +80,13 @@ public static partial class Tint
         return Color.FromArgb(255, (byte)Math.Round(r * 255), (byte)Math.Round(g * 255), (byte)Math.Round(b * 255));
     }
 
+    private static unsafe string WallpaperPath()
+    {
+        var path = stackalloc char[260];
+        return SystemParametersInfo(0x73, 260, path, 0) ? new string(path).TrimEnd('\0') : ""; // SPI_GETDESKWALLPAPER
+    }
+
     [LibraryImport("user32.dll", EntryPoint = "SystemParametersInfoW")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static partial bool SystemParametersInfo(uint action, uint param, [Out] char[] value, uint flags);
+    private static unsafe partial bool SystemParametersInfo(uint action, uint param, char* value, uint flags);
 }
