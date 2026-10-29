@@ -114,7 +114,7 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
             Choice(mode.ToString(), S0.Theme == mode, ThemeSwatch(mode), () => { S0.Theme = mode; Save(rebuild: true); })));
 
         var swatches = H(4);
-        foreach (var accent in Enum.GetValues<AccentChoice>())
+        foreach (var accent in Theme.Solids.Concat(Theme.Palettes))
         {
             var on = S0.Accent == accent;
             var dot = new Border
@@ -125,7 +125,40 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
             swatches.Children.Add(Plain(new Grid { Width = S(22), Height = S(22), Children = { Center(dot) } },
                                         () => { S0.Accent = accent; Save(rebuild: true); }, radius: 11, tip: accent.ToString()));
         }
-        var tint = Picker("Accent", "Buttons, highlights and the mini player", swatches);
+        // The palettes show both their colours.
+        foreach (var dot in swatches.Children.OfType<Button>().Skip(Theme.Solids.Length).Select(b => ((Grid)b.Content).Children[0]).OfType<Border>()
+                                    .Select((d, i) => (d, Theme.Palettes[i])))
+        {
+            var (border, palette) = dot;
+            border.Background = new Microsoft.UI.Xaml.Media.LinearGradientBrush
+            {
+                StartPoint = new Windows.Foundation.Point(0, 0), EndPoint = new Windows.Foundation.Point(1, 1),
+                GradientStops = { new() { Color = Theme.Primary(palette), Offset = 0 }, new() { Color = Theme.Secondary(palette), Offset = 1 } },
+            };
+        }
+        var solids = H(4, [.. swatches.Children.Take(Theme.Solids.Length)]);
+        var palettes = H(4, [.. swatches.Children.Skip(Theme.Solids.Length)]);
+        swatches.Children.Clear();
+        // Accents that follow the song, the wallpaper, or a colour of your own.
+        Button Chip(AccentChoice accent, string glyph, string title)
+        {
+            var on = S0.Accent == accent;
+            return Plain(H(5, Icon(glyph, 9, on ? Theme.Accent : Theme.Dim), Text(title, 9.5, on ? Theme.Accent : Theme.Dim, on ? FontWeights.SemiBold : FontWeights.Normal)),
+                         () => { S0.Accent = accent; Save(rebuild: true); Beanotch.Island.IslandWindow.SettingsAccentChanged?.Invoke(); },
+                         on ? Theme.WithAlpha(Theme.Accent, 0.14) : Theme.WithAlpha(Theme.Ink, 0.06), 11, new Thickness(S(9), S(4), S(9), S(4)));
+        }
+        var chips = H(6, Chip(AccentChoice.Artwork, Glyphs.Music, "From the song"), Chip(AccentChoice.Wallpaper, "\uE91B", "From the wallpaper"),
+                      Chip(AccentChoice.Custom, "\uEF3C", "Custom"));
+        if (S0.Accent == AccentChoice.Custom)
+        {
+            var picker = new ColorPicker { Color = Tint.Parse(S0.CustomAccent) ?? Theme.Accent, IsAlphaEnabled = false, IsMoreButtonVisible = false };
+            var pick = PillButton("Pick", Theme.Accent, () => { });
+            pick.Flyout = new Flyout { Content = picker };
+            picker.ColorChanged += (_, e) => S0.CustomAccent = Tint.Hex(e.NewColor);
+            pick.Flyout.Closed += (_, _) => Save(rebuild: true);
+            chips.Children.Add(pick);
+        }
+        var tint = Picker("Accent", "Buttons, highlights and the mini player", V(6, solids, palettes, chips));
 
         var size = Segmented(["Compact", "Regular", "Large"], (int)S0.Size, i => { S0.Size = (PanelSize)i; Save(rebuild: true); });
         string[] fontNames = ["Segoe UI", "Be Vietnam", "Inter", "Jakarta"];

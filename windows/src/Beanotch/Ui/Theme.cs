@@ -24,7 +24,14 @@ public enum IdleItem { Nothing, Auto, Pet, Time, Date, Weather, Battery, Event, 
 // What the closed island shows while music plays: nothing, the cover and a beat, or the line being sung.
 public enum MusicShows { Off, Beat, Lyrics }
 
-public enum AccentChoice { Mint, Ocean, Sunset, Rose, Lime, Violet, Teal, Gold, Crimson, Graphite }
+// One colour each; then palettes drawn as a two-colour gradient; then accents that follow the song's cover, the
+// wallpaper, or a colour of your own, as on the Mac.
+public enum AccentChoice
+{
+    Mint, Ocean, Sunset, Rose, Lime, Violet, Teal, Gold, Crimson, Graphite,
+    Aurora, Dusk, Matcha, Sakura, Kopi, Batik, Neon, Mono,
+    Artwork, Wallpaper, Custom,
+}
 
 // The Mac app's palette, so both look like the same product. Sizes on Windows are scaled up a little (see Ui.K):
 // Windows text reads larger than macOS points at the same nominal size.
@@ -43,12 +50,29 @@ public static class Theme
     public static readonly Color PixelEdge = Rgb(0.227, 0.227, 0.322);
     public static readonly Color PixelWell = Rgb(0.059, 0.059, 0.086);
 
-    public static void Apply(ThemeMode mode, AccentChoice accent, bool systemIsDark)
+    public static readonly AccentChoice[] Solids =
+        [AccentChoice.Mint, AccentChoice.Ocean, AccentChoice.Sunset, AccentChoice.Rose, AccentChoice.Lime, AccentChoice.Violet,
+         AccentChoice.Teal, AccentChoice.Gold, AccentChoice.Crimson, AccentChoice.Graphite];
+    public static readonly AccentChoice[] Palettes =
+        [AccentChoice.Aurora, AccentChoice.Dusk, AccentChoice.Matcha, AccentChoice.Sakura, AccentChoice.Kopi, AccentChoice.Batik,
+         AccentChoice.Neon, AccentChoice.Mono];
+
+    // A palette accent is drawn as a gradient from the one colour to the other where there's room for it.
+    public static bool Gradient { get; private set; }
+
+    // `own` is the colour the cover, the wallpaper or the picker gave, for the accents that follow them.
+    public static void Apply(ThemeMode mode, AccentChoice accent, bool systemIsDark, Color? own = null)
     {
         Mode = mode;
         Dark = mode switch { ThemeMode.Light => false, ThemeMode.System => systemIsDark, _ => true };
-        AccentColor = Primary(accent);
-        Accent2Color = Secondary(accent);
+        if (own is { } c && accent is AccentChoice.Artwork or AccentChoice.Wallpaper or AccentChoice.Custom)
+            (AccentColor, Accent2Color) = (c, Services.Tint.Turned(c));
+        // White on white would vanish: Mono turns to graphite in the light theme.
+        else if (accent == AccentChoice.Mono && !Dark)
+            (AccentColor, Accent2Color) = (Rgb(0.22, 0.22, 0.25), Rgb(0.45, 0.45, 0.5));
+        else
+            (AccentColor, Accent2Color) = (Primary(accent), Secondary(accent));
+        Gradient = Palettes.Contains(accent);
     }
 
     public static Color Rgb(double r, double g, double b, double a = 1) =>
@@ -65,7 +89,17 @@ public static class Theme
         AccentChoice.Teal => Rgb(0.2, 0.78, 0.82),
         AccentChoice.Gold => Rgb(0.95, 0.76, 0.3),
         AccentChoice.Crimson => Rgb(0.94, 0.33, 0.36),
-        _ => Rgb(0.62, 0.65, 0.7),
+        AccentChoice.Graphite => Rgb(0.62, 0.65, 0.7),
+        AccentChoice.Aurora => Rgb(0.2, 0.85, 0.78),
+        AccentChoice.Dusk => Rgb(1.0, 0.56, 0.26),
+        AccentChoice.Matcha => Rgb(0.55, 0.78, 0.38),
+        AccentChoice.Sakura => Rgb(1.0, 0.7, 0.79),
+        AccentChoice.Kopi => Rgb(0.8, 0.6, 0.43),
+        AccentChoice.Batik => Rgb(0.36, 0.42, 0.9),
+        AccentChoice.Neon => Rgb(0.62, 1.0, 0.27),
+        AccentChoice.Mono => Rgb(0.9, 0.9, 0.92),
+        // The dynamic ones stand in with mint until their colour is known.
+        _ => Rgb(0.33, 0.86, 0.68),
     };
 
     public static Color Secondary(AccentChoice accent) => accent switch
@@ -79,7 +113,16 @@ public static class Theme
         AccentChoice.Teal => Rgb(0.45, 0.6, 1.0),
         AccentChoice.Gold => Rgb(1.0, 0.55, 0.35),
         AccentChoice.Crimson => Rgb(1.0, 0.62, 0.3),
-        _ => Rgb(0.45, 0.7, 1.0),
+        AccentChoice.Graphite => Rgb(0.45, 0.7, 1.0),
+        AccentChoice.Aurora => Rgb(0.58, 0.42, 1.0),
+        AccentChoice.Dusk => Rgb(1.0, 0.36, 0.6),
+        AccentChoice.Matcha => Rgb(0.86, 0.84, 0.62),
+        AccentChoice.Sakura => Rgb(0.93, 0.42, 0.58),
+        AccentChoice.Kopi => Rgb(0.93, 0.74, 0.46),
+        AccentChoice.Batik => Rgb(0.93, 0.73, 0.3),
+        AccentChoice.Neon => Rgb(0.25, 1.0, 0.72),
+        AccentChoice.Mono => Rgb(0.58, 0.58, 0.62),
+        _ => Rgb(0.6, 0.5, 1.0),
     };
 
     public static readonly Color Good = Rgb(0.33, 0.86, 0.62);

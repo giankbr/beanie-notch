@@ -24,6 +24,8 @@ public sealed class MediaWatcher
     public bool Playing { get; private set; }
     public TimeSpan Duration { get; private set; }
     public BitmapImage? Art { get; private set; }
+    // The cover's colour, for the accent that follows the song.
+    public Windows.UI.Color? ArtTint { get; private set; }
     public IReadOnlyList<LyricLine> Lines { get; private set; } = [];
     public bool HasTrack => Title.Length > 0;
 
@@ -82,6 +84,7 @@ public sealed class MediaWatcher
             Title = Artist = "";
             Playing = false;
             Art = null;
+            ArtTint = null;
             Lines = [];
             Changed?.Invoke();
             return;
@@ -104,6 +107,7 @@ public sealed class MediaWatcher
                 Artist = artist;
                 Lines = [];
                 Art = await LoadArtAsync(props.Thumbnail);
+                ArtTint = await TintOfAsync(props.Thumbnail);
                 _ = LoadLyricsAsync(title, artist, Duration);
             }
         }
@@ -133,6 +137,17 @@ public sealed class MediaWatcher
             var image = new BitmapImage();
             await image.SetSourceAsync(stream);
             return image;
+        }
+        catch (Exception) { return null; }
+    }
+
+    private static async Task<Windows.UI.Color?> TintOfAsync(IRandomAccessStreamReference? thumbnail)
+    {
+        if (thumbnail is null) return null;
+        try
+        {
+            using var stream = await thumbnail.OpenReadAsync();
+            return await Tint.OfAsync(stream);
         }
         catch (Exception) { return null; }
     }

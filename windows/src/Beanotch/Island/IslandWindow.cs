@@ -54,6 +54,8 @@ public sealed partial class IslandWindow : Window
 
     // For Settings, which has no window of its own: re-register the shortcut, and say which one took.
     public static Action? ApplyHotkey;
+    // For Settings: the accent changed, so the wallpaper's colour may be wanted now.
+    public static Action? SettingsAccentChanged;
     public static Func<string?>? CurrentHotkey;
     private int fullscreenVotes;
     private readonly DispatcherQueueTimer petStroke;
@@ -199,6 +201,13 @@ public sealed partial class IslandWindow : Window
         statsTimer.Start();
 
         model.Media.Changed += Update;
+        model.Media.Changed += () => DispatcherQueue.TryEnqueue(() => { if (model.Settings.Accent == AccentChoice.Artwork) FollowAccent(); });
+        _ = ReadWallpaperAsync();
+        var wallpaperTimer = ui.CreateTimer();
+        wallpaperTimer.Interval = TimeSpan.FromMinutes(10);
+        wallpaperTimer.Tick += (_, _) => _ = ReadWallpaperAsync();
+        wallpaperTimer.Start();
+        SettingsAccentChanged = () => _ = ReadWallpaperAsync();
         model.Watchers.Notice += Show;
         model.Notice += Show;
         model.Cleaner.Changed += () => shell.Update();
@@ -296,13 +305,41 @@ public sealed partial class IslandWindow : Window
     private void ApplyTheme()
     {
         var systemDark = new UISettings().GetColorValue(UIColorType.Background).R < 128;
-        Theme.Apply(model.Settings.Theme, model.Settings.Accent, systemDark);
+        Theme.Apply(model.Settings.Theme, model.Settings.Accent, systemDark, OwnAccent());
         Ui.Ui.AppFont = model.Settings.Font;
         root.RequestedTheme = Theme.Dark ? ElementTheme.Dark : ElementTheme.Light;
         // Glass: the desktop behind the window, blurred, under the panel's dark wash.
         SystemBackdrop = Theme.Mode == ThemeMode.Glass ? new DesktopAcrylicBackdrop() : null;
         root.Background = Theme.Brush(model.Expanded ? Theme.Panel : Theme.Black);
         if (model.Expanded) Place(Open.Width, Open.Height, OpenRadius, OpenEar);
+    }
+
+    // The wallpaper's colour, read at start and every ten minutes while that accent is picked.
+    private Windows.UI.Color? wallpaperTint;
+
+    // The colour the accent follows, when it follows one: the song's cover, the wallpaper, or the one picked.
+    private Windows.UI.Color? OwnAccent() => model.Settings.Accent switch
+    {
+        AccentChoice.Artwork => model.Media.ArtTint,
+        AccentChoice.Wallpaper => wallpaperTint,
+        AccentChoice.Custom => Tint.Parse(model.Settings.CustomAccent),
+        _ => null,
+    };
+
+    // A new cover or wallpaper colour redraws the panel in it.
+    private void FollowAccent()
+    {
+        var wanted = OwnAccent();
+        if (wanted is null || wanted == Theme.Accent) return;
+        shell.Rebuild();
+        if (!model.Expanded) root.Background = Theme.Brush(Theme.Black);
+    }
+
+    private async Task ReadWallpaperAsync()
+    {
+        if (model.Settings.Accent != AccentChoice.Wallpaper) return;
+        wallpaperTint = await Tint.WallpaperAsync();
+        FollowAccent();
     }
 
     private void Update()

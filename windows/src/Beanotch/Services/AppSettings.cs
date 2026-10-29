@@ -12,6 +12,8 @@ public sealed class AppSettings
     public PrayerMethod Method { get; set; } = PrayerMethod.Kemenag;
     public ThemeMode Theme { get; set; } = ThemeMode.Dark;
     public AccentChoice Accent { get; set; } = AccentChoice.Mint;
+    // A colour of your own, as "#RRGGBB", for the Custom accent.
+    public string CustomAccent { get; set; } = "#FF7A59";
     public AppFont Font { get; set; } = AppFont.System;
     public PanelSize Size { get; set; } = PanelSize.Regular;
     public NotchShape Shape { get; set; } = NotchShape.Drop;

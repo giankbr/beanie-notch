@@ -356,7 +356,15 @@ public static class Ui
         };
         g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(Math.Max(value, 0.0001), GridUnitType.Star) });
         g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(Math.Max(1 - value, 0.0001), GridUnitType.Star) });
-        var fill = new Border { Background = Theme.Brush(color), CornerRadius = new CornerRadius(S(height / 2)) };
+        // A palette accent fills with its gradient.
+        Microsoft.UI.Xaml.Media.Brush brush = Theme.Gradient && color == Theme.Accent
+            ? new Microsoft.UI.Xaml.Media.LinearGradientBrush
+            {
+                StartPoint = new Windows.Foundation.Point(0, 0), EndPoint = new Windows.Foundation.Point(1, 0),
+                GradientStops = { new() { Color = Theme.Accent, Offset = 0 }, new() { Color = Theme.Accent2, Offset = 1 } },
+            }
+            : Theme.Brush(color);
+        var fill = new Border { Background = brush, CornerRadius = new CornerRadius(S(height / 2)) };
         g.Children.Add(fill);
         return g;
     }

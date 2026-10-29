@@ -53,6 +53,14 @@ public sealed partial class IslandWindow
         shell.Rebuild();
         shell.Shown();
         await Shot("00-glance", 2000);
+        // A palette accent, drawn as a gradient.
+        model.Settings.Accent = AccentChoice.Aurora;
+        model.Focus.Toggle();
+        shell.Rebuild();
+        shell.Shown();
+        await Shot("00-glance-aurora", 2000);
+        model.Focus.Reset();
+        model.Settings.Accent = AccentChoice.Mint;
         Collapse();
         // Then everything else at the earlier defaults, every page on, for the rest of the photos.
         model.Settings.HiddenTabs.Clear();
