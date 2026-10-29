@@ -360,7 +360,7 @@ final class NotchController {
     }
 
     private func placePet() {
-        let shown = model.settings.notchPet && !model.expanded && panel.isVisible && model.pet.walk == 0
+        let shown = model.petShows && !model.expanded && panel.isVisible && model.pet.walk == 0
         if shown {
             if petZone.frame != petRect { petZone.setFrame(petRect, display: false) }
             if !petZone.isVisible { petZone.orderFrontRegardless() }

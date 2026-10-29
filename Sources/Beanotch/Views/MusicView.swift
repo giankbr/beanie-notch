@@ -12,22 +12,26 @@ struct MusicView: View {
             CompactPlayer(now: now, tint: media.tint ?? Theme.accent)
         } else if let now = media.now {
             let tint = media.tint ?? Theme.accent
+            // Compact sits on the panel itself, with no card around it, and keeps to the main controls.
+            let compact = settings.size == .compact
             let showsLyrics = lyrics.state == .synced || lyrics.state == .plain || lyrics.state == .loading
             // Narrow layouts drop the lyrics column rather than squeeze or spill the player.
             ViewThatFits(in: .horizontal) {
                 if showsLyrics {
-                    row(now, tint: tint, lyrics: true, bigArt: true)
-                    row(now, tint: tint, lyrics: true, bigArt: false)
+                    row(now, tint: tint, lyrics: true, bigArt: true, compact: compact)
+                    row(now, tint: tint, lyrics: true, bigArt: false, compact: compact)
                 }
-                row(now, tint: tint, lyrics: false, bigArt: true)
+                row(now, tint: tint, lyrics: false, bigArt: true, compact: compact)
             }
-            .padding(16)
+            .padding(compact ? 4 : 16)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
             .background {
-                RoundedRectangle(cornerRadius: Theme.round(18), style: .continuous)
-                    .fill(LinearGradient(colors: [tint.opacity(0.2), tint.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                if !compact {
+                    RoundedRectangle(cornerRadius: Theme.round(18), style: .continuous)
+                        .fill(LinearGradient(colors: [tint.opacity(0.2), tint.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                }
             }
-            .overlay(RoundedRectangle(cornerRadius: Theme.round(18), style: .continuous).strokeBorder(tint.opacity(0.18)))
+            .overlay(RoundedRectangle(cornerRadius: Theme.round(18), style: .continuous).strokeBorder(compact ? .clear : tint.opacity(0.18)))
             .animation(.easeInOut(duration: 0.35), value: media.tint)
             .animation(.easeInOut(duration: 0.25), value: showsLyrics)
         } else {
@@ -37,11 +41,12 @@ struct MusicView: View {
     }
 
     // Wide enough: cover, player and lyrics side by side. Less room: the cover moves next to the title.
-    private func row(_ now: NowPlaying, tint: Color, lyrics: Bool, bigArt: Bool) -> some View {
-        HStack(spacing: 18) {
+    private func row(_ now: NowPlaying, tint: Color, lyrics: Bool, bigArt: Bool, compact: Bool) -> some View {
+        HStack(spacing: compact ? 14 : 18) {
             if bigArt { Artwork(tint: tint) }
             // Ideal widths are what the fit check measures, so they're kept at what each column can live with.
-            PlayerColumn(now: now, tint: tint, inlineArt: !bigArt).frame(minWidth: 230, idealWidth: 230, maxWidth: .infinity)
+            PlayerColumn(now: now, tint: tint, inlineArt: !bigArt, compact: compact)
+                .frame(minWidth: compact ? 200 : 230, idealWidth: compact ? 200 : 230, maxWidth: .infinity)
             if lyrics {
                 Rectangle().fill(Theme.stroke).frame(width: 1).padding(.vertical, 4)
                 LyricsColumn(now: now, tint: tint).frame(minWidth: 180, idealWidth: 180, maxWidth: 280)
@@ -84,6 +89,7 @@ private struct PlayerColumn: View {
     let now: NowPlaying
     let tint: Color
     var inlineArt = false
+    var compact = false
     @State private var volume: Double = 50
     @State private var editingVolume = false
 
@@ -128,7 +134,7 @@ private struct PlayerColumn: View {
 
             HStack(spacing: 6) {
                 control("backward.end.fill", "Previous") { media.previous() }
-                control("gobackward.15", "Back 15 seconds") { media.skip(-15) }
+                if !compact { control("gobackward.15", "Back 15 seconds") { media.skip(-15) } }
                 Button { media.playPause() } label: {
                     Image(systemName: now.playing ? "pause.fill" : "play.fill")
                         .font(.system(size: 14, weight: .bold))
@@ -139,12 +145,20 @@ private struct PlayerColumn: View {
                 }
                 .buttonStyle(PressStyle())
                 .help(now.playing ? "Pause" : "Play")
-                control("goforward.15", "Forward 15 seconds") { media.skip(15) }
+                if !compact { control("goforward.15", "Forward 15 seconds") { media.skip(15) } }
                 control("forward.end.fill", "Next") { media.next() }
             }
             .frame(maxWidth: .infinity)
             .padding(.top, 8)
 
+            if !compact { volumeRow }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .onAppear { volume = media.volume }
+        .onChange(of: media.volume) { _, v in if !editingVolume { volume = v } }
+    }
+
+    private var volumeRow: some View {
             HStack(spacing: 10) {
                 Image(systemName: "speaker.fill").font(.system(size: 9)).foregroundStyle(Theme.dim)
                 ThemedSlider(value: Binding(get: { Double(volume) }, set: { volume = .init($0) }), range: 0...100, tint: tint) { editing in
@@ -156,10 +170,6 @@ private struct PlayerColumn: View {
                 OutputMenu()
             }
             .padding(.top, 10)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .onAppear { volume = media.volume }
-        .onChange(of: media.volume) { _, v in if !editingVolume { volume = v } }
     }
 
     private func control(_ icon: String, _ label: String, action: @escaping () -> Void) -> some View {
@@ -259,9 +269,6 @@ private struct LyricsColumn: View {
         .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.12),
                                      .init(color: .black, location: 0.88), .init(color: .clear, location: 1)],
                              startPoint: .top, endPoint: .bottom))
-        .overlay(alignment: .bottomTrailing) {
-            Text("LRCLIB · NetEase · QQ · Kugou").font(.app(size: 7.5, weight: .semibold)).foregroundStyle(Theme.faint)
-        }
     }
 
     @ViewBuilder private func line(_ index: Int?, size: CGFloat, color: Color, bold: Bool = false, empty: String = " ") -> some View {

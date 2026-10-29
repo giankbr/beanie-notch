@@ -393,18 +393,30 @@ final class AppModel: ObservableObject {
     // The line being sung, beside the notch, when that's switched on and the song has synced lyrics.
     var showsNotchLyrics: Bool { showsMiniPlayer && settings.lyricsInNotch && media.lyrics.state == .synced }
 
+    // How far the closed notch grows past the camera for what it shows, both sides together: as little as the words
+    // need, so the notch stays small.
+    private var activityWidth: CGFloat {
+        volume != nil ? 150 : notice.map(noticeWidth) ?? (meeting.inCall ? 170 : focus.isRunning ? 100
+            : countdown.isRunning ? 100 : downloads.current != nil ? 190 : claude.working != nil ? 180 : devRuns.current != nil ? 190
+            : calendar.meeting != nil ? 190 : showsPrayerCountdown ? 150 : showsNotchLyrics ? 300 : showsMiniPlayer ? 64 : 0)
+    }
+
+    // The pet keeps the left corner while the notch is idle or only playing music (in place of the cover); anything
+    // with words takes the room for a moment, as the pet steps aside.
+    var petShows: Bool {
+        settings.notchPet && (activityWidth == 0 || (showsMiniPlayer && !showsNotchLyrics && notice == nil && volume == nil
+            && activityWidth == 64))
+    }
+
     var closedWidth: CGFloat {
-        let extra: CGFloat = volume != nil ? 190 : notice.map(noticeWidth) ?? (meeting.inCall ? 200 : focus.isRunning ? 110
-            : countdown.isRunning ? 110 : downloads.current != nil ? 240 : claude.working != nil ? 220 : devRuns.current != nil ? 240 : calendar.meeting != nil ? 240 : showsPrayerCountdown ? 170
-            : showsNotchLyrics ? 340 : showsMiniPlayer ? 64 : 0)
-        // The pet keeps a corner of the right side whatever shows; both sides grow so the camera stays centred.
-        return closedSize.width + extra + (settings.notchPet ? NotchPet.slot * 2 : 0)
+        // Both sides grow alike so the camera stays centred.
+        closedSize.width + (petShows ? max(activityWidth, NotchPet.slot * 2) : activityWidth)
     }
 
     // Each side of the camera gets room for the longer of its two texts, so neither is cut short.
     private func noticeWidth(_ n: Notice) -> CGFloat {
         let longest = CGFloat(max(n.left.count + 3, n.right.count))
-        return min(420, max(260, longest * 6.4 * 2 + 40))
+        return min(360, max(200, longest * 6.2 * 2 + 32))
     }
 
     var showsPrayerCountdown: Bool { prayerOn && settings.prayerCountdown && prayer.soon != nil }

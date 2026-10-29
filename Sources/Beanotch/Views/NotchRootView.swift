@@ -56,7 +56,7 @@ struct NotchRootView: View {
             closedContent
                 .frame(width: model.closedWidth, height: model.closedHeight)
                 .overlay(alignment: .leading) {
-                    if settings.notchPet {
+                    if model.petShows {
                         PetView(mood: pet.mood, kind: settings.petKind, accessory: settings.petAccessory, praying: pet.praying,
                                 offset: -(model.closedWidth / 2 - 8 - 17) + pet.walk * (model.closedWidth - NotchPet.slot - 16))
                             .scaleEffect(x: pet.mood == .walking && pet.walk == 1 ? -1 : 1, y: 1)
@@ -222,7 +222,7 @@ struct NotchRootView: View {
             NotchLyrics().transition(.emerge)
         } else if model.showsMiniPlayer {
             MiniPlayer().transition(.emerge)
-        } else if settings.notchPet {
+        } else if model.petShows {
             // Nothing else to show: the pet in its corner on the left, its word on the right.
             Ears {
                 EmptyView()
@@ -274,7 +274,7 @@ private struct Ears<Left: View, Right: View>: View {
     var body: some View {
         HStack(spacing: 0) {
             // Clear of the pet's corner, on the left.
-            left.frame(maxWidth: .infinity, alignment: .leading).padding(.leading, settings.notchPet ? NotchPet.slot : 0)
+            left.frame(maxWidth: .infinity, alignment: .leading).padding(.leading, model.petShows ? NotchPet.slot : 0)
             Color.clear.frame(width: model.closedSize.width)
             right.frame(maxWidth: .infinity, alignment: .trailing)
         }
@@ -327,15 +327,15 @@ private struct MiniPlayer: View {
     @EnvironmentObject var settings: Settings
 
     var body: some View {
+        // With the pet on, it takes the cover's place and dances to the song.
         HStack {
             Group {
-                if let art = media.artwork {
+                if let art = media.artwork, !model.petShows {
                     Image(nsImage: art).resizable().aspectRatio(contentMode: .fill)
                 }
             }
-            .frame(width: media.artwork == nil ? 0 : 16, height: 16)
+            .frame(width: media.artwork == nil || model.petShows ? 0 : 16, height: 16)
             .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
-            .padding(.leading, settings.notchPet ? NotchPet.slot : 0)
             Spacer()
             Equalizer(playing: true)
         }

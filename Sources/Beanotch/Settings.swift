@@ -232,6 +232,7 @@ final class Settings: ObservableObject {
         eyeBreaks = d.bool(forKey: "eyeBreaks")
         stretchEvery = d.object(forKey: "stretchEvery") as? Int ?? 0
         simplify(d)
+        quieten(d)
         applyAccent()
         Theme.font = font
     }
@@ -250,6 +251,15 @@ final class Settings: ObservableObject {
         d.set(size.rawValue, forKey: "size")
         d.set(Array(hiddenTabs).sorted(), forKey: "hiddenTabs")
         d.set(true, forKey: "simpleNotch")
+    }
+
+    // Once more, for room: the closed notch shows the cover and a beat while music plays, not the lyrics across it.
+    // Lyrics in the notch stay a switch away.
+    private func quieten(_ d: UserDefaults) {
+        guard !d.bool(forKey: "quietNotch") else { return }
+        lyricsInNotch = false
+        d.set(false, forKey: "lyricsInNotch")
+        d.set(true, forKey: "quietNotch")
     }
 
     func setHotkey(code: Int, modifiers: Int, label: String) {
