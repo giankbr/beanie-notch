@@ -21,7 +21,7 @@ struct SettingsView: View {
     private var section: Section { model.settingsSection }
 
     enum Section: String, CaseIterable, Identifiable {
-        case appearance, pages, notch, inNotch, ai, shelf, wellbeing, prayer, system, tools
+        case appearance, pages, notch, idle, inNotch, ai, shelf, wellbeing, prayer, system, tools
         var id: String { rawValue }
         var title: String {
             switch self {
@@ -29,6 +29,7 @@ struct SettingsView: View {
             case .pages: "Pages"
             case .ai: "AI"
             case .notch: "Notch"
+            case .idle: "Idle"
             case .inNotch: "In the notch"
             case .shelf: "Files"
             case .wellbeing: "Wellbeing"
@@ -43,6 +44,7 @@ struct SettingsView: View {
             case .pages: "square.stack.fill"
             case .ai: "sparkles"
             case .notch: "rectangle.topthird.inset.filled"
+            case .idle: "moon.zzz.fill"
             case .inNotch: "bell.badge.fill"
             case .shelf: "tray.full.fill"
             case .wellbeing: "heart.fill"
@@ -125,6 +127,7 @@ struct SettingsView: View {
         case .pages: pages
         case .ai: aiSection
         case .notch: notch
+        case .idle: idleSection
         case .inNotch: inNotch
         case .shelf: shelfSection
         case .wellbeing: wellbeing
@@ -279,17 +282,6 @@ struct SettingsView: View {
 
     private var inNotch: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // How much room the closed notch takes when little is going on.
-            card {
-                row("moon.zzz", "When idle", "Beside the camera; Nothing keeps it notch-sized") {
-                    Segmented(options: IdleShows.allCases.map(\.title), selection: index($settings.idle, IdleShows.allCases)).fixedSize()
-                }
-                row("music.note", "While music plays", "Lyrics take the most room") {
-                    Segmented(options: MusicShows.allCases.map(\.title),
-                              selection: Binding(get: { MusicShows.allCases.firstIndex(of: settings.musicShows) ?? 0 },
-                                                 set: { settings.musicShows = MusicShows.allCases[$0] })).fixedSize()
-                }
-            }
             card {
                 row("bubble.left.and.bubble.right", "Messages",
                     messages.trusted ? "Unread counts from Dock badges: WhatsApp, Telegram, Slack, Mail…"
@@ -324,7 +316,35 @@ struct SettingsView: View {
                 }
             }
             card {
-                if settings.notchPet {
+                row("music.note.list", "Song changes", "The new song's title shows for a moment") {
+                    Toggle("", isOn: $settings.songFlash)
+                }
+                row("quote.bubble", "Lyrics", "LRCLIB, NetEase, QQ Music and Kugou: title and artist are sent to look them up") {
+                    Toggle("", isOn: $settings.lyrics)
+                }
+            }
+        }
+    }
+
+    // The closed notch with nothing going on: what sits either side of the camera, what music adds, and the pet.
+    private var idleSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            IdlePreview()
+            card {
+                pickerRow("Left of the camera", "Nothing keeps the notch its own size") {
+                    Segmented(options: IdleItem.left.map(\.title), selection: index($settings.idleLeft, IdleItem.left))
+                }
+                pickerRow("Right of the camera", settings.notchPet ? "Free, it's where the pet talks" : "") {
+                    Segmented(options: IdleItem.right.map(\.title), selection: index($settings.idleRight, IdleItem.right))
+                }
+                row("music.note", "While music plays", "Lyrics take the most room") {
+                    Segmented(options: MusicShows.allCases.map(\.title),
+                              selection: Binding(get: { MusicShows.allCases.firstIndex(of: settings.musicShows) ?? 0 },
+                                                 set: { settings.musicShows = MusicShows.allCases[$0] })).fixedSize()
+                }
+            }
+            if settings.notchPet {
+                card {
                     pickerRow("Pet", "Who lives in the notch") {
                         HStack(spacing: 6) {
                             ForEach(PetKind.allCases) { kind in
@@ -353,12 +373,6 @@ struct SettingsView: View {
                     row("moon", "Cap for prayer", "Puts it on for a while at each prayer time") {
                         Toggle("", isOn: $settings.petPrayerCap)
                     }
-                }
-                row("music.note.list", "Song changes", "The new song's title shows for a moment") {
-                    Toggle("", isOn: $settings.songFlash)
-                }
-                row("quote.bubble", "Lyrics", "LRCLIB, NetEase, QQ Music and Kugou: title and artist are sent to look them up") {
-                    Toggle("", isOn: $settings.lyrics)
                 }
             }
         }
@@ -568,6 +582,35 @@ private struct ThemeSwatch: View {
                 .padding(7)
             }
         }
+    }
+}
+
+// The idle notch as it'll look, with the camera's gap in the middle.
+private struct IdlePreview: View {
+    @EnvironmentObject var settings: Settings
+    @EnvironmentObject var model: AppModel
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Group {
+                if settings.idleLeft == .pet {
+                    PetView(mood: .happy, kind: settings.petKind, accessory: settings.petAccessory)
+                } else {
+                    IdleItemView(item: settings.idleLeft)
+                }
+            }
+            .frame(minWidth: 30, alignment: .leading)
+            Color.clear.frame(width: 90)
+            IdleItemView(item: settings.idleRight).frame(minWidth: 30, alignment: .trailing)
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 30)
+        .background(UnevenRoundedRectangle(bottomLeadingRadius: 10, bottomTrailingRadius: 10, style: .continuous).fill(.black))
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(RoundedRectangle(cornerRadius: Theme.round(12), style: .continuous).fill(Theme.ink.opacity(0.05)))
+        .animation(.snappy(duration: 0.25), value: settings.idleLeft)
+        .animation(.snappy(duration: 0.25), value: settings.idleRight)
     }
 }
 

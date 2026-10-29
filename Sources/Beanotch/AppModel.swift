@@ -408,20 +408,28 @@ final class AppModel: ObservableObject {
             && activityWidth == 64))
     }
 
-    // With nothing going on: the time or the weather either side of the camera, when that's the idle choice.
-    var idleShows: IdleShows? {
-        guard activityWidth == 0, !settings.notchPet else { return nil }
-        switch settings.idle {
-        case .clock: return .clock
-        case .weather: return weather.report == nil ? nil : .weather
-        default: return nil
+    // The room one idle item takes beside the camera; nothing when it has nothing to say.
+    func idleWidth(_ item: IdleItem) -> CGFloat {
+        switch item {
+        case .nothing, .pet: 0
+        case .time, .date: 56
+        case .weather: weather.report == nil ? 0 : 54
+        case .battery: power.present ? 64 : 0
         }
     }
 
+    // Nothing going on, and something chosen to show either side of the camera.
+    var idleShows: Bool {
+        activityWidth == 0 && (petShows || idleWidth(settings.idleLeft) > 0 || idleWidth(settings.idleRight) > 0)
+    }
+
     var closedWidth: CGFloat {
-        // Both sides grow alike so the camera stays centred.
-        let idle: CGFloat = idleShows == .clock ? 110 : idleShows == .weather ? 84 : 0
-        return closedSize.width + (petShows ? max(activityWidth, NotchPet.slot * 2) : activityWidth == 0 ? idle : activityWidth)
+        // Both sides grow alike so the camera stays centred: as far as the wider side needs.
+        if activityWidth == 0 {
+            let side = max(petShows ? NotchPet.slot : 0, idleWidth(settings.idleLeft), idleWidth(settings.idleRight))
+            return closedSize.width + side * 2
+        }
+        return closedSize.width + (petShows ? max(activityWidth, NotchPet.slot * 2) : activityWidth)
     }
 
     // Each side of the camera gets room for the longer of its two texts, so neither is cut short.

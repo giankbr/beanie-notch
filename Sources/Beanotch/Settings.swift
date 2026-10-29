@@ -59,18 +59,23 @@ enum PanelSize: String, CaseIterable {
     }
 }
 
-// What the closed notch shows when nothing's going on: just the notch, the pet, the time, or the weather.
-enum IdleShows: String, CaseIterable {
-    case nothing, pet, clock, weather
+// What sits on one side of the camera when nothing's going on. The pet only lives on the left.
+enum IdleItem: String, CaseIterable {
+    case nothing, pet, time, date, weather, battery
 
     var title: String {
         switch self {
         case .nothing: "Nothing"
         case .pet: "Pet"
-        case .clock: "Time"
+        case .time: "Time"
+        case .date: "Date"
         case .weather: "Weather"
+        case .battery: "Battery"
         }
     }
+
+    static let left: [IdleItem] = allCases
+    static let right: [IdleItem] = allCases.filter { $0 != .pet }
 }
 
 // What the closed notch shows while music plays: nothing extra, the cover and a beat, or the line being sung.
@@ -201,16 +206,18 @@ final class Settings: ObservableObject {
     @Published var notchPet: Bool {
         didSet {
             save(notchPet, "notchPet")
-            if notchPet, idle != .pet { idle = .pet } else if !notchPet, idle == .pet { idle = .nothing }
+            if notchPet, idleLeft != .pet { idleLeft = .pet } else if !notchPet, idleLeft == .pet { idleLeft = .nothing }
         }
     }
-    // The pet is one of the idle choices; picking it (or anything else) switches the pet on (or off).
-    @Published var idle: IdleShows {
+    // Either side of the camera when idle. The pet is the left side's choice; picking it (or anything else) switches
+    // the pet on (or off).
+    @Published var idleLeft: IdleItem {
         didSet {
-            save(idle.rawValue, "idle")
-            if notchPet != (idle == .pet) { notchPet = idle == .pet }
+            save(idleLeft.rawValue, "idleLeft")
+            if notchPet != (idleLeft == .pet) { notchPet = idleLeft == .pet }
         }
     }
+    @Published var idleRight: IdleItem { didSet { save(idleRight.rawValue, "idleRight") } }
     // The mini player and lyrics-in-the-notch switches as one choice.
     var musicShows: MusicShows {
         get { !miniPlayer ? .off : lyricsInNotch ? .lyrics : .beat }
@@ -272,7 +279,13 @@ final class Settings: ObservableObject {
         smartCopy = d.object(forKey: "smartCopy") as? Bool ?? true
         quakeAlerts = d.object(forKey: "quakeAlerts") as? Bool ?? true
         notchPet = d.bool(forKey: "notchPet")
-        idle = d.bool(forKey: "notchPet") ? .pet : IdleShows(rawValue: d.string(forKey: "idle") ?? "").flatMap { $0 == .pet ? nil : $0 } ?? .nothing
+        // A single idle choice came first: the time became the date and the time, the weather sat on the left.
+        let old = d.string(forKey: "idle")
+        idleLeft = d.bool(forKey: "notchPet") ? .pet
+            : IdleItem(rawValue: d.string(forKey: "idleLeft") ?? "").flatMap { $0 == .pet ? nil : $0 }
+            ?? (old == "clock" ? .date : old == "weather" ? .weather : .nothing)
+        idleRight = IdleItem(rawValue: d.string(forKey: "idleRight") ?? "").flatMap { $0 == .pet ? nil : $0 }
+            ?? (old == "clock" ? .time : .nothing)
         petKind = PetKind(rawValue: d.string(forKey: "petKind") ?? "") ?? .bean
         petName = d.string(forKey: "petName") ?? ""
         petAccessory = PetAccessory(rawValue: d.string(forKey: "petAccessory") ?? "") ?? .none

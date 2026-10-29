@@ -16,6 +16,8 @@ struct NotchRootView: View {
     @EnvironmentObject var pet: NotchPet
     @EnvironmentObject var weather: Weather
 
+    private var usesWeather: Bool { settings.idleLeft == .weather || settings.idleRight == .weather }
+
     private var size: CGSize {
         model.expanded ? model.openSize : CGSize(width: model.closedWidth, height: model.closedHeight)
     }
@@ -75,8 +77,8 @@ struct NotchRootView: View {
         .animation(.smooth(duration: 0.4, extraBounce: 0.1), value: model.closedHeight)
         .animation(.smooth(duration: 0.4), value: settings.size)
         // Weather for the idle notch, asked again every half hour (the report itself keeps it from asking more).
-        .task(id: settings.idle == .weather ? Int(Date().timeIntervalSince1970 / 1800) : -1) {
-            if settings.idle == .weather { weather.refresh(for: prayer.place) }
+        .task(id: usesWeather ? Int(Date().timeIntervalSince1970 / 1800) : -1) {
+            if usesWeather { weather.refresh(for: prayer.place) }
         }
     }
 
@@ -227,33 +229,60 @@ struct NotchRootView: View {
             NotchLyrics().transition(.emerge)
         } else if model.showsMiniPlayer {
             MiniPlayer().transition(.emerge)
-        } else if model.idleShows == .clock {
+        } else if model.idleShows {
+            // Nothing going on: what was picked for each side of the camera, the pet in its corner on the left (with
+            // its word on the right when that side is free).
             Ears {
-                Text(Date().formatted(.dateTime.weekday(.abbreviated).day())).font(.app(size: 10, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.6)).lineLimit(1)
+                IdleItemView(item: settings.idleLeft)
             } right: {
-                TimelineView(.everyMinute) { context in
-                    Text(context.date.formatted(date: .omitted, time: .shortened)).font(.app(size: 10.5, weight: .semibold))
-                        .monospacedDigit().foregroundStyle(.white).lineLimit(1)
+                if settings.idleRight == .nothing, model.petShows {
+                    Text(petLine).font(.app(size: 9.5, weight: .semibold)).foregroundStyle(.white.opacity(0.6)).lineLimit(1)
+                } else {
+                    IdleItemView(item: settings.idleRight)
                 }
             }
             .transition(.emerge)
-        } else if model.idleShows == .weather, let report = weather.report {
-            Ears {
-                Image(systemName: Weather.symbol(report.code)).symbolRenderingMode(.hierarchical)
-                    .font(.system(size: 11, weight: .semibold)).foregroundStyle(.white)
-            } right: {
-                Text("\(Int(report.temp.rounded()))°").font(.app(size: 10.5, weight: .semibold)).monospacedDigit().foregroundStyle(.white)
+        }
+    }
+}
+
+// One side of the idle notch: the time, the date, the weather or the battery, small and quiet.
+struct IdleItemView: View {
+    @EnvironmentObject var weather: Weather
+    @EnvironmentObject var power: PowerMonitor
+    let item: IdleItem
+
+    var body: some View {
+        switch item {
+        case .nothing, .pet: EmptyView()
+        case .time:
+            TimelineView(.everyMinute) { context in
+                Text(context.date.formatted(date: .omitted, time: .shortened)).font(.app(size: 10.5, weight: .semibold))
+                    .monospacedDigit().foregroundStyle(.white).lineLimit(1)
             }
-            .transition(.emerge)
-        } else if model.petShows {
-            // Nothing else to show: the pet in its corner on the left, its word on the right.
-            Ears {
-                EmptyView()
-            } right: {
-                Text(petLine).font(.app(size: 9.5, weight: .semibold)).foregroundStyle(.white.opacity(0.6)).lineLimit(1)
+        case .date:
+            TimelineView(.everyMinute) { context in
+                Text(context.date.formatted(.dateTime.weekday(.abbreviated).day())).font(.app(size: 10, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.6)).lineLimit(1)
             }
-            .transition(.emerge)
+        case .weather:
+            if let report = weather.report {
+                HStack(spacing: 4) {
+                    Image(systemName: Weather.symbol(report.code)).symbolRenderingMode(.hierarchical).font(.system(size: 10, weight: .semibold))
+                    Text("\(Int(report.temp.rounded()))°").font(.app(size: 10.5, weight: .semibold)).monospacedDigit()
+                }
+                .foregroundStyle(.white).lineLimit(1)
+            }
+        case .battery:
+            if power.present {
+                HStack(spacing: 4) {
+                    Image(systemName: power.charging ? "battery.100percent.bolt" : power.percent < 20 ? "battery.25percent" : "battery.75percent")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(power.percent < 20 && !power.charging ? Theme.red : power.charging ? Theme.good : .white)
+                    Text("\(power.percent)%").font(.app(size: 10, weight: .semibold)).monospacedDigit().foregroundStyle(.white)
+                }
+                .lineLimit(1)
+            }
         }
     }
 }
