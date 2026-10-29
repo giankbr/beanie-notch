@@ -54,14 +54,17 @@ public sealed class MusicPage(Model model) : PanelPage(model)
         volume.ValueChanged += (_, e) => { if (!settingVolume) Audio.SetSpeaker(e.NewValue / 100); };
         var volumeRow = Columns(8, (Icon(Glyphs.Volume, 10, Theme.Dim), null), (volume, 1));
 
-        var player = Rows(8, (head, null), (null, 1), (progress, null), (times, null), (controls, null), (volumeRow, null));
-        player.Width = S(260);
+        // Compact sits on the panel itself, with no card around it, and keeps to the main controls.
+        var compact = Model.Settings.Size == PanelSize.Compact;
+        var player = Rows(8, (head, null), (null, 1), (progress, null), (times, null), (controls, null), (compact ? null : volumeRow, null));
+        player.Width = S(compact ? 230 : 260);
 
-        var lyricColumn = Rows(0, (lyrics, 1), (credit, null));
+        var lyricColumn = Rows(0, (lyrics, 1), (compact ? null : credit, null));
         lyrics.VerticalAlignment = VerticalAlignment.Center;
         credit.HorizontalAlignment = HorizontalAlignment.Right;
         var divider = new Border { Width = 1, Background = Theme.Brush(Theme.Stroke) };
-        return Card(Columns(18, (player, null), (divider, null), (lyricColumn, 1)), 14, 16);
+        var columns = Columns(compact ? 14 : 18, (player, null), (divider, null), (lyricColumn, 1));
+        return compact ? new Border { Child = columns, Padding = new Thickness(S(4)) } : Card(columns, 14, 16);
     }
 
     public override void Refresh()

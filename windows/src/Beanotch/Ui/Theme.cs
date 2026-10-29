@@ -14,8 +14,14 @@ public enum PanelSize { Compact, Regular, Large }
 public enum NotchShape { Drop, Seamless, Floating }
 
 // How the open panel finds its pages, as on the Mac: a labelled side menu, a rail of icons, tabs along the top, a row
-// of round buttons, or a grid of tiles to pick from.
-public enum PanelLayout { Studio, Compact, TopTabs, Classic, Launcher }
+// of round buttons, a grid of tiles to pick from, or no menu at all, the pages swiped sideways.
+public enum PanelLayout { Studio, Compact, TopTabs, Classic, Launcher, Slide }
+
+// What sits on one side of the closed island when nothing's going on. The pet only lives on the left.
+public enum IdleItem { Nothing, Pet, Time, Date, Weather, Battery }
+
+// What the closed island shows while music plays: nothing, the cover and a beat, or the line being sung.
+public enum MusicShows { Off, Beat, Lyrics }
 
 public enum AccentChoice { Mint, Ocean, Sunset, Rose, Lime, Violet, Teal, Gold, Crimson, Graphite }
 

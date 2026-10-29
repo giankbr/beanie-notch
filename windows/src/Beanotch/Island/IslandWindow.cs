@@ -25,7 +25,7 @@ public sealed partial class IslandWindow : Window
     // The open panel at each size, a little taller than the Mac's since Windows sets text larger.
     private (double Width, double Height) Open => model.Settings.Size switch
     {
-        PanelSize.Compact => (630, 300),
+        PanelSize.Compact => (560, 290),
         PanelSize.Large => (780, 390),
         _ => (680, 336),
     };
@@ -35,6 +35,7 @@ public sealed partial class IslandWindow : Window
     private readonly Grid root = new();
     private readonly ClosedView closed;
     private readonly Shell shell;
+    private readonly SettingsWindow settingsWindow;
     private readonly DispatcherQueueTimer collapseTimer, tick, statsTimer, dataTimer, quakeTimer, updateTimer;
     // A notice's link that installs the update instead of opening a page.
     private static readonly Uri InstallUpdate = new("beanotch:update");
@@ -59,7 +60,7 @@ public sealed partial class IslandWindow : Window
 
     private bool OnPet(Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
-        if (model.Expanded || !model.Settings.NotchPet) return false;
+        if (model.Expanded || !closed.PetShowing) return false;
         var spot = closed.PetSpot;
         var p = e.GetCurrentPoint(spot).Position;
         return p.X >= -4 && p.Y >= -4 && p.X <= spot.ActualWidth + 4 && p.Y <= spot.ActualHeight + 4;
@@ -90,6 +91,12 @@ public sealed partial class IslandWindow : Window
 
         closed = new ClosedView(model, PetAnchor);
         shell = new Shell(model, ApplyTheme);
+        settingsWindow = new SettingsWindow(model, () => { shell.Rebuild(); if (!model.Expanded) Update(); });
+        model.OpenSettings = tab =>
+        {
+            if (model.Expanded) Collapse();
+            settingsWindow.Show(tab);
+        };
         root.Children.Add(closed.View);
         root.Children.Add(shell.View);
         shell.View.Visibility = Visibility.Collapsed;

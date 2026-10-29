@@ -111,7 +111,21 @@ public sealed class Model
         return tomorrow is null ? null : $"Fast broken · Imsak tomorrow at {Clock(tomorrow.Time)}";
     }
 
-    public bool Visible(Tab tab) => tab is Tab.Home or Tab.Settings || !Settings.HiddenTabs.Contains(tab.ToString());
+    // A page in the panel's menus: Tools and Settings live in their own window, and the rest can be switched off.
+    public bool Visible(Tab tab) => tab is not (Tab.Tools or Tab.Settings) && !Settings.HiddenTabs.Contains(tab.ToString());
+
+    // The pages in the menus, in order; with all of them off, Music stays.
+    public List<Tab> Pages
+    {
+        get
+        {
+            var shown = Enum.GetValues<Tab>().Where(Visible).ToList();
+            return shown.Count > 0 ? shown : [Tab.Music];
+        }
+    }
+
+    // Settings and Tools in their own window; the island hands this in.
+    public Action<Tab> OpenSettings { get; set; } = _ => { };
 
     // Weather every half hour, the calendar every ten minutes; both only while there's something to show them for.
     public async Task RefreshDataAsync(bool force = false)

@@ -9,15 +9,19 @@ using static Beanotch.Ui.Ui;
 
 namespace Beanotch.Pages;
 
-// Settings, laid out like the Mac's: sections down the side, one at a time on the right.
+// Settings, laid out like the Mac's: sections down the side, one at a time on the right. It lives in its own window,
+// with Tools as its last section.
 public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model)
 {
-    private enum Section { Appearance, Pages, Island, Today, Prayer, System }
+    public enum Section { Appearance, Pages, Idle, Island, Today, Prayer, System, Tools }
 
     private readonly StackPanel sections = V(1);
     private readonly Grid content = new() { ChildrenTransitions = Arrive() };
     private readonly Grid footer = new();
-    private Section section = Section.Appearance;
+    // Kept across rebuilds (a theme change makes a new page), and set by the window to open on Tools.
+    private static Section section = Section.Appearance;
+    public static Section? Opening { get; set; }
+    private ToolsPage? tools;
 
     protected override FrameworkElement Build()
     {
@@ -29,14 +33,15 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
 
     public override void Refresh()
     {
+        if (Opening is { } opening) { section = opening; Opening = null; }
         sections.Children.Clear();
         foreach (var s in Enum.GetValues<Section>())
         {
             var active = s == section;
             var glyph = s switch
             {
-                Section.Appearance => "", Section.Pages => "", Section.Island => "",
-                Section.Today => Glyphs.Calendar, Section.Prayer => Glyphs.Moon, _ => Glyphs.Settings,
+                Section.Appearance => "", Section.Pages => "", Section.Island => "", Section.Idle => "\uE708",
+                Section.Today => Glyphs.Calendar, Section.Prayer => Glyphs.Moon, Section.Tools => Glyphs.Tools, _ => Glyphs.Settings,
             };
             var row = Columns(7, (Icon(glyph, 10, active ? Theme.Accent : Theme.Dim), null),
                               (Text(s == Section.Island ? "In the island" : s.ToString(), 10.5, active ? Theme.Ink : Theme.WithAlpha(Theme.Ink, 0.75),
@@ -58,10 +63,19 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
         footer.Children.Add(bottom);
 
         content.Children.Clear();
+        // Tools fill the space and scroll their own lists.
+        if (section == Section.Tools)
+        {
+            tools ??= new ToolsPage(Model);
+            content.Children.Add(tools.View);
+            tools.Refresh();
+            return;
+        }
         FrameworkElement page = section switch
         {
             Section.Appearance => Appearance(),
             Section.Pages => Pages(),
+            Section.Idle => IdleSection(),
             Section.Island => Island(),
             Section.Today => Today(),
             Section.Prayer => Prayer(),
@@ -171,6 +185,16 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
                 g.Children.Add(Block(S(16), S(4), L, T, 0, 0, 0.4));
                 for (var i = 0; i < 3; i++) g.Children.Add(Block(S(4), S(4), HorizontalAlignment.Right, T, 0, 0, i == 0 ? 0.45 : 0.25) is var dot ? Shift(dot, i) : null);
                 g.Children.Add(new Border { Margin = new Thickness(0, S(8), 0, 0), CornerRadius = new CornerRadius(S(2)), Background = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.12)) });
+                break;
+            case PanelLayout.Slide:
+                g.Children.Add(new Border { Margin = new Thickness(0, 0, 0, S(8)), CornerRadius = new CornerRadius(S(2)), Background = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.12)) });
+                for (var i = 0; i < 3; i++)
+                    g.Children.Add(new Border
+                    {
+                        Width = S(i == 0 ? 8 : 3), Height = S(3), CornerRadius = new CornerRadius(S(1.5)), HorizontalAlignment = HorizontalAlignment.Center,
+                        VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness((i - 1) * S(12), 0, 0, 0),
+                        Background = Theme.Brush(i == 0 ? Theme.WithAlpha(Theme.Accent, 0.8) : Theme.WithAlpha(Theme.Ink, 0.25)),
+                    });
                 break;
             default:
                 for (var r = 0; r < 2; r++)
@@ -294,7 +318,7 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
     private FrameworkElement Pages()
     {
         var rows = new List<UIElement>();
-        foreach (var tab in new[] { Tab.Today, Tab.Prayer, Tab.Music, Tab.Shelf, Tab.Clipboard, Tab.Ai, Tab.Controls, Tab.Tools })
+        foreach (var tab in new[] { Tab.Home, Tab.Today, Tab.Prayer, Tab.Music, Tab.Shelf, Tab.Clipboard, Tab.Ai, Tab.Controls })
         {
             var on = !S0.HiddenTabs.Contains(tab.ToString());
             rows.Add(Row(null, Model.Title(tab), tab == Tab.Prayer ? "Also hides the prayer countdown and reminders" : "", Switch(on, v =>
@@ -304,39 +328,12 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
                 Save(rebuild: true);
             })));
         }
-        return V(8, Text("Pages you don't use can be switched off. Overview and Settings always stay.", 9.5, Theme.Faint, wrap: true), Group([.. rows]));
+        return V(8, Text("Pages you don't use can be switched off. Settings and Tools are always a click on the gear away.", 9.5, Theme.Faint, wrap: true), Group([.. rows]));
     }
 
     private FrameworkElement Island()
     {
         UIElement Toggle(string title, string caption, bool on, Action<bool> set) => Row(null, title, caption, Switch(on, v => { set(v); Save(); }));
-        var idle = new List<UIElement>
-        {
-            Toggle("Time when idle", "Otherwise the notch stays empty and black", S0.IdleClock, v => S0.IdleClock = v),
-            Toggle("Notch pet", "Click it, rest the pointer on it, drop files on it; it reacts to the PC", S0.NotchPet, v => { S0.NotchPet = v; Refresh(); }),
-        };
-        if (S0.NotchPet)
-            idle.Add(Picker("Pet", "Who lives in the island", Cells(Enum.GetValues<Island.PetKind>().Select(kind =>
-                Choice(kind.ToString(), S0.PetKind == kind,
-                       new Grid { Background = Theme.Brush(Theme.Black), Children = { Center(new Island.PetView(() => Model.PetMood.Happy, () => kind, still: true).View) } },
-                       () => { S0.PetKind = kind; Save(); Refresh(); })))));
-        if (S0.NotchPet)
-        {
-            var name = new TextBox { Text = S0.PetName, PlaceholderText = S0.PetKind.ToString(), FontSize = S(10), Width = S(140) };
-            name.LostFocus += (_, _) => { S0.PetName = name.Text.Trim(); Save(); };
-            idle.Add(Row(null, "Name", "Shown when it talks to you", name));
-            var pet = Model.Pet;
-            idle.Add(Picker("Wears", $"Level {pet.Level} · {S0.PetXp % 10}/10 to the next · focus, feed and pet it to level up",
-                Cells(Enum.GetValues<PetAccessory>().Select(item =>
-                {
-                    var open = pet.Level >= Pet.LevelFor(item);
-                    var preview = new Grid { Background = Theme.Brush(Theme.Black), Opacity = open ? 1 : 0.35,
-                        Children = { Center(new Island.PetView(() => Model.PetMood.Happy, () => S0.PetKind, still: true, accessory: () => item).View) } };
-                    return Choice(open ? (item == PetAccessory.None ? "Nothing" : item.ToString()) : $"Level {Pet.LevelFor(item)}",
-                                  S0.PetAccessory == item, preview, () => { if (open) { S0.PetAccessory = item; Save(); Refresh(); } });
-                }))));
-            idle.Add(Toggle("Cap for prayer", "Puts it on for ten minutes at each prayer time", S0.PetPrayerCap, v => S0.PetPrayerCap = v));
-        }
         int[] waters = [0, 30, 45, 60, 90], stretches = [0, 30, 45, 60];
         double[] delaySeconds = [0.4, 1, 2.5];
         var hotkey = Beanotch.Island.IslandWindow.CurrentHotkey?.Invoke();
@@ -355,9 +352,8 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
                 Segmented(["Off", "30 m", "45 m", "1 h"], Math.Max(0, Array.IndexOf(stretches, S0.StretchEvery)), i => { S0.StretchEvery = stretches[i]; Save(); })),
             Toggle("Eye breaks", "Every 20 minutes, look 20 feet away for 20 seconds", S0.EyeBreaks, v => S0.EyeBreaks = v));
 
-        return V(8, opening, Group([.. idle]), health,
+        return V(8, opening, health,
             Group(
-            Toggle("Lyrics", "The line being sung, while music plays", S0.Lyrics, v => S0.Lyrics = v),
             Toggle("Volume", "Level when it changes", S0.VolumeHud, v => S0.VolumeHud = v),
             Toggle("Downloads", "Progress from Chrome, Edge and Firefox", S0.DownloadsInIsland, v => S0.DownloadsInIsland = v),
             Toggle("Mic and camera", "When an app starts using them", S0.PrivacyAlerts, v => S0.PrivacyAlerts = v),
@@ -368,6 +364,49 @@ public sealed class SettingsPage(Model model, Updater updater) : PanelPage(model
             Toggle("Caps Lock", "When it turns on or off", S0.KeyboardAlerts, v => S0.KeyboardAlerts = v),
             Toggle("Meetings", "Five minutes before an event", S0.MeetingAlerts, v => S0.MeetingAlerts = v),
             Toggle("Prayer countdown", "In the last hour before each prayer", S0.PrayerCountdown, v => S0.PrayerCountdown = v)));
+    }
+
+    // The closed island with nothing going on: what sits on each side, what music adds, and the pet.
+    private FrameworkElement IdleSection()
+    {
+        IdleItem[] lefts = Enum.GetValues<IdleItem>(), rights = [.. lefts.Where(i => i != IdleItem.Pet)];
+        var left = Segmented([.. lefts.Select(i => i.ToString())], Array.IndexOf(lefts, S0.NotchPet ? IdleItem.Pet : S0.IdleLeft), i =>
+        {
+            S0.IdleLeft = lefts[i];
+            S0.NotchPet = lefts[i] == IdleItem.Pet;
+            Save();
+        });
+        var right = Segmented([.. rights.Select(i => i.ToString())], Math.Max(0, Array.IndexOf(rights, S0.IdleRight)), i => { S0.IdleRight = rights[i]; Save(); });
+        var music = Segmented(["Nothing", "Cover & beat", "Lyrics"], (int)S0.MusicShows, i => { S0.MusicShows = (MusicShows)i; Save(); });
+        var rows = new List<UIElement>
+        {
+            Picker("Left of the island", "Nothing keeps it small", left),
+            Picker("Right of the island", S0.NotchPet ? "Free, it's where the pet talks" : "", right),
+            Row(null, "While music plays", "Lyrics take the most room", music),
+        };
+        var pet = new List<UIElement>();
+        if (S0.NotchPet)
+        {
+            pet.Add(Picker("Pet", "Who lives in the island", Cells(Enum.GetValues<Island.PetKind>().Select(kind =>
+                Choice(kind.ToString(), S0.PetKind == kind,
+                       new Grid { Background = Theme.Brush(Theme.Black), Children = { Center(new Island.PetView(() => Model.PetMood.Happy, () => kind, still: true).View) } },
+                       () => { S0.PetKind = kind; Save(); })))));
+            var name = new TextBox { Text = S0.PetName, PlaceholderText = S0.PetKind.ToString(), FontSize = S(10), Width = S(140) };
+            name.LostFocus += (_, _) => { S0.PetName = name.Text.Trim(); Save(); };
+            pet.Add(Row(null, "Name", "Shown when it talks to you", name));
+            var level = Model.Pet;
+            pet.Add(Picker("Wears", $"Level {level.Level} · {S0.PetXp % 10}/10 to the next · focus, feed and pet it to level up",
+                Cells(Enum.GetValues<PetAccessory>().Select(item =>
+                {
+                    var open = level.Level >= Pet.LevelFor(item);
+                    var preview = new Grid { Background = Theme.Brush(Theme.Black), Opacity = open ? 1 : 0.35,
+                        Children = { Center(new Island.PetView(() => Model.PetMood.Happy, () => S0.PetKind, still: true, accessory: () => item).View) } };
+                    return Choice(open ? (item == PetAccessory.None ? "Nothing" : item.ToString()) : $"Level {Pet.LevelFor(item)}",
+                                  S0.PetAccessory == item, preview, () => { if (open) { S0.PetAccessory = item; Save(); } });
+                }))));
+            pet.Add(Row(null, "Cap for prayer", "Puts it on for ten minutes at each prayer time", Switch(S0.PetPrayerCap, v => { S0.PetPrayerCap = v; Save(); })));
+        }
+        return pet.Count == 0 ? V(8, Group([.. rows])) : V(8, Group([.. rows]), Group([.. pet]));
     }
 
     private FrameworkElement Today()

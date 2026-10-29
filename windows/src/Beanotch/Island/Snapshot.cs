@@ -35,7 +35,36 @@ public sealed partial class IslandWindow
             catch (Exception e) { log.Add($"FAIL {name}: {e.GetType().Name}: {e.Message}"); }
         }
 
+        // The simpler island a fresh install opens with: compact, top tabs, Today, Shelf and Music.
+        Expand();
+        foreach (var tab in model.Pages)
+        {
+            shell.Open(tab);
+            await Shot($"00-simple-{tab.ToString().ToLowerInvariant()}", 2000);
+        }
+        model.Settings.Layout = PanelLayout.Slide;
+        shell.Rebuild();
+        foreach (var tab in model.Pages)
+        {
+            shell.Open(tab);
+            await Shot($"00-slide-{tab.ToString().ToLowerInvariant()}", 1500);
+        }
+        Collapse();
+        // Then everything else at the earlier defaults, every page on, for the rest of the photos.
+        model.Settings.HiddenTabs.Clear();
+        model.Settings.Layout = PanelLayout.Studio;
+        model.Settings.Size = PanelSize.Regular;
+        shell.Rebuild();
+
         await Shot("01-closed-idle", 3000);
+        foreach (var (l, r) in new[] { (IdleItem.Date, IdleItem.Time), (IdleItem.Battery, IdleItem.Time), (IdleItem.Weather, IdleItem.Nothing), (IdleItem.Nothing, IdleItem.Time) })
+        {
+            (model.Settings.IdleLeft, model.Settings.IdleRight) = (l, r);
+            Update();
+            await Shot($"01-closed-idle-{l.ToString().ToLowerInvariant()}-{r.ToString().ToLowerInvariant()}", 800);
+        }
+        (model.Settings.IdleLeft, model.Settings.IdleRight) = (IdleItem.Nothing, IdleItem.Nothing);
+        Update();
         Show(new Notice(Glyphs.Volume, Theme.Accent, "Volume", "64", TimeSpan.FromSeconds(10), 0.64, "volume"));
         await Shot("02-closed-volume");
         Show(new Notice(Glyphs.Mic, Theme.Red, "Mic in use", "Zoom", TimeSpan.FromSeconds(10), Key: "microphone"));
@@ -79,7 +108,7 @@ public sealed partial class IslandWindow
 
         Expand();
         var index = 4;
-        foreach (var tab in Enum.GetValues<Tab>())
+        foreach (var tab in Enum.GetValues<Tab>().Where(t => t is not (Tab.Tools or Tab.Settings)))
         {
             try { shell.Open(tab); }
             catch (Exception e) { log.Add($"FAIL open {tab}: {e.GetType().Name}: {e.Message}"); continue; }
@@ -93,6 +122,20 @@ public sealed partial class IslandWindow
             if (layout == PanelLayout.Launcher) shell.Shown();
             if (layout != PanelLayout.Studio) await Shot($"{index++:00}-layout-{layout.ToString().ToLowerInvariant()}", 2000);
         }
+        // Settings and Tools, in their own window.
+        foreach (var section in new[] { Pages.SettingsPage.Section.Appearance, Pages.SettingsPage.Section.Idle, Pages.SettingsPage.Section.Tools })
+        {
+            Pages.SettingsPage.Opening = section;
+            settingsWindow.Show(Tab.Settings);
+            await Task.Delay(section == Pages.SettingsPage.Section.Tools ? 4000 : 2000);
+            try
+            {
+                if (settingsWindow.View is { } view) await Save(view, Path.Combine(dir, $"{index++:00}-window-{section.ToString().ToLowerInvariant()}.png"));
+                log.Add($"ok   window {section}");
+            }
+            catch (Exception e) { log.Add($"FAIL window {section}: {e.GetType().Name}: {e.Message}"); }
+        }
+        Expand();
         model.Phone.Start();
         shell.Open(Tab.Shelf);
         await Shot($"{index++:00}-dark-shelf-phone", 2000);
@@ -111,7 +154,7 @@ public sealed partial class IslandWindow
         model.Settings.Accent = AccentChoice.Ocean;
         shell.Rebuild();
         root.Background = Theme.Brush(Theme.Panel);
-        foreach (var tab in new[] { Tab.Home, Tab.Today, Tab.Prayer, Tab.Settings })
+        foreach (var tab in new[] { Tab.Home, Tab.Today, Tab.Prayer, Tab.Music })
         {
             shell.Open(tab);
             await Shot($"{index++:00}-light-{tab.ToString().ToLowerInvariant()}");
@@ -141,7 +184,7 @@ public sealed partial class IslandWindow
         shell.Open(Tab.Today);
         await Shot($"{index++:00}-today-rates", 6000);
         Pages.TodayPage.StartLeft = 0;
-        foreach (var (theme, tab) in new[] { (ThemeMode.Glass, Tab.Home), (ThemeMode.Glass, Tab.Settings), (ThemeMode.Keycap, Tab.Home), (ThemeMode.Keycap, Tab.Settings), (ThemeMode.Pixel, Tab.Home), (ThemeMode.Pixel, Tab.Today) })
+        foreach (var (theme, tab) in new[] { (ThemeMode.Glass, Tab.Home), (ThemeMode.Glass, Tab.Music), (ThemeMode.Keycap, Tab.Home), (ThemeMode.Keycap, Tab.Shelf), (ThemeMode.Pixel, Tab.Home), (ThemeMode.Pixel, Tab.Today) })
         {
             model.Settings.Theme = theme;
             ApplyTheme();

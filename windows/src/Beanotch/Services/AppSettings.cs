@@ -36,8 +36,14 @@ public sealed class AppSettings
     public bool DeviceAlerts { get; set; } = true;
     public bool KeyboardAlerts { get; set; } = true;
     public bool PrayerCountdown { get; set; } = true;
-    // When nothing else is showing, the notch is empty and black unless this puts the time in it.
+    // Before 1.11, the one idle choice: the time, or an empty notch. Read once into IdleLeft and IdleRight.
     public bool IdleClock { get; set; }
+    // Either side of the closed island when idle; the pet on the left is the same as NotchPet.
+    public IdleItem IdleLeft { get; set; }
+    public IdleItem IdleRight { get; set; }
+    public MusicShows MusicShows { get; set; } = MusicShows.Beat;
+    // Set once the simpler island (1.11) has been applied: compact, top tabs, Today, Shelf and Music.
+    public bool SimpleIsland { get; set; }
     public bool MeetingAlerts { get; set; } = true;
     public bool CallMode { get; set; } = true;
     public bool HideInFullscreen { get; set; } = true;
@@ -81,12 +87,32 @@ public sealed class AppSettings
     {
         // Retro (dropped in 1.9.6) and Midnight (folded into Dark in 1.10.5) read as Dark; an unknown theme name would
         // otherwise fail the whole file.
+        var fresh = !File.Exists(FilePath);
+        AppSettings settings;
         try
         {
             var json = File.ReadAllText(FilePath).Replace("\"Retro\"", "\"Dark\"").Replace("\"Midnight\"", "\"Dark\"");
-            return JsonSerializer.Deserialize(json, SettingsJson.Default.AppSettings) ?? new();
+            settings = JsonSerializer.Deserialize(json, SettingsJson.Default.AppSettings) ?? new();
         }
-        catch (Exception e) when (e is IOException or JsonException or UnauthorizedAccessException) { return new(); }
+        catch (Exception e) when (e is IOException or JsonException or UnauthorizedAccessException) { settings = new(); }
+        settings.Simplify(fresh);
+        return settings;
+    }
+
+    // Once, for everyone, as on the Mac: the simpler island. Top tabs, the compact panel, and Today, Shelf and Music;
+    // the other pages are a switch away in Settings › Pages. Prayer stays on where it was already in use, since its
+    // reminders go with the page. The old idle choice becomes the two sides, and music shows its cover and a beat.
+    private void Simplify(bool fresh)
+    {
+        if (SimpleIsland) return;
+        SimpleIsland = true;
+        Size = PanelSize.Compact;
+        Layout = PanelLayout.TopTabs;
+        foreach (var tab in new[] { "Home", "Clipboard", "Ai", "Controls" }.Concat(fresh ? new[] { "Prayer" } : Array.Empty<string>()))
+            if (!HiddenTabs.Contains(tab)) HiddenTabs.Add(tab);
+        (IdleLeft, IdleRight) = NotchPet ? (IdleItem.Pet, IdleItem.Nothing) : IdleClock ? (IdleItem.Date, IdleItem.Time) : (IdleItem.Nothing, IdleItem.Nothing);
+        MusicShows = MusicShows.Beat;
+        Save();
     }
 
     public void Save()

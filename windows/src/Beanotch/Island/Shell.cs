@@ -4,12 +4,14 @@ using Beanotch.Ui;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media.Animation;
 using static Beanotch.Ui.Ui;
 
 namespace Beanotch.Island;
 
-// The open panel, in the layout picked in Settings (the Mac's Studio by default: a labelled side menu, a header with the
-// page title and date, and the page underneath).
+// The open panel, in the layout picked in Settings (top tabs by default: the pages along the top, the page underneath).
+// Settings and Tools open in a window of their own, from the gear.
 public sealed class Shell
 {
     private readonly Model model;
@@ -43,6 +45,11 @@ public sealed class Shell
     private Button? back;
     // In the Launcher layout: the grid of tiles shows until a page is picked, and again each time the panel opens.
     private bool grid = true;
+    // Slide: which way the next page comes in, and the sideways swipe being counted.
+    private int slideFrom;
+    private double swipe;
+    private bool swiped;
+    private DateTime swipeAt;
 
     private void Build()
     {
@@ -51,6 +58,8 @@ public sealed class Shell
         date = Text("", 9.5, Theme.Faint, FontWeights.Medium);
         pills = H(6);
         host = new Grid { ChildrenTransitions = Arrive() };
+        // The header's end: what's coming up, then the way to Settings and Tools.
+        var extras = H(6, pills, IconButton(Glyphs.Settings, () => model.OpenSettings(Tab.Settings), 10, Theme.Dim, "Settings and tools"));
         back = null;
         FrameworkElement layout;
         switch (Layout)
@@ -60,7 +69,7 @@ public sealed class Shell
                 nav = V(2);
                 var rail = Card(nav, 4, 12);
                 rail.VerticalAlignment = VerticalAlignment.Stretch;
-                layout = Columns(10, (rail, null), (Rows(8, (Header(), null), (host, 1)), 1));
+                layout = Columns(10, (rail, null), (Rows(8, (Header(extras), null), (host, 1)), 1));
                 break;
             }
             case PanelLayout.TopTabs:
@@ -72,14 +81,26 @@ public sealed class Shell
                     Padding = new Thickness(S(2)), CornerRadius = new CornerRadius(S(9)),
                     Background = Theme.Brush(Theme.WithAlpha(Theme.Ink, 0.06)), HorizontalAlignment = HorizontalAlignment.Left,
                 };
-                var top = Columns(8, (tray, 1), (pills, null));
+                var top = Columns(8, (tray, 1), (extras, null));
                 layout = Rows(8, (top, null), (host, 1));
+                break;
+            }
+            case PanelLayout.Slide:
+            {
+                // No menu: the page, a dot for each page under it, and a sideways swipe to move between them.
+                nav = H(2);
+                nav.HorizontalAlignment = HorizontalAlignment.Center;
+                var gear = IconButton(Glyphs.Settings, () => model.OpenSettings(Tab.Settings), 9, Theme.Faint, "Settings and tools", 20);
+                gear.HorizontalAlignment = HorizontalAlignment.Right;
+                var dots = new Grid { Height = S(18), Children = { nav, gear } };
+                host.AddHandler(UIElement.PointerWheelChangedEvent, new PointerEventHandler(Swiped), true);
+                layout = Rows(6, (host, 1), (dots, null));
                 break;
             }
             case PanelLayout.Classic:
             {
                 nav = H(4);
-                var top = Columns(8, (H(8, title, date), 1), (pills, null), (nav, null));
+                var top = Columns(8, (H(8, title, date), 1), (extras, null), (nav, null));
                 top.Height = S(28);
                 layout = Rows(8, (top, null), (host, 1));
                 break;
@@ -88,7 +109,7 @@ public sealed class Shell
             {
                 nav = new StackPanel();
                 back = IconButton("\uE72B", () => { grid = true; Show(); }, 10, Theme.Ink, "All pages");
-                var top = Columns(8, (back, null), (H(8, title, date), 1), (pills, null));
+                var top = Columns(8, (back, null), (H(8, title, date), 1), (extras, null));
                 top.Height = S(26);
                 layout = Rows(8, (top, null), (host, 1));
                 break;
@@ -99,7 +120,7 @@ public sealed class Shell
                 var side = Card(nav, 5, 12);
                 side.Width = S(138);
                 side.VerticalAlignment = VerticalAlignment.Stretch;
-                layout = Columns(12, (side, null), (Rows(8, (Header(), null), (host, 1)), 1));
+                layout = Columns(12, (side, null), (Rows(8, (Header(extras), null), (host, 1)), 1));
                 break;
             }
         }
@@ -108,9 +129,9 @@ public sealed class Shell
         Open(model.Tab);
     }
 
-    private Grid Header()
+    private Grid Header(UIElement extras)
     {
-        var header = Columns(8, (H(8, title, date), 1), (pills, null));
+        var header = Columns(8, (H(8, title, date), 1), (extras, null));
         header.Height = S(26);
         return header;
     }
@@ -126,8 +147,6 @@ public sealed class Shell
         yield return (Tab.Clipboard, Glyphs.Clipboard, "Clipboard", model.Clipboard.Items.Count > 0 ? $"{model.Clipboard.Items.Count}" : null);
         yield return (Tab.Ai, Glyphs.Spark, "AI", null);
         yield return (Tab.Controls, Glyphs.Controls, "Controls", null);
-        yield return (Tab.Tools, Glyphs.Tools, "Tools", null);
-        yield return (Tab.Settings, Glyphs.Settings, "Settings", null);
     }
 
     private PanelPage PageFor(Tab tab)
@@ -153,7 +172,15 @@ public sealed class Shell
 
     public void Open(Tab tab)
     {
-        if (!model.Visible(tab)) tab = Tab.Home;
+        if (tab is Tab.Tools or Tab.Settings)
+        {
+            model.OpenSettings(tab);
+            return;
+        }
+        if (!model.Visible(tab)) tab = model.Pages[0];
+        // In Slide, the new page comes in from the side it sits on.
+        var pages = model.Pages;
+        slideFrom = Math.Sign(pages.IndexOf(tab) - pages.IndexOf(model.Tab));
         model.Tab = tab;
         grid = false;
         Show();
@@ -169,6 +196,8 @@ public sealed class Shell
         else
         {
             var page = PageFor(model.Tab);
+            if (Layout == PanelLayout.Slide)
+                host.ChildrenTransitions = [new EntranceThemeTransition { FromHorizontalOffset = slideFrom * S(60), FromVerticalOffset = 0 }];
             host.Children.Add(page.View);
             page.Refresh();
         }
@@ -213,7 +242,8 @@ public sealed class Shell
         pills.Children.Clear();
         var next = model.NextPrayer;
         if (model.Visible(Tab.Prayer)) pills.Children.Add(Pill($"{next.Name} {Model.Clock(next.Time)}", Theme.Accent2, Glyphs.Moon));
-        if (model.Cleaner.Total > 0) pills.Children.Add(Pill($"{Format.Bytes(model.Cleaner.Total)} can be freed", Theme.Amber, dot: true));
+        // Cleanup news belongs with Overview; without that page, the header keeps quiet about it.
+        if (model.Cleaner.Total > 0 && model.Visible(Tab.Home)) pills.Children.Add(Pill($"{Format.Bytes(model.Cleaner.Total)} can be freed", Theme.Amber, dot: true));
         if (!(Layout == PanelLayout.Launcher && grid)) PageFor(model.Tab).Tick();
     }
 
@@ -221,6 +251,11 @@ public sealed class Shell
     {
         nav.Children.Clear();
         if (Layout == PanelLayout.Launcher) return;
+        if (Layout == PanelLayout.Slide)
+        {
+            foreach (var tab in model.Pages) Dot(tab);
+            return;
+        }
         if (Layout != PanelLayout.Studio)
         {
             foreach (var (tab, glyph, name, _) in Entries()) Compact(tab, glyph, name);
@@ -236,8 +271,50 @@ public sealed class Shell
         Group("SYSTEM");
         Item(Tab.Ai, Glyphs.Spark);
         Item(Tab.Controls, Glyphs.Controls);
-        Item(Tab.Tools, Glyphs.Tools);
-        Item(Tab.Settings, Glyphs.Settings);
+        SettingsItem();
+    }
+
+    // Studio's last row: Settings and Tools, in their own window.
+    private void SettingsItem()
+    {
+        var row = Columns(7, (Icon(Glyphs.Settings, 10, Theme.Dim), null),
+                          (Text("Settings", 10.5, Theme.WithAlpha(Theme.Ink, 0.75)), 1),
+                          (Icon("\uE8A7", 8, Theme.Faint), null));
+        row.Height = S(20);
+        row.Padding = new Thickness(S(8), 0, S(8), 0);
+        var button = Plain(row, () => model.OpenSettings(Tab.Settings), Colors.Transparent, 7);
+        button.HorizontalAlignment = HorizontalAlignment.Stretch;
+        nav.Children.Add(button);
+    }
+
+    // A page's dot under Slide's pages: long for the open one.
+    private void Dot(Tab tab)
+    {
+        var active = model.Tab == tab;
+        var dot = new Border
+        {
+            Width = S(active ? 16 : 6), Height = S(6), CornerRadius = new CornerRadius(S(3)),
+            Background = Theme.Brush(active ? Theme.Accent : Theme.WithAlpha(Theme.Ink, 0.22)),
+        };
+        nav.Children.Add(Plain(new Grid { Padding = new Thickness(S(3)), Children = { dot } }, () => Open(tab), Colors.Transparent, 4, tip: Model.Title(tab)));
+    }
+
+    // A sideways two-finger swipe (or a tilt of the wheel) turns one page per gesture; a pause ends the gesture.
+    private void Swiped(object sender, PointerRoutedEventArgs e)
+    {
+        var point = e.GetCurrentPoint(host).Properties;
+        if (!point.IsHorizontalMouseWheel) return;
+        var now = DateTime.UtcNow;
+        if (now - swipeAt > TimeSpan.FromMilliseconds(350)) { swipe = 0; swiped = false; }
+        swipeAt = now;
+        e.Handled = true;
+        if (swiped) return;
+        swipe += point.MouseWheelDelta;
+        if (Math.Abs(swipe) < 100) return;
+        swiped = true;
+        var pages = model.Pages;
+        var at = pages.IndexOf(model.Tab) + Math.Sign(swipe);
+        if (at >= 0 && at < pages.Count) Open(pages[at]);
     }
 
     // A tab in the other layouts: an icon in the rail, an icon and its name along the top, or a round button.
