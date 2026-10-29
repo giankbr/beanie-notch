@@ -99,7 +99,7 @@ Beanotch is written in Swift and SwiftUI with no third-party dependencies. The d
 
 ### Look
 
-- Eight layouts:
+- Nine layouts:
   - **Studio**: a labelled side menu.
   - **Compact**: an icon rail.
   - **Top tabs**: tabs along the top.
@@ -108,12 +108,13 @@ Beanotch is written in Swift and SwiftUI with no third-party dependencies. The d
   - **Launcher**: opens on a grid of live tiles.
   - **Slide**: no menu at all; swipe sideways between pages.
   - **Glance**: one page of cards: what's playing, what's coming up, the focus timer.
+  - **Bar**: one slim row: the song, the focus timer, what's next.
 - Every page fits every layout and size, and scrolls when the panel is too short for it.
 - **Settings and Tools** open in a window of their own, from the gear in the notch or the menu bar (⌘,).
 - **Idle:** pick what sits either side of the camera when nothing's going on (the pet, time, date, weather or battery, or nothing at all), and what music adds.
 - **Pages:** switch off any page you don't use in Settings › Pages; a fresh install starts with Today, Shelf and Now Playing. Turning off Prayer also removes prayer times from the header and the notch, and the Hijri date.
-- Dark and light themes; 10 accent colors, 8 gradient palettes, or an accent that follows the song's cover, the wallpaper or a color you pick; 4 panel sizes.
-- Three notch shapes: drop, seamless and floating.
+- Dark and light themes; 10 accent colors, 8 gradient palettes, or an accent that follows the song's cover, the wallpaper or a color you pick; 4 panel sizes, or any width and height.
+- Five notch shapes: drop, seamless, floating, pill and squircle.
 - Flat buttons that light up under the pointer, and segmented controls with a sliding thumb.
 - Settings in sections, with visual pickers for the theme, layout and notch shape.
 - SF Pro (Segoe UI on Windows), Be Vietnam Pro, Inter or Plus Jakarta Sans.
